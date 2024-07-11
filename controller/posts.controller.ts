@@ -20,6 +20,7 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
             soundName: soundName,
             filterName: {
                 create: {
+                    idx: filterName.idx,//changes by Vivek
                     name: filterName.name,
                     t1: filterName.t1,
                     t2: filterName.t2,
