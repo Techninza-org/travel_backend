@@ -240,13 +240,13 @@ httpApp.use((req, res) => {
 });
 const httpServer = http.createServer(httpApp);
 
-httpServer.listen(3000, () => {
-  console.log('HTTP server running on port 3000 and redirecting to HTTPS');
-});
+// httpServer.listen(3000, () => {
+//   console.log('HTTP server running on port 3000 and redirecting to HTTPS');
+// });
 
-httpsServer.listen(443, () => {
-  console.log('HTTPS server running on port 443');
-});
+// httpsServer.listen(443, () => {
+//   console.log('HTTPS server running on port 443');
+// });
 
 app.all('*', (_req, res) => {
     res.status(200).send({
