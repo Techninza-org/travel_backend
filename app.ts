@@ -188,9 +188,9 @@ cron.schedule('0 0 * * *', async () => {
 
 app.use(middleware.ErrorHandler)
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/chain.pem', 'utf8');
+const privateKey = fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/home/ubuntu/cert.pem', 'utf8');
+const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8');
 
 const credentials = {
     key: privateKey,
