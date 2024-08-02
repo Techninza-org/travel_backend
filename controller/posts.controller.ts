@@ -67,6 +67,7 @@ export const createTemplate = async (req: ExtendedRequest, res: Response, next: 
             soundName: body.soundName,
             filterName: {
                 create: {
+<<<<<<< HEAD
                     name: body.filterName.name,
                     t1: body.filterName.t1,
                     t2: body.filterName.t2,
@@ -75,6 +76,24 @@ export const createTemplate = async (req: ExtendedRequest, res: Response, next: 
                     t5: body.filterName.t5,
                     t6: body.filterName.t6,
                 },
+=======
+                    idx: filterName.idx,//changes by Vivek
+                    name: filterName.name,
+                    t1: filterName.t1,
+                    t2: filterName.t2,
+                    t3: filterName.t3,
+                    t4: filterName.t4,
+                    t5: filterName.t5,
+                    t6: filterName.t6
+                }
+            },
+            transitionData: {
+                create: transitionData.map((td: any) => ({
+                    transitionType: td.transitionType,
+                    imageurl: td.imageurl,
+                    mediaType: td.mediaType
+                }))
+>>>>>>> a39c24df439b73a829656d0e05b2cdd24399bccd
             },
             transitions: body.transitions
         },

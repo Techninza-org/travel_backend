@@ -435,6 +435,7 @@ model ServiceOptions {
 model FilterName {
   id         Int      @id @default(autoincrement())
   name       String
+  idx        String  //changes by Vivek
   t1         String
   t2         String
   t3         String
