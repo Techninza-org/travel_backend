@@ -5,7 +5,7 @@ dotenv.config()
 const storage = multer.memoryStorage()
 export const upload = multer({ storage: storage })
 
-const PORT = 80;
+const PORT = 5000;
 const HTTP_PORT = 3000;
 
 import('./app')
