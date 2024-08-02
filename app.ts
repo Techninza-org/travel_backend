@@ -8,6 +8,7 @@ import postRouter from './routes/post.routes'
 import fs from 'fs'
 import path from 'path'
 import http from 'http'
+import https from 'https'
 import { Server } from 'socket.io'
 import actionRouter from './routes/action.routes'
 import tripRouter from './routes/trip.routes'
@@ -51,41 +52,6 @@ app.use(express.json())
 // app.use(statusMonitor())
 app.use(morgan('tiny'))
 app.use(cors())
-
-const server = http.createServer(app)
-
-const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-    },
-})
-
-export const getReceiverSocketId = (receiverId: string) => {
-    return userSocketMap[receiverId]
-}
-
-const userSocketMap: { [key: string]: string } = {}
-
-io.on('connection', (socket) => {
-    console.log('user connected', socket.id)
-    const userId = socket.handshake.query.userId
-    if (typeof userId === 'string') {
-        userSocketMap[userId] = socket.id
-    }
-
-    io.emit('getOnlineUsers', Object.keys(userSocketMap))
-
-    socket.on('disconnect', () => {
-        console.log('user disconnected', socket.id)
-        for (const key in userSocketMap) {
-            if (userSocketMap[key] === socket.id) {
-                delete userSocketMap[key]
-            }
-        }
-        io.emit('getOnlineUsers', Object.keys(userSocketMap))
-    })
-})
 
 // const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
 
@@ -221,6 +187,67 @@ cron.schedule('0 0 * * *', async () => {
 })
 
 app.use(middleware.ErrorHandler)
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/chain.pem', 'utf8');
+
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+  };
+
+const httpsServer = https.createServer(credentials, app);
+
+const io = new Server(httpsServer, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+
+export const getReceiverSocketId = (receiverId: string) => {
+    return userSocketMap[receiverId]
+}
+
+const userSocketMap: { [key: string]: string } = {}
+
+io.on('connection', (socket) => {
+    console.log('user connected', socket.id)
+    const userId = socket.handshake.query.userId
+    if (typeof userId === 'string') {
+        userSocketMap[userId] = socket.id
+    }
+
+    io.emit('getOnlineUsers', Object.keys(userSocketMap))
+
+    socket.on('disconnect', () => {
+        console.log('user disconnected', socket.id)
+        for (const key in userSocketMap) {
+            if (userSocketMap[key] === socket.id) {
+                delete userSocketMap[key]
+            }
+        }
+        io.emit('getOnlineUsers', Object.keys(userSocketMap))
+    })
+})
+
+
+const httpApp = express();
+httpApp.use((req, res) => {
+  res.redirect(`https://${req.headers.host}${req.url}`);
+});
+const httpServer = http.createServer(httpApp);
+
+httpServer.listen(3000, () => {
+  console.log('HTTP server running on port 3000 and redirecting to HTTPS');
+});
+
+httpsServer.listen(443, () => {
+  console.log('HTTPS server running on port 443');
+});
+
 app.all('*', (_req, res) => {
     res.status(200).send({
         status: 404,
@@ -229,5 +256,5 @@ app.all('*', (_req, res) => {
     })
 })
 
-export default server
-export { io, server }
+export default httpsServer;
+export { io, httpsServer, httpServer };
