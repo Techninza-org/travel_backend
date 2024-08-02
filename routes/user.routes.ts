@@ -30,6 +30,8 @@ userRouter
     //@ts-ignore
     .put('/', upload.single('profile_pic'), userController.update_user)  
     //@ts-ignore
+    .put('/bg', upload.single('bg'), userController.update_user_bg)  
+    //@ts-ignore
     .get('/followers', userController.Get_follower)
     //@ts-ignore
     .get('/following', userController.GET_following)

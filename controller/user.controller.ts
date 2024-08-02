@@ -96,17 +96,7 @@ const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFuncti
 
 const update_user = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
-    const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
-    const imageName = randomImageName()
-    const params = {
-        Bucket: process.env.BUCKET_NAME!,
-        Key: imageName,
-        Body: req.file?.buffer,
-        ContentType: req.file?.mimetype,
-    }
-    const command = new PutObjectCommand(params)
-    await s3.send(command)
-    let { username, gender, date_of_birth, bio, emergency_name, emergency_phone, typeOfTraveller, background_image, email } = req.body
+    let { username, gender, date_of_birth, bio, emergency_name, emergency_phone, typeOfTraveller, email } = req.body
     if (gender) {
         gender = Number(gender)
         if (Number.isNaN(gender)) {
@@ -128,6 +118,16 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
     }
     try {
         if (req.file) {
+            const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+            const imageName = randomImageName()
+            const params = {
+                Bucket: process.env.BUCKET_NAME!,
+                Key: imageName,
+                Body: req.file?.buffer,
+                ContentType: req.file?.mimetype,
+            }
+            const command = new PutObjectCommand(params)
+            await s3.send(command)
             const updatedUser = await prisma.user.update({
                 where: { id: user.id },
                 data: {
@@ -136,7 +136,6 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     date_of_birth,
                     bio,
                     image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
-                    background_image,
                     emergency_name,
                     emergency_phone,
                     typeOfTraveller,
@@ -155,7 +154,6 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     gender,
                     date_of_birth,
                     bio,
-                    background_image,
                     emergency_name,
                     emergency_phone,
                     typeOfTraveller,
@@ -171,6 +169,35 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
         return next(err)
     }
 }
+
+const update_user_bg = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user
+    if(!req.file){
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'No image provided' })  
+    }
+    const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+    const imageName = randomImageName()
+    const params = {
+        Bucket: process.env.BUCKET_NAME!,
+        Key: imageName,
+        Body: req.file?.buffer,
+        ContentType: req.file?.mimetype,
+    }
+    const command = new PutObjectCommand(params)
+    await s3.send(command)
+    const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            background_image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`
+        },
+    })
+    delete (updatedUser as any).password
+    delete (updatedUser as any).emergency_name
+    delete (updatedUser as any).emergency_phone
+    return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
+
+}
+
 const Get_follower = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     try {
@@ -861,6 +888,7 @@ const userController = {
     pinLocation,
     deletePinnedLocation,
     updateRegistrationToken,
+    update_user_bg
 }
 
 export default userController
