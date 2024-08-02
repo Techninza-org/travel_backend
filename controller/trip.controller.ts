@@ -71,7 +71,7 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             gateways: { order_id: order.id, amount: order.amount, currency: order.currency },
         })
     } catch (err) {
-        console.log(err);  // by vivek
+        console.log(err);  // by vivek ++
         return res.status(200).send({
             status: 500,
             error: 'orderId or trip creation failed.',
