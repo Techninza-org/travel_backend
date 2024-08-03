@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export const CreateExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const body = req.body
     const trip = await prisma.trip.findFirst({ where: { id: body.trip_id } })
     if (!trip) {
@@ -26,10 +26,13 @@ export const CreateExpense = async (req: ExtendedRequest, res: Response, next: N
         },
     })
     return res.status(200).send({ status: 201, message: 'Created', expense: expense })
+}catch(err){
+    return next(err)
+}
 }
 
 export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let tripId: string | number = req.params.id
+    try{let tripId: string | number = req.params.id
     const user = req.user
     if (!tripId) {
         return res
@@ -51,10 +54,13 @@ export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next:
     })
     
     return res.status(200).send({ status: 200, expenses: expenses, total: total })
+}catch(err){
+    return next(err)
+}
 }
 
 export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+   try{ const user = req.user
     const normal_trips = await prisma.trip.findMany({
         where: { user_id: user.id, is_payment_confirmed: true},
         include: {
@@ -94,7 +100,9 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
         grandTotal += tripExpense.total;
     });
     return res.status(200).send({ status: 200, tripExpenses: tripExpenses, grandTotal: grandTotal });
-
+}catch(err){
+    return next(err)
+}
 }
 
 const expenseController = {CreateExpense, GetTripExpenses, getEachTripsExpenses}

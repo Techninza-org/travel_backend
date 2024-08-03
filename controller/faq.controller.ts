@@ -4,8 +4,8 @@ import { PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
 const prisma = new PrismaClient()
 
-const getFAQ = async (req: Request, res: Response) => {
-    const query = req.query
+const getFAQ = async (req: Request, res: Response, next: NextFunction) => {
+   try{ const query = req.query
     let { page = 1, limit = 10, search } = query
     limit = Number(limit)
     page = Number(page)
@@ -34,6 +34,9 @@ const getFAQ = async (req: Request, res: Response) => {
         })
     }
     return res.status(200).send({ message: STATUS_CODES['200'], faqs })
+}catch(err){
+    return next(err)
+}
 }
 
 const createFAQ = async (req: Request, res: Response, next: NextFunction) => {

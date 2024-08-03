@@ -10,7 +10,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export const createDestination = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{const body = req.body
     if (!helper.isValidatePaylod(body, ['destination', 'pincode'])) {
         return res.status(200).send({
             status: 200,
@@ -42,7 +42,9 @@ export const createDestination = async (req: ExtendedRequest, res: Response, nex
             longitude: Number(body.longitude),
         },
     })
-    return res.status(200).send({ status: 201, message: 'Created', destination: destination })
+    return res.status(200).send({ status: 201, message: 'Created', destination: destination })}catch(err){
+        return next(err)
+    }
 }
 
 export const getDestinations = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -69,12 +71,15 @@ export const deleteDestination = async (req: ExtendedRequest, res: Response, nex
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'id(destination) should be a number.' })
     }
-    const destination = await prisma.destination.delete({
+    try{const destination = await prisma.destination.delete({
         where: {
             id: destinationId,
         },
     })
     return res.status(200).send({ status: 200, message: 'Deleted', destination: destination })
+}catch(err){
+    return next(err)
+}
 }
 
 export const getSpecificDestination = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -92,12 +97,15 @@ export const getSpecificDestination = async (req: ExtendedRequest, res: Response
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'id(destination) should be a number.' })
     }
-    const destination = await prisma.destination.findUnique({
+    try{const destination = await prisma.destination.findUnique({
         where: {
             id: destinationId,
         },
     })
     return res.status(200).send({ status: 200, message: 'Ok', destination: destination })
+}catch(err){
+    next(err)
+}
 
 }
 

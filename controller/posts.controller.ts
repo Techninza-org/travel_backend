@@ -10,7 +10,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export const CreatePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const body = req.body
     const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
     const imageName = randomImageName()
@@ -34,27 +34,14 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
             },
         })
         return res.status(200).send({ status: 201, message: 'Created', post: post })
+    }catch(err){
+        return next(err)
+    }
 }
 
 export const createTemplate = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const body = req.body
-    // let transitionArray = []
-    // if (req.files && Array.isArray(req.files)) {
-    //     for (let i = 0; i < req.files.length; i++) {
-    //         const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
-    //         const imageName = randomImageName()
-    //         const params = {
-    //             Bucket: process.env.BUCKET_NAME!,
-    //             Key: imageName,
-    //             Body: req.files[i].buffer,
-    //             ContentType: req.files[i].mimetype,
-    //         }
-    //         const command = new PutObjectCommand(params)
-    //         await s3.send(command)
-    //         transitionArray.push(`https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`)
-    //     }
-    // }
     const post = await prisma.post.create({
         data: {
             description: body.description,
@@ -80,6 +67,9 @@ export const createTemplate = async (req: ExtendedRequest, res: Response, next: 
         },
     })
     return res.status(200).send({ status: 201, message: 'Created', template: post })
+}catch(err){
+    return next(err)
+}
 }
 
 export const GetOnlyVideos = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
@@ -154,7 +144,7 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
 }
 
 export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
-    const id = Number(req.body.userId)
+    try{const id = Number(req.body.userId)
     const isFollowing = await prisma.follows.findFirst({
         where: { user_id: id, follower_id: req.user.id },
     })
@@ -244,11 +234,13 @@ export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _nex
         user: user,
         isFollowing: isFollowing ? true : false,
         isRequested: isRequested ? true : false,
-    })
+    })}catch(err){
+        return _next(err)
+    }
 }
 
 export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let postId: string | number = req.params.id
+    try{let postId: string | number = req.params.id
     if (!postId) {
         return res
             .status(200)
@@ -282,6 +274,9 @@ export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next:
     return res
         .status(200)
         .send({ status: 200, message: 'Ok', post, user_follower_count: follower_count, user_trip_count: trip_count })
+}catch(err){
+    return next(err)
+}
 }
 
 export const DeletePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {

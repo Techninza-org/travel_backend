@@ -220,7 +220,8 @@ const VerifyOtp = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{
+        const body = req.body
 
     if (!helper.isValidatePaylod(body, ['username', 'password'])) {
         return res.status(400).send({
@@ -255,6 +256,9 @@ const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
         },
         token: token,
     })
+}catch(err){
+    return next(err)
+}
 }
 
 const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -345,7 +349,7 @@ const socialSignUp = async (req: Request, res: Response, next: NextFunction, ema
 }
 
 const superAdminLogin = async (req: Request, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{const body = req.body
 
     if (!helper.isValidatePaylod(body, ['username', 'password'])) {
         return res.status(400).send({
@@ -376,7 +380,9 @@ const superAdminLogin = async (req: Request, res: Response, next: NextFunction) 
             username: userDetails.username,
         },
         token: token,
-    })
+    })}catch(err){
+        return next(err)
+    }
 }
 
 const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) => {

@@ -171,7 +171,7 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
 }
 
 const update_user_bg = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+   try{ const user = req.user
     if(!req.file){
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'No image provided' })  
     }
@@ -195,6 +195,9 @@ const update_user_bg = async (req: ExtendedRequest, res: Response, next: NextFun
     delete (updatedUser as any).emergency_name
     delete (updatedUser as any).emergency_phone
     return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
+}catch(err){
+    return next(err)
+}
 
 }
 

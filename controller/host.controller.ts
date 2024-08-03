@@ -23,7 +23,7 @@ const getHostedTrips = async (req: ExtendedRequest, res: Response, next: NextFun
 }
 
 export const GetSpecificTripHost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let tripId: string | number = req.params.id
+    try{let tripId: string | number = req.params.id
     const user = req.host
     if (!tripId) {
         return res
@@ -45,10 +45,13 @@ export const GetSpecificTripHost = async (req: ExtendedRequest, res: Response, n
         return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Trip not found.' })
     }
     return res.status(200).send({ status: 200, message: 'Ok', trip })
+}catch(err){
+        return next(err)
+    }
 }
 
 const getHostProfile = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const hostId: string | number = req.params.id
+    try{const hostId: string | number = req.params.id
     if (!hostId) {
         return res
             .status(200)
@@ -56,7 +59,9 @@ const getHostProfile = async (req: ExtendedRequest, res: Response, next: NextFun
     }
     const host = await prisma.host.findUnique({ where: { id: Number(hostId) } })
     return res.status(200).send({ status: 200, host })
-}
+}catch(err){
+    return next(err)
+}}
 
 const updateHostProfile = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
@@ -82,22 +87,25 @@ const updateHostProfile = async (req: ExtendedRequest, res: Response, next: Next
     const host = await prisma.host.update({ where: { id: Number(hostId) }, data: { ...req.body, photo: imageUrl } })
     return res.status(200).send({ status: 200, host })
     }catch(err){
-        console.log(err);
+        return next(err)
     }
 }
 
 const updateProfile = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const hostId: string | number = req.params.id
+    try{const hostId: string | number = req.params.id
     console.log(hostId);
     
     const {name, description, email} = req.body
     const google_rating = parseFloat(req.body.google_rating)
     const host = await prisma.host.update({ where: { id: Number(hostId) }, data: { name, description, email, google_rating } })
     return res.status(200).send({ updated: host })
+}catch(err){
+    return next(err)
+}
 }
 
 const changeHostPassword = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const hostId: string | number = req.params.id
+    try{const hostId: string | number = req.params.id
     const { oldPassword, newPassword } = req.body
     const host = await prisma.host.findUnique({ where: { id: Number(hostId) } })
     if (!host) {
@@ -109,6 +117,9 @@ const changeHostPassword = async (req: ExtendedRequest, res: Response, next: Nex
     }
     await prisma.host.update({ where: { id: Number(hostId) }, data: { password: newPassword } })
     return res.status(200).send({ status: 200, message: 'Password changed successfully.' })
+}catch(err){
+    return next(err)
+}
 }
 
 

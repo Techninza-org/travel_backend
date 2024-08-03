@@ -283,7 +283,7 @@ export const CustomTripPaymentVerification = async (req: ExtendedRequest, res: R
                 error_description: 'paymentId, orderId ,tripId is required.',
             })
     }
-    const razorpay_signature = req.headers['x-razorpay-signature']
+    try{const razorpay_signature = req.headers['x-razorpay-signature']
     if (!razorpay_signature) return res.status(200).send({ status: 400, message: 'x-razorpay-signature' })
     let sha256 = crypto.createHmac('sha256', process.env.KEY_SECRET!)
     sha256.update(orderId + '|' + paymentId)
@@ -301,6 +301,8 @@ export const CustomTripPaymentVerification = async (req: ExtendedRequest, res: R
         return res
             .status(200)
             .send({ status: 400, error: 'incorrect payload', error_description: "payment couldn't be verified." })
+    }}catch(err){
+        return next(err)
     }
 }
 

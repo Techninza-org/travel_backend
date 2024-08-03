@@ -73,14 +73,14 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
     } catch (err) {
         return res.status(200).send({
             status: 500,
-            error: 'orderId or trip creation failed.',
+            error: 'order failed.',
             error_description: (err as Error)?.message,
         })
     }
 }
 
 export const PaymentVerification = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const body = req.body
 
     if (!body)
@@ -114,11 +114,13 @@ export const PaymentVerification = async (req: ExtendedRequest, res: Response, n
         return res
             .status(200)
             .send({ status: 400, error: 'incorrect payload', error_description: "payment couldn't be verified." })
+    }}catch(err){
+        return next(err)
     }
 }
 
 export const GetTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const trips = await prisma.trip.findMany({
         where: {
             user_id: user.id,
@@ -171,11 +173,14 @@ export const GetTrips = async (req: ExtendedRequest, res: Response, next: NextFu
         return a?.created_at?.getTime() - b?.created_at?.getTime() || -1
     })
 
-    return res.status(200).send({ status: 200, trips: finalTrips })
+    return res.status(200).send({ status: 200, trips: finalTrips })}
+    catch(err){
+        return next(err)
+    }
 }
 
 export const GetSpecificTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let tripId: string | number = req.params.id
+    try{let tripId: string | number = req.params.id
     const user = req.user
     if (!tripId) {
         return res
@@ -206,11 +211,14 @@ export const GetSpecificTrip = async (req: ExtendedRequest, res: Response, next:
         return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Trip not found.' })
     }
     return res.status(200).send({ status: 200, message: 'Ok', trip })
+}catch(err){
+    return next(err)
+}
 }
 
 //todo payment return
 export const cancelTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const tripId = req.params.id
     if (!tripId) {
         return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'tripId is required.' })
@@ -239,10 +247,13 @@ export const cancelTrip = async (req: ExtendedRequest, res: Response, next: Next
     })
 
     return res.status(200).send({ status: 200, message: 'Trip cancelled.', trip: deletedTrip })
+}catch(err){
+    return next(err)
+}
 }
 
 const getLocations = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    try{const user = req.user
     const trips = await prisma.trip.findMany({
         where: {
             user_id: user.id,
@@ -276,7 +287,9 @@ const getLocations = async (req: ExtendedRequest, res: Response, next: NextFunct
 
     const merged = [...tripLocations, ...customTripLocations];
     
-    return res.status(200).send({ status: 200, locations: merged });
+    return res.status(200).send({ status: 200, locations: merged });}catch(err){
+        return next(err)
+    }
 }
 
 const tripController = { CreateTrip, GetTrips, GetSpecificTrip, PaymentVerification, cancelTrip, getLocations }

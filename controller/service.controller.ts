@@ -9,7 +9,7 @@ import crypto from 'crypto'
 import { s3 } from '../app'
 
 export const CreateService = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{const body = req.body
     if (
         !helper.isValidatePaylod(body, [
             'name',
@@ -55,7 +55,9 @@ export const CreateService = async (req: ExtendedRequest, res: Response, next: N
     })
 
     return res.status(200).send({ status: 201, message: 'Created', service: service })
-}
+}catch(err){
+    return next(err)
+}}
 
 export const GetAllServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -252,7 +254,7 @@ export const getSpecificService = async (req: ExtendedRequest, res: Response, ne
 }
 
 export const deleteService = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let serviceId: string | number = req.params.id
+    try{let serviceId: string | number = req.params.id
     if (!serviceId) {
         return res
             .status(200)
@@ -270,11 +272,13 @@ export const deleteService = async (req: ExtendedRequest, res: Response, next: N
         data: { service_id: null },
     })
     const service = await prisma.service.delete({ where: { id: serviceId } })
-    return res.status(200).send({ status: 200, message: 'Deleted', service })
+    return res.status(200).send({ status: 200, message: 'Deleted', service })}catch(err){
+        return next(err)
+    }
 }
 
 const editServiceById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    let serviceId: string | number = req.params.id
+    try{let serviceId: string | number = req.params.id
     if (!serviceId) {
         return res
             .status(200)
@@ -310,7 +314,9 @@ const editServiceById = async (req: ExtendedRequest, res: Response, next: NextFu
             itinerary: body.itinerary,
         },
     })
-    return res.status(200).send({ status: 200, message: 'Updated', service })
+    return res.status(200).send({ status: 200, message: 'Updated', service })}catch(err){
+        return next(err)
+    }
 }
 
 const uploadServicePics = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
