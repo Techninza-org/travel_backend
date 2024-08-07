@@ -177,6 +177,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
         participants.forEach(async (participant: any) => {
+            console.log(senderId, participant, profile_pic);
             await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
         });
         return res.status(200).send({ message: 'Participants added to group' })
