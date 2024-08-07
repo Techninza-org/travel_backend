@@ -2,6 +2,7 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import { PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
+import { sendNotif } from '../app'
 const prisma = new PrismaClient()
 
 const createForumQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -94,6 +95,8 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
     const user = req.user
     const questionId = Number(req.params.id)
     const body = req.body
+    const postedBy = await prisma.forumQuestion.findUnique({ where: { id: questionId }, select: { user_id: true } })
+    const postedById = Number(postedBy?.user_id)
     try {
         if (!helper.isValidatePaylod(body, ['answer'])) {
             return res.status(200).send({ error: 'Invalid payload', error_description: 'answer is required.' })
@@ -105,6 +108,11 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
             where: { question_id: questionId },
             include: { User: { select: { id: true, username: true, image: true } } },
         })
+        if (postedById !== user.id) {
+            const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+            const profile_pic = sender?.image ?? '';
+            sendNotif(user.id, postedById, profile_pic, 'Question Answered', `${req.user.username} answered your question`)
+        }
         return res.status(200).send({ message: 'forum answer created', allAnswers })
     } catch (err) {
         return next(err)
@@ -114,6 +122,8 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
 export const likeQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const questionId = Number(req.params.id)
+    const postedBy = await prisma.forumQuestion.findUnique({ where: { id: questionId }, select: { user_id: true } })
+    const postedById = Number(postedBy?.user_id)
     try {
         const isLiked = await prisma.qLikes.findFirst({
             where: { question_id: questionId, user_id: user.id },
@@ -123,6 +133,11 @@ export const likeQuestion = async (req: ExtendedRequest, res: Response, next: Ne
             return res.status(200).send({ message: 'Question unliked' })
         } else {
             await prisma.qLikes.create({ data: { question_id: questionId, user_id: user.id } })
+            if (postedById !== user.id) {
+                const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+                const profile_pic = sender?.image ?? '';
+                sendNotif(user.id, postedById, profile_pic, 'Question Liked', `${req.user.username} liked your question`)
+            }
             return res.status(200).send({ message: 'Question liked' })
         }
     } catch (err) {
