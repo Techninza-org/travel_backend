@@ -175,7 +175,10 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
                     conversationId: Number(conversationId),
                 }
             })
+            console.log(senderId, participant, profile_pic, 'group --------------------------');
+            
             await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
+            
         })
         return res.status(200).send({ message: 'Participants added to group' })
     }catch(err){
