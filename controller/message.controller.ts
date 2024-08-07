@@ -127,6 +127,8 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         const senderId = req.user.id
         const participants = req.body.participants
         const groupName = req.body.groupName
+        const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+        const profile_pic = sender?.image ?? '';
         if(!participants) return res.status(400).send({ message: 'Participants are required' })
         participants.push(senderId)
         const conversation = await prisma.conversation.create({
@@ -142,6 +144,8 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                     conversationId: conversation.id,
                 }
             })
+            console.log(senderId, participant, profile_pic, 'group --------------------------');
+            await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
         })
         return res.status(200).send({ message: 'Group created', conversationId: conversation.id})
     }catch(err){
@@ -175,10 +179,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
                     conversationId: Number(conversationId),
                 }
             })
-            console.log(senderId, participant, profile_pic, 'group --------------------------');
-            
             await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
-            
         })
         return res.status(200).send({ message: 'Participants added to group' })
     }catch(err){
