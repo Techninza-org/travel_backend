@@ -114,6 +114,18 @@ app.use('/message', middleware.AuthMiddleware, messageRouter)
 app.use('/superAdmin', SuperAdminRouter)
 // app.use('/template', TemplateRouter)
 
+export const sendNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+        },
+    })
+}
+
 export const sendNotification = async (registrationToken: string, payload: { title: string, body: string }) => {
     try {
         const message = {

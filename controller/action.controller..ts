@@ -3,13 +3,14 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import helper from '../utils/helpers'
 import { PrismaClient } from '@prisma/client'
-import { getUserToken, sendNotification } from '../app'
+import { sendNotif } from '../app'
 
 // const actionRouter = Router()
 const prisma = new PrismaClient()
 
 export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{
+        const body = req.body
     if (!helper.isValidatePaylod(body, ['post_id', 'action'])) {
         return res
             .status(200)
@@ -32,6 +33,9 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
             }
             await prisma.likes.create({ data: { post_id: post_id, user_id: req.user.id } })
             const post = await prisma.post.update({ where: { id: post_id }, data: { likes: { increment: 1 } } })
+            const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+            const profile_pic = sender?.image ?? '';
+            sendNotif(req.user.id, post.user_id, profile_pic, 'New Like', `${req.user.username} liked your post`);
             return res.status(200).send({ status: 200, message: 'Ok', post: post })
         } catch (err: unknown) {
             return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
@@ -46,8 +50,12 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
         const deletedPost = await prisma.likes.deleteMany({ where: { post_id: post_id, user_id: req.user.id } })
         return res.status(200).send({ status: 200, message: 'Ok', post: post })
     }
+    }catch(err) {
+        return next(err)
+    }
 }
 export const CommentPost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+   try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['post_id', 'comment'])) {
         return res
@@ -75,6 +83,9 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
                 where: { postId: post_id },
                 include: { user: { select: { id: true, username: true, image: true, status: true } } },
             })
+            const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+            const profile_pic = sender?.image ?? '';
+            sendNotif(req.user.id, isPostExists.user_id, profile_pic, 'New Comment', `${req.user.username} commented on your post`);
             return res
                 .status(200)
                 .send({ status: 201, message: 'Created', comment: commentEntry, comments: allComments })
@@ -84,9 +95,13 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
     } else {
         return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
     }
+   }catch(err){
+    return next(err)
+   }
 }
 export const Follows = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{
+        const body = req.body
     if (!helper.isValidatePaylod(body, ['user_id', 'action'])) {
         return res
             .status(200)
@@ -135,10 +150,14 @@ export const Follows = async (req: ExtendedRequest, res: Response, next: NextFun
         }
     }
     return res.sendStatus(500)
+    }catch(err){
+        return next(err)
+    }
 }
 
 const unfollowUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const body = req.body
+    try{
+        const body = req.body
     if (!helper.isValidatePaylod(body, ['user_id'])) {
         return res
             .status(200)
@@ -161,6 +180,9 @@ const unfollowUser = async (req: ExtendedRequest, res: Response, next: NextFunct
         const follow = await prisma.follows.deleteMany({ where: { user_id: user_id, follower_id: req.user.id } })
         return res.status(200).send({ status: 200, message: 'Ok', unfollow: follow })
     } catch (err) {
+        return next(err)
+    }
+    }catch(err){
         return next(err)
     }
 }
@@ -196,18 +218,25 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
     }
     try {
         const entry = await prisma.followRequest.create({ data: { user_id: user_id, follower_id: req.user.id } })
-        const receiverToken = await getUserToken(user_id);
-        if (!receiverToken) {
-            return res.status(404).send({ error: 'Receiver not found or has no registration token' });
-            // console.log('Receiver not found or has no registration token');
-        } else {
-            const payload = {
-                title: 'New Friend Request',
-                body: `${req.user.username} has sent you a friend request!`
-            };
-            await sendNotification(receiverToken, payload);
-            console.log('Notification sent to receiver');
-        }
+        const title = 'New Friend Request';
+        const message = `${req.user.username} has sent you a friend request!`;
+        const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+        const profile_pic = sender?.image ?? '';
+
+        sendNotif(req.user.id, user_id, profile_pic, title, message);
+        
+        // const receiverToken = await getUserToken(user_id);
+        // if (!receiverToken) {
+        //     return res.status(404).send({ error: 'Receiver not found or has no registration token' });
+        //     // console.log('Receiver not found or has no registration token');
+        // } else {
+        //     const payload = {
+        //         title: 'New Friend Request',
+        //         body: `${req.user.username} has sent you a friend request!`
+        //     };
+        //     await sendNotification(receiverToken, payload);
+        //     console.log('Notification sent to receiver');
+        // }
         return res.status(200).send({ status: 200, message: 'Ok', follow: entry })
     } catch (err) {
         return next(err)
@@ -215,15 +244,19 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
 }
 
 const getFollowRequests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const followRequests = await prisma.followRequest.findMany({
-        where: { user_id: req.user.id, status: 0 },
-        include: {
-            follower: {
-                select: { id: true, username: true, image: true },
+    try{
+        const followRequests = await prisma.followRequest.findMany({
+            where: { user_id: req.user.id, status: 0 },
+            include: {
+                follower: {
+                    select: { id: true, username: true, image: true },
+                },
             },
-        },
-    })
-    return res.status(200).send({ status: 200, message: 'Ok', followRequests: followRequests })
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', followRequests: followRequests })
+    }catch(err){
+        return next(err)
+    }
 }
 
 const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -281,6 +314,9 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
     try {
         const entry = await prisma.follows.create({ data: { user_id: req.user.id, follower_id: follower_id } })
         const deletedEntry = await prisma.followRequest.delete({ where: { id: followRequest.id } })
+        const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
+        const profile_pic = sender?.image ?? '';
+        sendNotif(req.user.id, follower_id, profile_pic, 'New Friend', `${req.user.username} accepted your friend request`);
         return res.status(200).send({ status: 200, message: 'Accepted follow request', follow: entry })
     } catch (err) {
         return next(err)

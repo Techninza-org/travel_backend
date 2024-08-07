@@ -56,10 +56,9 @@ model User {
   receiver        Message[]        @relation("receiver")
   participated    Participant[]
   pinnedLocations PinnedLocation[]
-  // template        Template[]
   kyc             KYC?
   kycStatus       Int?             @default(-1) // -1 = not submitted, 0 = submitted, 1 = accepted
-  isSocialLogin  Boolean          @default(false)
+  isSocialLogin   Boolean          @default(false)
 }
 
 model KYC {
@@ -115,9 +114,9 @@ model Post {
   duration    String?
   postReport  PostReport[]
   // transitionData TransitionData[]
-  soundName      String?
-  filterName     FilterName[]
-  transitions    Json?
+  soundName   String?
+  filterName  FilterName[]
+  transitions Json?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -433,15 +432,25 @@ model ServiceOptions {
 }
 
 model FilterName {
-  id         Int      @id @default(autoincrement())
-  name       String
-  t1         String
-  t2         String
-  t3         String
-  t4         String
-  t5         String
-  t6         String
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id     Int    @id @default(autoincrement())
+  name   String
+  t1     String
+  t2     String
+  t3     String
+  t4     String
+  t5     String
+  t6     String
+  postId Int
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
+model Notification {
+  id             Int    @id @default(autoincrement())
+  sender_id      Int
+  sender_profile String
+  receiver_id    Int
+  title          String
+  message        String
+  isRead         Boolean @default(false)
+  created_at DateTime @default(now())
+}

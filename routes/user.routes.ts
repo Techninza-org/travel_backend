@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment@ts-nocheck
 import { Router } from 'express'
 import userController from '../controller/user.controller'
-import { upload } from '..'
+import { upload } from '../index'
 const userRouter = Router()
 
 userRouter
@@ -59,5 +59,11 @@ userRouter
     .post('/pin', userController.pinLocation)
     //@ts-ignore
     .delete('/pin/:id', userController.deletePinnedLocation)
+    //@ts-ignore
+    .get('/notifications', userController.getNotifications)
+    //@ts-ignore
+    .delete('/notifications', userController.deleteNotification)
+    //@ts-ignore
+    .put('/notifications/read', userController.markAsRead)
 
 export default userRouter

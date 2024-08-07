@@ -864,6 +864,59 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
     }
 }
 
+const getNotifications = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user
+    try {
+        const notifications = await prisma.notification.findMany({
+            where: { receiver_id: user.id },
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', notifications: notifications })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deleteNotification = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { id } = req.body
+    if (!id) {
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+    }
+    const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
+    if(!notif){
+        return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
+    }
+    try {
+        await prisma.notification.delete({
+            where: { id: Number(id), receiver_id: req.user.id },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { id } = req.body
+    if (!id) {
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+    }
+    const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
+    if(!notif){
+        return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
+    }
+    try {
+        await prisma.notification.update({
+            where: { id: Number(id), receiver_id: req.user.id },
+            data: { isRead: true },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -891,7 +944,10 @@ const userController = {
     pinLocation,
     deletePinnedLocation,
     updateRegistrationToken,
-    update_user_bg
+    update_user_bg,
+    getNotifications,
+    deleteNotification,
+    markAsRead
 }
 
 export default userController
