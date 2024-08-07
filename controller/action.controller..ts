@@ -196,18 +196,18 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
     }
     try {
         const entry = await prisma.followRequest.create({ data: { user_id: user_id, follower_id: req.user.id } })
-        // const receiverToken = await getUserToken(user_id);
-        // if (!receiverToken) {
-        //     // return res.status(404).send({ error: 'Receiver not found or has no registration token' });
-        //     console.log('Receiver not found or has no registration token');
-        // } else {
-        //     const payload = {
-        //         title: 'New Friend Request',
-        //         body: `${req.user.username} has sent you a friend request!`
-        //     };
-        //     await sendNotification(receiverToken, payload);
-        //     console.log('Notification sent to receiver');
-        // }
+        const receiverToken = await getUserToken(user_id);
+        if (!receiverToken) {
+            return res.status(404).send({ error: 'Receiver not found or has no registration token' });
+            // console.log('Receiver not found or has no registration token');
+        } else {
+            const payload = {
+                title: 'New Friend Request',
+                body: `${req.user.username} has sent you a friend request!`
+            };
+            await sendNotification(receiverToken, payload);
+            console.log('Notification sent to receiver');
+        }
         return res.status(200).send({ status: 200, message: 'Ok', follow: entry })
     } catch (err) {
         return next(err)

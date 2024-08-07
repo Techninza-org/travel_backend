@@ -53,18 +53,18 @@ app.use(express.json())
 app.use(morgan('tiny'))
 app.use(cors())
 
-// const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
 
-// try {
-//     admin.initializeApp({
-//         credential: admin.credential.cert(serviceAccount),
-//         // databaseURL: process.env.FIREBASE_DATABASE_URL,
-//     });
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: process.env.FIREBASE_DATABASE_URL,
+    });
 
-//     console.log('Firebase Admin initialized successfully.');
-// } catch (error) {
-//     console.error('Error initializing Firebase Admin:', error);
-// }
+    console.log('Firebase Admin initialized successfully.');
+} catch (error) {
+    console.error('Error initializing Firebase Admin:', error);
+}
 
 app.get('/ping', (_req, res) => {
     return res.status(200).send({ status: 200, message: 'pong' })
@@ -239,14 +239,6 @@ httpApp.use((req, res) => {
   res.redirect(`https://${req.headers.host}${req.url}`);
 });
 const httpServer = http.createServer(httpApp);
-
-// httpServer.listen(3000, () => {
-//   console.log('HTTP server running on port 3000 and redirecting to HTTPS');
-// });
-
-// httpsServer.listen(443, () => {
-//   console.log('HTTPS server running on port 443');
-// });
 
 app.all('*', (_req, res) => {
     res.status(200).send({
