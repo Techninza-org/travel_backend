@@ -28,6 +28,7 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
                 description: body.description,
                 user_id: user.id,
                 media_type: body.media_type,
+                thumbnail: body.thumbnail,
                 latitude: body.latitude,
                 longitude: body.longitude,
                 place: body.place,
@@ -52,6 +53,7 @@ export const createTemplate = async (req: ExtendedRequest, res: Response, next: 
             place: body.place,
             duration: body.duration,
             soundName: body.soundName,
+            thumbnail: body.thumbnail,
             filterName: {
                 create: {
                     name: body.filterName.name,
