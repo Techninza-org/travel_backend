@@ -111,7 +111,7 @@ export const getSpecificDestination = async (req: ExtendedRequest, res: Response
 
 const fetchAddressPredictions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const address = req.query.address;
-    const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAyu-6Pv7RaiohWH1bWpQqwXbx7roNG_GA&input=${address}`;
+    const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyA9bSNp7B8WIWN4nxYhzYegyJOdQpQEJgs&input=${address}`;
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -124,7 +124,7 @@ const fetchAddressPredictions = async (req: ExtendedRequest, res: Response, next
 const getLatLong = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const description = req.query.description;
     try {
-        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${description}&key=AIzaSyAyu-6Pv7RaiohWH1bWpQqwXbx7roNG_GA`;
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${description}&key=AIzaSyA9bSNp7B8WIWN4nxYhzYegyJOdQpQEJgs`;
         const response = await fetch(geocodeUrl);
         const data = await response.json();
         const latLong = data.results[0].geometry.location;
