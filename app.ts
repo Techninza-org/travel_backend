@@ -155,6 +155,7 @@ cron.schedule('0 0 * * *', async () => {
 
     try {
         const trips = await prisma.trip.findMany({})
+        const customTrips = await prisma.customTrip.findMany({})
 
         for (const trip of trips) {
             const startDate = new Date(trip.start_date)
@@ -191,7 +192,41 @@ cron.schedule('0 0 * * *', async () => {
                 })
             }
         }
+        for(const customTrip of customTrips) {
+            const startDate = new Date(customTrip.start_date)
+            const endDate = new Date(customTrip.end_date)
+            const today = new Date()
 
+            if (customTrip.cancelled) {
+                await prisma.customTrip.update({
+                    where: { id: customTrip.id },
+                    data: { status: 'cancelled' },
+                })
+            } else if (endDate < today) {
+                await prisma.customTrip.update({
+                    where: { id: customTrip.id },
+                    data: { status: 'completed' },
+                })
+                await prisma.user.update({
+                    where: { id: customTrip.user_id },
+                    data: { status: false },
+                })
+            } else if (startDate < today && today < endDate) {
+                await prisma.customTrip.update({
+                    where: { id: customTrip.id },
+                    data: { status: 'ongoing' },
+                })
+                await prisma.user.update({
+                    where: { id: customTrip.user_id },
+                    data: { status: true },
+                })
+            } else {
+                await prisma.customTrip.update({
+                    where: { id: customTrip.id },
+                    data: { status: 'upcoming' },
+                })
+            }
+        }
         console.log('Trip statuses updated successfully.')
     } catch (error) {
         console.error('Error updating trip statuses:', error)
