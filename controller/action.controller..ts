@@ -38,7 +38,7 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
             sendNotif(req.user.id, post.user_id, profile_pic, 'New Like', `${req.user.username} liked your post`);
             const receiverToken = await getUserToken(post.user_id);
             if (!receiverToken) {
-                console.log('Receiver not found or has no registration token');
+                console.log('Receiver not found or has no registration token', post.user_id);
             } else {
                 const payload = {
                     title: 'New Like',
@@ -238,7 +238,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
         
         const receiverToken = await getUserToken(user_id);
         if (!receiverToken) {
-            console.log('Receiver not found or has no registration token');
+            console.log('Receiver not found or has no registration token', user_id);
         } else {
             const payload = {
                 title: 'New Friend Request',
