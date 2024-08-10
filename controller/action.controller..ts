@@ -3,7 +3,7 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import helper from '../utils/helpers'
 import { PrismaClient } from '@prisma/client'
-import { sendNotif } from '../app'
+import { getUserToken, sendNotif, sendNotification } from '../app'
 
 // const actionRouter = Router()
 const prisma = new PrismaClient()
@@ -36,6 +36,17 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
             const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
             const profile_pic = sender?.image ?? '';
             sendNotif(req.user.id, post.user_id, profile_pic, 'New Like', `${req.user.username} liked your post`);
+            const receiverToken = await getUserToken(post.user_id);
+            if (!receiverToken) {
+                return res.status(404).send({ error: 'Receiver not found or has no registration token' });
+            } else {
+                const payload = {
+                    title: 'New Like',
+                    body: `${req.user.username} liked your post`
+                };
+                await sendNotification(receiverToken, payload);
+                console.log('Notification sent to receiver');
+            }
             return res.status(200).send({ status: 200, message: 'Ok', post: post })
         } catch (err: unknown) {
             return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
@@ -225,18 +236,17 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
 
         sendNotif(req.user.id, user_id, profile_pic, title, message);
         
-        // const receiverToken = await getUserToken(user_id);
-        // if (!receiverToken) {
-        //     return res.status(404).send({ error: 'Receiver not found or has no registration token' });
-        //     // console.log('Receiver not found or has no registration token');
-        // } else {
-        //     const payload = {
-        //         title: 'New Friend Request',
-        //         body: `${req.user.username} has sent you a friend request!`
-        //     };
-        //     await sendNotification(receiverToken, payload);
-        //     console.log('Notification sent to receiver');
-        // }
+        const receiverToken = await getUserToken(user_id);
+        if (!receiverToken) {
+            return res.status(404).send({ error: 'Receiver not found or has no registration token' });
+        } else {
+            const payload = {
+                title: 'New Friend Request',
+                body: `${req.user.username} has sent you a friend request!`
+            };
+            await sendNotification(receiverToken, payload);
+            console.log('Notification sent to receiver');
+        }
         return res.status(200).send({ status: 200, message: 'Ok', follow: entry })
     } catch (err) {
         return next(err)

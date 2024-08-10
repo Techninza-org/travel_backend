@@ -145,7 +145,9 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                 }
             })
             console.log(senderId, participant, profile_pic, 'group --------------------------');
-            await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
+            if(participant !== senderId){
+                await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
+            }
         })
         return res.status(200).send({ message: 'Group created', conversationId: conversation.id})
     }catch(err){
