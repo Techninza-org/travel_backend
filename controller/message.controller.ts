@@ -1,6 +1,6 @@
 import { NextFunction, Response } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
-import { io, sendNotif } from '../app'
+import { getUserToken, io, sendNotif, sendNotification } from '../app'
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
@@ -144,9 +144,16 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                     conversationId: conversation.id,
                 }
             })
-            console.log(senderId, participant, profile_pic, 'group --------------------------');
             if(participant !== senderId){
                 await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
+                const receiverToken = await getUserToken(participant);
+            if (receiverToken) {
+                const payload = {
+                    title: 'New Group',
+                    body: `${req.user.username} added you in a group`
+                };
+                await sendNotification(receiverToken, payload);
+            }
             }
         })
         return res.status(200).send({ message: 'Group created', conversationId: conversation.id})
@@ -182,6 +189,14 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
                 }
             })
             await sendNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`);
+            const receiverToken = await getUserToken(participant);
+            if (receiverToken) {
+                const payload = {
+                    title: 'New Group',
+                    body: `${req.user.username} added you in a group`
+                };
+                await sendNotification(receiverToken, payload);
+            }
         })
         return res.status(200).send({ message: 'Participants added to group' })
     }catch(err){

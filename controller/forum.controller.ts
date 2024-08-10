@@ -2,7 +2,7 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import { PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
-import { sendNotif } from '../app'
+import { getUserToken, sendNotif, sendNotification } from '../app'
 const prisma = new PrismaClient()
 
 const createForumQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -112,6 +112,14 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
             const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
             const profile_pic = sender?.image ?? '';
             sendNotif(user.id, postedById, profile_pic, 'Question Answered', `${req.user.username} answered your question`)
+            const receiverToken = await getUserToken(postedById);
+            if (receiverToken) {
+                const payload = {
+                    title: 'New Answer',
+                    body: `${req.user.username} answered your question`
+                };
+                await sendNotification(receiverToken, payload);
+            }
         }
         return res.status(200).send({ message: 'forum answer created', allAnswers })
     } catch (err) {
@@ -137,6 +145,14 @@ export const likeQuestion = async (req: ExtendedRequest, res: Response, next: Ne
                 const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
                 const profile_pic = sender?.image ?? '';
                 sendNotif(user.id, postedById, profile_pic, 'Question Liked', `${req.user.username} liked your question`)
+                const receiverToken = await getUserToken(postedById);
+            if (receiverToken) {
+                const payload = {
+                    title: 'New Like',
+                    body: `${req.user.username} liked your question`
+                };
+                await sendNotification(receiverToken, payload);
+            }
             }
             return res.status(200).send({ message: 'Question liked' })
         }
