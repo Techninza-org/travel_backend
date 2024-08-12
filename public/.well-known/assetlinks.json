@@ -1,0 +1,15 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.tourntravel",
+            "sha256_cert_fingerprints": [
+                "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C",
+                "02:3A:7D:A1:DF:93:42:5D:C5:76:5E:84:FC:4B:B3:2C:5B:9D:13:10:91:17:02:EB:A2:12:00:F4:9E:0D:8F:17"
+            ]
+        }
+    }
+]
