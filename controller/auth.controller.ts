@@ -38,6 +38,13 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
                 error_description: 'username or password is not valid',
             })
         }
+        //update registration token
+        if(body.registrationToken){
+            await prisma.user.update({
+                where: { id: userDetails.id },
+                data: { registrationToken: body.registrationToken },
+            })
+        }
         delete (userDetails as any).password
         const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
             expiresIn: '7d',
@@ -123,6 +130,7 @@ const Signup = async (req: Request, res: Response, next: NextFunction) => {
                         username,
                         referredByCode: referredByCode,
                         userReferralCode: referralCode,
+                        registrationToken: body.registrationToken,
                     },
                 })
                 .then((createdUser) => {
