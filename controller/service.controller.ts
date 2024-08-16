@@ -72,6 +72,7 @@ export const GetAllServices = async (req: ExtendedRequest, res: Response, next: 
         const services = await prisma.service.findMany({
             skip: skip,
             take: Number(limit),
+            orderBy: { created_at: 'desc' }
         })
         return res.status(200).send({ status: 200, message: 'Ok', services: services })
     } catch (err) {
@@ -193,6 +194,7 @@ export const getServicesByHostId = async (req: ExtendedRequest, res: Response, n
                 host_id: { equals: Number(host_id) },
                 type: { not: 2 },
             },
+            orderBy: { created_at: 'desc' }
         })
         return res.status(200).send({ status: 200, message: 'Ok', services: services, count: services.length })
     } catch (err) {
@@ -211,7 +213,7 @@ export const getBidsByHostId = async (req: ExtendedRequest, res: Response, next:
             where: {
                 host_id: { equals: Number(host_id) },
                 type: { equals: 2 },
-            },
+            },orderBy: { created_at: 'desc' }
         })
         return res.status(200).send({ status: 200, message: 'Ok', bids: services, count: services.length })
     } catch (err) {

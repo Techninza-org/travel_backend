@@ -13,7 +13,6 @@ const razorpayInstance = new Razorpay({
 })
 
 export const CreateTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    // console.log(razorpayInstance.orders);
     const user = req.user
     const body = req.body
     const service = await prisma.service.findFirst({ where: { id: body.service_id } })
@@ -28,6 +27,13 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             status: 200,
             error: 'Invalid payload',
             error_description: 'destination, start_date, end_date is required.',
+        })
+    }
+    if(req.body.cost > 100000){
+        return res.status(200).send({
+            status: 400,
+            error: 'Invalid payload',
+            error_description: 'cost should be less than 100000.',
         })
     }
     if (service.type === 1) {
