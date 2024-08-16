@@ -12,6 +12,8 @@ dotenv.config()
 export const CreatePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{const user = req.user
     const body = req.body
+    console.log(req.file, 'req.file');
+    
     const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
     const imageName = randomImageName()
     const params = {
@@ -20,8 +22,10 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
         Body: req.file?.buffer,
         ContentType: req.file?.mimetype,
     }
+    console.log(params, 'params');
+    
     const command = new PutObjectCommand(params)
-    await s3.send(command)
+    const uploadres = await s3.send(command)
         const post = await prisma.post.create({
             data: {
                 image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
@@ -34,6 +38,8 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
                 place: body.place,
             },
         })
+        console.log(uploadres, 'uploadres');
+        
         return res.status(200).send({ status: 201, message: 'Created', post: post })
     }catch(err){
         return next(err)
