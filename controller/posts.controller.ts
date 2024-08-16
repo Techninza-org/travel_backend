@@ -10,25 +10,26 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export const CreatePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{const user = req.user
-    const body = req.body
-    console.log(req.file, 'req.file');
-    
-    const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
-    const imageName = randomImageName()
-    const params = {
-        Bucket: process.env.BUCKET_NAME!,
-        Key: imageName,
-        Body: req.file?.buffer,
-        ContentType: req.file?.mimetype,
-    }
-    console.log(params, 'params');
-    
-    const command = new PutObjectCommand(params)
-    const uploadres = await s3.send(command)
+    try {
+        const user = req.user
+        const body = req.body
+        // console.log(req.file, 'req.file');
+
+        // const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+        // const imageName = randomImageName()
+        // const params = {
+        //     Bucket: process.env.BUCKET_NAME!,
+        //     Key: imageName,
+        //     Body: req.file?.buffer,
+        //     ContentType: req.file?.mimetype,
+        // }
+        // console.log(params, 'params');
+
+        // const command = new PutObjectCommand(params)
+        // const uploadres = await s3.send(command)
         const post = await prisma.post.create({
             data: {
-                image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
+                image: body.image,
                 description: body.description,
                 user_id: user.id,
                 media_type: body.media_type,
@@ -38,46 +39,46 @@ export const CreatePost = async (req: ExtendedRequest, res: Response, next: Next
                 place: body.place,
             },
         })
-        console.log(uploadres, 'uploadres');
-        
+
         return res.status(200).send({ status: 201, message: 'Created', post: post })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 export const createTemplate = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{const user = req.user
-    const body = req.body
-    const post = await prisma.post.create({
-        data: {
-            description: body.description,
-            user_id: user.id,
-            media_type: body.media_type,
-            latitude: body.latitude,
-            longitude: body.longitude,
-            place: body.place,
-            duration: body.duration,
-            soundName: body.soundName,
-            thumbnail: body.thumbnail,
-            filterName: {
-                create: {
-                    name: body.filterName.name,
-                    t1: body.filterName.t1,
-                    t2: body.filterName.t2,
-                    t3: body.filterName.t3,
-                    t4: body.filterName.t4,
-                    t5: body.filterName.t5,
-                    t6: body.filterName.t6,
+    try {
+        const user = req.user
+        const body = req.body
+        const post = await prisma.post.create({
+            data: {
+                description: body.description,
+                user_id: user.id,
+                media_type: body.media_type,
+                latitude: body.latitude,
+                longitude: body.longitude,
+                place: body.place,
+                duration: body.duration,
+                soundName: body.soundName,
+                thumbnail: body.thumbnail,
+                filterName: {
+                    create: {
+                        name: body.filterName.name,
+                        t1: body.filterName.t1,
+                        t2: body.filterName.t2,
+                        t3: body.filterName.t3,
+                        t4: body.filterName.t4,
+                        t5: body.filterName.t5,
+                        t6: body.filterName.t6,
+                    },
                 },
+                transitions: body.transitions,
             },
-            transitions: body.transitions
-        },
-    })
-    return res.status(200).send({ status: 201, message: 'Created', template: post })
-}catch(err){
-    return next(err)
-}
+        })
+        return res.status(200).send({ status: 201, message: 'Created', template: post })
+    } catch (err) {
+        return next(err)
+    }
 }
 
 export const GetOnlyVideos = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
@@ -152,139 +153,148 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
 }
 
 export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
-    try{const id = Number(req.body.userId)
-    const isFollowing = await prisma.follows.findFirst({
-        where: { user_id: id, follower_id: req.user.id },
-    })
-    const isRequested = await prisma.followRequest.findFirst({
-        where: { user_id: id, follower_id: req.user.id },
-    })
-    const posts = await prisma.post.findMany({
-        where: { user_id: id },
-        include: {
-            comment: {
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            username: true,
-                            image: true,
-                        },
-                    },
-                },
-            },
-            user: {
-                select: {
-                    id: true,
-                    username: true,
-                    image: true,
-                    status: true,
-                },
-            },
-            filterName: true,
-        },
-    })
-    for (let i = 0; i < posts.length; i++) {
-        const isLiked = await prisma.likes.findFirst({
-            where: { post_id: posts[i].id, user_id: req.user.id },
+    try {
+        const id = Number(req.body.userId)
+        const isFollowing = await prisma.follows.findFirst({
+            where: { user_id: id, follower_id: req.user.id },
         })
-        //@ts-ignore
-        posts[i].isLiked = isLiked ? true : false
-    }
-    const user = await prisma.user.findFirst({
-        where: { id: id },
-        include: {
-            followers: {
-                include: {
-                    follower: {
-                        select: {
-                            id: true,
-                            username: true,
-                            image: true,
-                            status: true,
-                            is_verified: true,
-                            followerRequest: { select: { status: true } },
+        const isRequested = await prisma.followRequest.findFirst({
+            where: { user_id: id, follower_id: req.user.id },
+        })
+        const posts = await prisma.post.findMany({
+            where: { user_id: id },
+            include: {
+                comment: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                image: true,
+                            },
                         },
                     },
                 },
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true,
+                        status: true,
+                    },
+                },
+                filterName: true,
             },
-            follows: {
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            username: true,
-                            image: true,
-                            status: true,
-                            is_verified: true,
-                            followerRequest: { select: { status: true } },
+        })
+        for (let i = 0; i < posts.length; i++) {
+            const isLiked = await prisma.likes.findFirst({
+                where: { post_id: posts[i].id, user_id: req.user.id },
+            })
+            //@ts-ignore
+            posts[i].isLiked = isLiked ? true : false
+        }
+        const user = await prisma.user.findFirst({
+            where: { id: id },
+            include: {
+                followers: {
+                    include: {
+                        follower: {
+                            select: {
+                                id: true,
+                                username: true,
+                                image: true,
+                                status: true,
+                                is_verified: true,
+                                followerRequest: { select: { status: true } },
+                            },
                         },
                     },
                 },
-            },
-            trips: {
-                include: {
-                    service: true,
+                follows: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                image: true,
+                                status: true,
+                                is_verified: true,
+                                followerRequest: { select: { status: true } },
+                            },
+                        },
+                    },
+                },
+                trips: {
+                    include: {
+                        service: true,
+                    },
                 },
             },
-        },
-    })
-    delete (user as any).password
-    const follower_count = await prisma.follows.count({ where: { user_id: id } })
-    const trip_count = await prisma.trip.count({ where: { user_id: id } })
+        })
+        delete (user as any).password
+        const follower_count = await prisma.follows.count({ where: { user_id: id } })
+        const trip_count = await prisma.trip.count({ where: { user_id: id } })
 
-    return res.status(200).send({
-        status: 200,
-        message: 'Ok',
-        posts,
-        user_follower_count: follower_count,
-        user_trip_count: trip_count,
-        user: user,
-        isFollowing: isFollowing ? true : false,
-        isRequested: isRequested ? true : false,
-    })}catch(err){
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            posts,
+            user_follower_count: follower_count,
+            user_trip_count: trip_count,
+            user: user,
+            isFollowing: isFollowing ? true : false,
+            isRequested: isRequested ? true : false,
+        })
+    } catch (err) {
         return _next(err)
     }
 }
 
 export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{let postId: string | number = req.params.id
-    if (!postId) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) is required in params.' })
-    }
-    postId = Number(postId)
-    if (Number.isNaN(postId)) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a number.' })
-    }
+    try {
+        let postId: string | number = req.params.id
+        if (!postId) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) is required in params.' })
+        }
+        postId = Number(postId)
+        if (Number.isNaN(postId)) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a number.' })
+        }
 
-    const post = await prisma.post.findFirst({
-        where: { id: postId },
-        include: {
-            comment: true,
-            user: {
-                select: {
-                    id: true,
-                    username: true,
-                    image: true,
+        const post = await prisma.post.findFirst({
+            where: { id: postId },
+            include: {
+                comment: true,
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true,
+                    },
                 },
             },
-        },
-    })
-    const follower_count = await prisma.follows.count({ where: { user_id: post?.user_id } })
-    const trip_count = await prisma.trip.count({ where: { user_id: post?.user_id } })
-    if (!post) {
-        return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
+        })
+        const follower_count = await prisma.follows.count({ where: { user_id: post?.user_id } })
+        const trip_count = await prisma.trip.count({ where: { user_id: post?.user_id } })
+        if (!post) {
+            return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
+        }
+        return res
+            .status(200)
+            .send({
+                status: 200,
+                message: 'Ok',
+                post,
+                user_follower_count: follower_count,
+                user_trip_count: trip_count,
+            })
+    } catch (err) {
+        return next(err)
     }
-    return res
-        .status(200)
-        .send({ status: 200, message: 'Ok', post, user_follower_count: follower_count, user_trip_count: trip_count })
-}catch(err){
-    return next(err)
-}
 }
 
 export const DeletePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -312,7 +322,7 @@ export const DeletePost = async (req: ExtendedRequest, res: Response, next: Next
         if (!post) {
             return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
         }
-        if(post.image){
+        if (post.image) {
             const params = {
                 Bucket: process.env.BUCKET_NAME!,
                 Key: post.image,
@@ -327,5 +337,13 @@ export const DeletePost = async (req: ExtendedRequest, res: Response, next: Next
         return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
     }
 }
-const postController = { CreatePost, GetPosts, GetSpecificPost, DeletePost, GetOnlyVideos, GetPostsByUserId, createTemplate }
+const postController = {
+    CreatePost,
+    GetPosts,
+    GetSpecificPost,
+    DeletePost,
+    GetOnlyVideos,
+    GetPostsByUserId,
+    createTemplate,
+}
 export default postController
