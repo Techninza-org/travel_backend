@@ -108,6 +108,17 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
         }
     }
 
+    if(username){
+        const userExists = await prisma.user.findFirst({ where: { username: username } })
+        if(userExists){
+            return res.status(200).send({
+                status: 200,
+                error: 'Invalid Payload',
+                error_description: 'Username already exists',
+            })
+        }
+    }
+
     if (typeOfTraveller) {
         typeOfTraveller = Number(typeOfTraveller)
         if (Number.isNaN(typeOfTraveller)) {
