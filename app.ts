@@ -138,7 +138,7 @@ export const sendPostNotif = async (senderId: number, receiverId: number, sender
         },
     })
 }
-export const sendPostNotification = async (registrationToken: string, payload: { title: string, body: string }, postId: any) => {
+export const sendPostNotification = async (registrationToken: string, payload: { title: string, body: string }, postId: string) => {
     try {
         const message = {
             token: registrationToken,
@@ -172,7 +172,7 @@ export const sendForumNotif = async (senderId: number, receiverId: number, sende
         },
     })
 }
-export const sendForumNotification = async (registrationToken: string, payload: { title: string, body: string }, questionId: any) => {
+export const sendForumNotification = async (registrationToken: string, payload: { title: string, body: string }, questionId: string) => {
     try {
         const message = {
             token: registrationToken,
@@ -206,7 +206,7 @@ export const sendMessageNotif = async (senderId: number, receiverId: number, sen
         },
     })
 }
-export const sendMessageNotification = async (registrationToken: string, payload: { title: string, body: string }, chatId: any) => {
+export const sendMessageNotification = async (registrationToken: string, payload: { title: string, body: string }, chatId: string) => {
     try {
         const message = {
             token: registrationToken,
@@ -240,7 +240,7 @@ export const sendFollowNotif = async (senderId: number, receiverId: number, send
         },
     })
 }
-export const sendFollowNotification = async (registrationToken: string, payload: { title: string, body: string }, senderId: any) => {
+export const sendFollowNotification = async (registrationToken: string, payload: { title: string, body: string }, senderId: string) => {
     try {
         const message = {
             token: registrationToken,

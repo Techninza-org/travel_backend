@@ -152,7 +152,7 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                     title: 'New Group',
                     body: `${req.user.username} added you in a group`
                 };
-                await sendMessageNotification(receiverToken, payload, conversation.id);
+                await sendMessageNotification(receiverToken, payload, String(conversation.id));
             }
             }
         })
@@ -195,7 +195,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
                     title: 'New Group',
                     body: `${req.user.username} added you in a group`
                 };
-                await sendMessageNotification(receiverToken, payload, conversationId);
+                await sendMessageNotification(receiverToken, payload, String(conversationId));
             }
         })
         return res.status(200).send({ message: 'Participants added to group' })

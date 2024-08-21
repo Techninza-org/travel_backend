@@ -42,7 +42,7 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
                     title: 'New Like',
                     body: `${req.user.username} liked your post`
                 };
-                await sendPostNotification(receiverToken, payload, post_id);
+                await sendPostNotification(receiverToken, payload, String(post_id));
             }
             return res.status(200).send({ status: 200, message: 'Ok', post: post })
         } catch (err: unknown) {
@@ -100,7 +100,7 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
                     title: 'New Comment',
                     body: `${req.user.username} commented on your post`
                 };
-                await sendPostNotification(receiverToken, payload, post_id);
+                await sendPostNotification(receiverToken, payload, String(post_id));
             }
             return res
                 .status(200)
@@ -250,7 +250,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
                 title: 'New Friend Request',
                 body: `${req.user.username} has sent you a friend request!`
             };
-            await sendFollowNotification(receiverToken, payload, req.user.id);
+            await sendFollowNotification(receiverToken, payload, String(req.user.id));
             console.log('Notification sent to receiver');
         }
         return res.status(200).send({ status: 200, message: 'Ok', follow: entry })
@@ -339,7 +339,7 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
                 title: 'New Friend',
                 body: `${req.user.username} accepted your friend request`
             };
-            await sendFollowNotification(receiverToken, payload, req.user.id);
+            await sendFollowNotification(receiverToken, payload, String(req.user.id));
         }
         
         return res.status(200).send({ status: 200, message: 'Accepted follow request', follow: entry })

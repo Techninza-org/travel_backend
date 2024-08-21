@@ -118,7 +118,7 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
                     title: 'New Answer',
                     body: `${req.user.username} answered your question`
                 };
-                await sendForumNotification(receiverToken, payload, questionId);
+                await sendForumNotification(receiverToken, payload, String(questionId));
             }
         }
         return res.status(200).send({ message: 'forum answer created', allAnswers })
@@ -151,7 +151,7 @@ export const likeQuestion = async (req: ExtendedRequest, res: Response, next: Ne
                     title: 'New Like',
                     body: `${req.user.username} liked your question`
                 };
-                await sendForumNotification(receiverToken, payload, questionId);
+                await sendForumNotification(receiverToken, payload, String(questionId));
             }
             }
             return res.status(200).send({ message: 'Question liked' })
