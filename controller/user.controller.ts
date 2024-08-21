@@ -932,7 +932,6 @@ const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunctio
 const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const friendsIdList = await prisma.follows.findMany({ where: { follower_id: req.user.id } })
-        console.log((friendsIdList), 'friendsIdList');
         const friendsId = friendsIdList.map((friend) => friend.user_id)
         const friendsOfFriends = await prisma.follows.findMany({
             where: { follower_id: { in: friendsId } },
@@ -941,8 +940,15 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
         const friendsOfFriendsId = friendsOfFriends.map((friend) => friend.user_id)
         const suggestions = await prisma.user.findMany({
             where: { id: { in: friendsOfFriendsId }, NOT: { id: req.user.id } },
+            select:{
+                id: true,
+                username: true,
+                image: true,
+                status: true,
+                latitude: true,
+                longitude: true,
+            }
         })
-        console.log(suggestions, 'suggestions');
         return res.status(200).send({ status: 200, message: 'Ok', suggestions: suggestions })
     }catch(err){
         return next(err)
