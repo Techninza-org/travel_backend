@@ -3,7 +3,7 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import helper from '../utils/helpers'
 import { PrismaClient } from '@prisma/client'
-import { getUserToken, sendNotif, sendNotification } from '../app'
+import { getUserToken, sendFollowNotif, sendNotif, sendNotification, sendPostNotif } from '../app'
 
 // const actionRouter = Router()
 const prisma = new PrismaClient()
@@ -35,7 +35,7 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
             const post = await prisma.post.update({ where: { id: post_id }, data: { likes: { increment: 1 } } })
             const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
             const profile_pic = sender?.image ?? '';
-            sendNotif(req.user.id, post.user_id, profile_pic, 'New Like', `${req.user.username} liked your post`);
+            sendPostNotif(req.user.id, post.user_id, profile_pic, 'New Like', `${req.user.username} liked your post`, String(post_id));
             const receiverToken = await getUserToken(post.user_id);
             if (receiverToken) {
                 const payload = {
@@ -93,7 +93,7 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
             })
             const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
             const profile_pic = sender?.image ?? '';
-            sendNotif(req.user.id, isPostExists.user_id, profile_pic, 'New Comment', `${req.user.username} commented on your post`);
+            sendPostNotif(req.user.id, isPostExists.user_id, profile_pic, 'New Comment', `${req.user.username} commented on your post`, String(post_id));
             const receiverToken = await getUserToken(isPostExists.user_id);
             if (receiverToken) {
                 const payload = {
@@ -239,7 +239,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
 
-        sendNotif(req.user.id, user_id, profile_pic, title, message);
+        sendFollowNotif(req.user.id, user_id, profile_pic, title, message);
         
         const receiverToken = await getUserToken(user_id);
         console.log('Receiver Token:', receiverToken);
@@ -332,7 +332,7 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
         const deletedEntry = await prisma.followRequest.delete({ where: { id: followRequest.id } })
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
-        sendNotif(req.user.id, follower_id, profile_pic, 'New Friend', `${req.user.username} accepted your friend request`);
+        sendFollowNotif(req.user.id, follower_id, profile_pic, 'New Friend', `${req.user.username} accepted your friend request`);
         const receiverToken = await getUserToken(follower_id);
         if (receiverToken) {
             const payload = {

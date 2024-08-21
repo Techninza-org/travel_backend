@@ -125,6 +125,58 @@ export const sendNotif = async (senderId: number, receiverId: number, senderProf
         },
     })
 }
+export const sendPostNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, postId: string) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+            type: 'post',
+            type_id: postId,
+        },
+    })
+}
+export const sendForumNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, questionId: string) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+            type: 'forum',
+            type_id: questionId,
+        },
+    })
+}
+export const sendMessageNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, chatId: string) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+            type: 'chat',
+            type_id: chatId,
+        },
+    })
+}
+export const sendFollowNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+            type: 'follow',
+            type_id: senderId.toString(),
+        },
+    })
+}
 
 export const sendNotification = async (registrationToken: string, payload: { title: string, body: string }) => {
     try {

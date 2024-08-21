@@ -451,6 +451,8 @@ model Notification {
   receiver_id    Int
   title          String
   message        String
+  type           String?
+  type_id        String?
   isRead         Boolean @default(false)
   created_at DateTime @default(now())
 }
