@@ -65,5 +65,7 @@ userRouter
     .delete('/notifications', userController.deleteNotification)
     //@ts-ignore
     .put('/notifications/read', userController.markAsRead)
+    //@ts-ignore
+    .get('/suggestions', userController.friendsSuggestions)
 
 export default userRouter
