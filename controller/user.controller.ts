@@ -158,7 +158,8 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     emergency_name,
                     emergency_phone,
                     typeOfTraveller,
-                    email
+                    email,
+                    background_image
                 },
             })
             delete (updatedUser as any).password
