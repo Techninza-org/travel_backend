@@ -283,6 +283,11 @@ export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next:
         if (!post) {
             return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
         }
+        const isLiked = await prisma.likes.findFirst({
+            where: { post_id: post.id, user_id: req.user.id },
+        })
+        //@ts-ignore
+        post.isLiked = isLiked ? true : false
         return res
             .status(200)
             .send({
