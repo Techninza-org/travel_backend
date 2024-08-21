@@ -138,6 +138,27 @@ export const sendPostNotif = async (senderId: number, receiverId: number, sender
         },
     })
 }
+export const sendPostNotification = async (registrationToken: string, payload: { title: string, body: string }, postId: any) => {
+    try {
+        const message = {
+            token: registrationToken,
+            notification: {
+                title: payload.title,
+                body: payload.body
+            },
+            data: {
+                type: 'post',
+                postId: postId
+            }
+        };
+
+        const response = await admin.messaging().send(message);
+        return response;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};
 export const sendForumNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, questionId: string) => {
     const notif = await prisma.notification.create({
         data: {
@@ -151,6 +172,27 @@ export const sendForumNotif = async (senderId: number, receiverId: number, sende
         },
     })
 }
+export const sendForumNotification = async (registrationToken: string, payload: { title: string, body: string }, questionId: any) => {
+    try {
+        const message = {
+            token: registrationToken,
+            notification: {
+                title: payload.title,
+                body: payload.body
+            },
+            data: {
+                type: 'forum',
+                questionId: questionId
+            }
+        };
+
+        const response = await admin.messaging().send(message);
+        return response;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};
 export const sendMessageNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, chatId: string) => {
     const notif = await prisma.notification.create({
         data: {
@@ -164,6 +206,27 @@ export const sendMessageNotif = async (senderId: number, receiverId: number, sen
         },
     })
 }
+export const sendMessageNotification = async (registrationToken: string, payload: { title: string, body: string }, chatId: any) => {
+    try {
+        const message = {
+            token: registrationToken,
+            notification: {
+                title: payload.title,
+                body: payload.body
+            },
+            data: {
+                type: 'chat',
+                chatId: chatId
+            }
+        };
+
+        const response = await admin.messaging().send(message);
+        return response;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};
 export const sendFollowNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string) => {
     const notif = await prisma.notification.create({
         data: {
@@ -177,7 +240,27 @@ export const sendFollowNotif = async (senderId: number, receiverId: number, send
         },
     })
 }
+export const sendFollowNotification = async (registrationToken: string, payload: { title: string, body: string }, senderId: any) => {
+    try {
+        const message = {
+            token: registrationToken,
+            notification: {
+                title: payload.title,
+                body: payload.body
+            },
+            data: {
+                type: 'follow',
+                senderId: senderId
+            }
+        };
 
+        const response = await admin.messaging().send(message);
+        return response;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};
 export const sendNotification = async (registrationToken: string, payload: { title: string, body: string }) => {
     try {
         const message = {
@@ -196,6 +279,7 @@ export const sendNotification = async (registrationToken: string, payload: { tit
         throw error;
     }
 };
+
 
 export const getUserToken = async (userId: any) => {
     const user = await prisma.user.findUnique({where: {id: userId}, select: {registrationToken: true}})

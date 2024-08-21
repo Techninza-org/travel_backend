@@ -2,7 +2,7 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import { PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
-import { getUserToken, sendForumNotif, sendNotif, sendNotification } from '../app'
+import { getUserToken, sendForumNotif, sendForumNotification } from '../app'
 const prisma = new PrismaClient()
 
 const createForumQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -118,7 +118,7 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
                     title: 'New Answer',
                     body: `${req.user.username} answered your question`
                 };
-                await sendNotification(receiverToken, payload);
+                await sendForumNotification(receiverToken, payload, questionId);
             }
         }
         return res.status(200).send({ message: 'forum answer created', allAnswers })
@@ -151,7 +151,7 @@ export const likeQuestion = async (req: ExtendedRequest, res: Response, next: Ne
                     title: 'New Like',
                     body: `${req.user.username} liked your question`
                 };
-                await sendNotification(receiverToken, payload);
+                await sendForumNotification(receiverToken, payload, questionId);
             }
             }
             return res.status(200).send({ message: 'Question liked' })
