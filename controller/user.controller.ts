@@ -96,7 +96,7 @@ const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFuncti
 
 const update_user = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
-    let { username, gender, date_of_birth, bio, emergency_name, emergency_phone, typeOfTraveller, email, bg } = req.body
+    let { username, gender, date_of_birth, bio, emergency_name, emergency_phone, typeOfTraveller, email, background_image } = req.body
     if (gender) {
         gender = Number(gender)
         if (Number.isNaN(gender)) {
@@ -140,7 +140,7 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     emergency_phone,
                     typeOfTraveller,
                     email,
-                    background_image: bg,
+                    background_image,
                 },
             })
             delete (updatedUser as any).password
