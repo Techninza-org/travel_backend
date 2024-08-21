@@ -947,9 +947,24 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
                 status: true,
                 latitude: true,
                 longitude: true,
+                followers: true,
+                followRequest: true,
             }
         })
-        return res.status(200).send({ status: 200, message: 'Ok', suggestions: suggestions })
+        const usersWithFollowingInfo = suggestions.map((user) => ({
+            id: user.id,
+            username: user.username,
+            image: user.image,
+            latitude: user.latitude,
+            longitude: user.longitude,
+            followersCount: user.followers.length,
+            isFollowing: user.followers.some((follow) => follow.follower_id === req.user.id),
+            isRequested: user.followRequest.some(
+                (request) => request.follower_id === req.user.id && request.status === 0
+            ),
+            status: user.status,
+        }))
+        return res.status(200).send({ status: 200, message: 'Ok', suggestions: usersWithFollowingInfo })
     }catch(err){
         return next(err)
     }
