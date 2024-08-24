@@ -211,6 +211,7 @@ model Trip {
   isBookmarked         Boolean   @default(false)
   expense              Expense[]
   host                 Host      @relation(fields: [host_id], references: [id])
+  order_id             String?
 
   service    Service? @relation(fields: [service_id], references: [id], onDelete: SetNull)
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)

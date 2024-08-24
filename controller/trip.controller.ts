@@ -54,6 +54,10 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
     }
 
     try {
+        const order = await razorpayInstance.orders.create({
+            amount: body.cost,
+            currency: 'INR',
+        })
         const trip = await prisma.trip.create({
             data: {
                 destination: body.destination,
@@ -64,12 +68,10 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                 user_id: user.id,
                 cost: body.cost,
                 host_id: service.host_id,
+                order_id: order.id,
             },
         })
-        const order = await razorpayInstance.orders.create({
-            amount: body.cost,
-            currency: 'INR',
-        })
+        
         return res.status(200).send({
             status: 201,
             message: 'Created',
