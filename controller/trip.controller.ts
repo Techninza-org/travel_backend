@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 import Razorpay from 'razorpay'
 import { error } from 'node:console'
+import { sendNotif, sendNotification } from '../app'
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID!,
@@ -226,8 +227,10 @@ export const GetSpecificTrip = async (req: ExtendedRequest, res: Response, next:
 
 //todo payment return
 export const cancelTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{const user = req.user
+    try{
+    const user = req.user
     const tripId = req.params.id
+    const ezio = await prisma.user.findUnique({ where: { id: 3 } })
     if (!tripId) {
         return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'tripId is required.' })
     }
@@ -253,6 +256,17 @@ export const cancelTrip = async (req: ExtendedRequest, res: Response, next: Next
         where: { id: Number(tripId) },
         data: { cancelled: true },
     })
+    try{
+        const registrationToken = user.registrationToken
+        const payload = {
+            title: 'Trip Update',
+            body: `Your trip has been cancelled`,
+        }
+        sendNotif(3, user.id, ezio?.image ?? '', payload.title, payload.body)
+        if (registrationToken) await sendNotification(registrationToken, payload)
+    }catch(err){
+        return next(err)
+    }
 
     return res.status(200).send({ status: 200, message: 'Trip cancelled.', trip: deletedTrip })
 }catch(err){

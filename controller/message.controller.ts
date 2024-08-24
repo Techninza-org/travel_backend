@@ -75,6 +75,31 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
         
         io.emit("newMessage", { message: newMessage })
 
+        const convo = await prisma.conversation.findFirst({
+            where: {
+                id: getConversation.id
+            },
+            include: { messages: true, participants: {select: {user: {select: {username: true, image: true, id: true}}}}}
+        })
+
+        if(convo?.messages.length === 1){
+            const sender = await prisma.user.findUnique({ where: { id: senderId } });
+            const senderProfilePic = sender?.image ?? '';
+            convo.participants.forEach(async (element) => {
+                if (!element.user.id === senderId) {
+                    sendMessageNotif(senderId, element.user.id, senderProfilePic, 'New Message', `${sender?.username} sent you a message`, String(convo.id));
+                    const receiverToken = await getUserToken(element.user.id);
+                    if (receiverToken) {
+                        const payload = {
+                            title: 'New Message',
+                            body: `${sender?.username} sent you a message`
+                        };
+                        sendMessageNotification(receiverToken, payload, String(convo.id));
+                    }
+                }
+            });
+        }
+
         return res.status(200).send({ message: 'Message sent' })
     } catch (err) {
         return res.status(500).send({ message: 'Error sending message' })

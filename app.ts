@@ -25,7 +25,7 @@ import faqRouter from './routes/faq.routes'
 import forumRouter from './routes/forum.routes'
 import messageRouter from './routes/message.routes'
 import SuperAdminRouter from './routes/superadmin.routes'
-import * as admin from 'firebase-admin';
+import * as admin from 'firebase-admin'
 // import TemplateRouter from './routes/template.routes'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
@@ -41,7 +41,7 @@ export const s3 = new S3Client({
         secretAccessKey: secretAccessKey,
     },
     region: bucketRegion,
-});
+})
 
 const prisma = new PrismaClient()
 const app = express()
@@ -53,17 +53,17 @@ app.use(express.json())
 app.use(morgan('tiny'))
 app.use(cors())
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)
 
 try {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL: process.env.FIREBASE_DATABASE_URL,
-    });
+    })
 
-    console.log('Firebase Admin initialized successfully.');
+    console.log('Firebase Admin initialized successfully.')
 } catch (error) {
-    console.error('Error initializing Firebase Admin:', error);
+    console.error('Error initializing Firebase Admin:', error)
 }
 
 app.get('/ping', (_req, res) => {
@@ -114,7 +114,13 @@ app.use('/message', middleware.AuthMiddleware, messageRouter)
 app.use('/superAdmin', SuperAdminRouter)
 // app.use('/template', TemplateRouter)
 
-export const sendNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string) => {
+export const sendNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string
+) => {
     const notif = await prisma.notification.create({
         data: {
             sender_id: senderId,
@@ -125,7 +131,14 @@ export const sendNotif = async (senderId: number, receiverId: number, senderProf
         },
     })
 }
-export const sendPostNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, postId: string) => {
+export const sendPostNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string,
+    postId: string
+) => {
     const notif = await prisma.notification.create({
         data: {
             sender_id: senderId,
@@ -138,28 +151,39 @@ export const sendPostNotif = async (senderId: number, receiverId: number, sender
         },
     })
 }
-export const sendPostNotification = async (registrationToken: string, payload: { title: string, body: string }, postId: string) => {
+export const sendPostNotification = async (
+    registrationToken: string,
+    payload: { title: string; body: string },
+    postId: string
+) => {
     try {
         const message = {
             token: registrationToken,
             notification: {
                 title: payload.title,
-                body: payload.body
+                body: payload.body,
             },
             data: {
                 type: 'post',
-                postId: postId
-            }
-        };
+                postId: postId,
+            },
+        }
 
-        const response = await admin.messaging().send(message);
-        return response;
+        const response = await admin.messaging().send(message)
+        return response
     } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
+        console.error('Error sending message:', error)
+        throw error
     }
-};
-export const sendForumNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, questionId: string) => {
+}
+export const sendForumNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string,
+    questionId: string
+) => {
     const notif = await prisma.notification.create({
         data: {
             sender_id: senderId,
@@ -172,28 +196,39 @@ export const sendForumNotif = async (senderId: number, receiverId: number, sende
         },
     })
 }
-export const sendForumNotification = async (registrationToken: string, payload: { title: string, body: string }, questionId: string) => {
+export const sendForumNotification = async (
+    registrationToken: string,
+    payload: { title: string; body: string },
+    questionId: string
+) => {
     try {
         const message = {
             token: registrationToken,
             notification: {
                 title: payload.title,
-                body: payload.body
+                body: payload.body,
             },
             data: {
                 type: 'forum',
-                questionId: questionId
-            }
-        };
+                questionId: questionId,
+            },
+        }
 
-        const response = await admin.messaging().send(message);
-        return response;
+        const response = await admin.messaging().send(message)
+        return response
     } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
+        console.error('Error sending message:', error)
+        throw error
     }
-};
-export const sendMessageNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string, chatId: string) => {
+}
+export const sendMessageNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string,
+    chatId: string
+) => {
     const notif = await prisma.notification.create({
         data: {
             sender_id: senderId,
@@ -206,28 +241,38 @@ export const sendMessageNotif = async (senderId: number, receiverId: number, sen
         },
     })
 }
-export const sendMessageNotification = async (registrationToken: string, payload: { title: string, body: string }, chatId: string) => {
+export const sendMessageNotification = async (
+    registrationToken: string,
+    payload: { title: string; body: string },
+    chatId: string
+) => {
     try {
         const message = {
             token: registrationToken,
             notification: {
                 title: payload.title,
-                body: payload.body
+                body: payload.body,
             },
             data: {
                 type: 'chat',
-                chatId: chatId
-            }
-        };
+                chatId: chatId,
+            },
+        }
 
-        const response = await admin.messaging().send(message);
-        return response;
+        const response = await admin.messaging().send(message)
+        return response
     } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
+        console.error('Error sending message:', error)
+        throw error
     }
-};
-export const sendFollowNotif = async (senderId: number, receiverId: number, senderProfile: string, title: string, message: string) => {
+}
+export const sendFollowNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string
+) => {
     const notif = await prisma.notification.create({
         data: {
             sender_id: senderId,
@@ -240,51 +285,54 @@ export const sendFollowNotif = async (senderId: number, receiverId: number, send
         },
     })
 }
-export const sendFollowNotification = async (registrationToken: string, payload: { title: string, body: string }, senderId: string) => {
+export const sendFollowNotification = async (
+    registrationToken: string,
+    payload: { title: string; body: string },
+    senderId: string
+) => {
     try {
         const message = {
             token: registrationToken,
             notification: {
                 title: payload.title,
-                body: payload.body
+                body: payload.body,
             },
             data: {
                 type: 'follow',
-                senderId: senderId
-            }
-        };
+                senderId: senderId,
+            },
+        }
 
-        const response = await admin.messaging().send(message);
-        return response;
+        const response = await admin.messaging().send(message)
+        return response
     } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
+        console.error('Error sending message:', error)
+        throw error
     }
-};
-export const sendNotification = async (registrationToken: string, payload: { title: string, body: string }) => {
+}
+export const sendNotification = async (registrationToken: string, payload: { title: string; body: string }) => {
     try {
         const message = {
             token: registrationToken,
             notification: {
                 title: payload.title,
-                body: payload.body
-            }
-        };
+                body: payload.body,
+            },
+        }
 
-        const response = await admin.messaging().send(message);
-        console.log('Successfully sent message:', response);
-        return response;
+        const response = await admin.messaging().send(message)
+        console.log('Successfully sent message:', response)
+        return response
     } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
+        console.error('Error sending message:', error)
+        throw error
     }
-};
-
+}
 
 export const getUserToken = async (userId: any) => {
-    const user = await prisma.user.findUnique({where: {id: userId}, select: {registrationToken: true}})
-    return user ? user.registrationToken : null;
-};
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { registrationToken: true } })
+    return user ? user.registrationToken : null
+}
 
 cron.schedule('0 0 * * *', async () => {
     console.log('Running your daily task...')
@@ -328,7 +376,7 @@ cron.schedule('0 0 * * *', async () => {
                 })
             }
         }
-        for(const customTrip of customTrips) {
+        for (const customTrip of customTrips) {
             const startDate = new Date(customTrip.start_date)
             const endDate = new Date(customTrip.end_date)
             const today = new Date()
@@ -369,26 +417,77 @@ cron.schedule('0 0 * * *', async () => {
     }
 })
 
+cron.schedule('* * * * *', async () => {
+    console.log('Running trips notifications...')
+    try {
+        const trips = await prisma.trip.findMany({})
+        const customTrips = await prisma.customTrip.findMany({})
+        const allTrips = [...trips, ...customTrips]
+        const upcomingTrips = allTrips.filter((trip) => trip.status === 'upcoming')
+        const ongoingTrips = allTrips.filter((trip) => trip.status === 'ongoing')
+        const ezio = await prisma.user.findUnique({ where: { id: 3 } })
+
+        for (const trip of upcomingTrips) {
+            const startDate = new Date(trip.start_date)
+            const today = new Date()
+
+            if (startDate.getDate() - today.getDate() === 1) {
+                const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
+                if (user) {
+                    const registrationToken = user.registrationToken
+                    const payload = {
+                        title: 'Trip Alert',
+                        body: `Your journey starts tomorrow! Get ready for an adventure.`,
+                    }
+                    sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
+                    if (registrationToken) await sendNotification(registrationToken, payload)
+                }
+            }
+        }
+
+        for(const trip of ongoingTrips) {
+            const startDate = new Date(trip.start_date)
+            const today = new Date()
+            if(startDate.getDate() === today.getDate()) {
+                const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
+                if (user) {
+                    const registrationToken = user.registrationToken
+                    const payload = {
+                        title: 'Trip Alert',
+                        body: `Your journey starts today!`,
+                    }
+                    sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
+                    if (registrationToken) await sendNotification(registrationToken, payload)
+                }
+            }
+        }
+
+        console.log('User statuses updated successfully.')
+    } catch (error) {
+        console.error('Error updating user statuses:', error)
+    }
+})
+
 app.use(middleware.ErrorHandler)
 
-const privateKey = fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/home/ubuntu/cert.pem', 'utf8');
-const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8');
+const privateKey = fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8')
+const certificate = fs.readFileSync('/home/ubuntu/cert.pem', 'utf8')
+const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8')
 
 const credentials = {
     key: privateKey,
     cert: certificate,
-    ca: ca
-  };
+    ca: ca,
+}
 
-const httpsServer = https.createServer(credentials, app);
+const httpsServer = https.createServer(credentials, app)
 
 const io = new Server(httpsServer, {
     cors: {
         origin: '*',
-        methods: ['GET', 'POST']
-    }
-});
+        methods: ['GET', 'POST'],
+    },
+})
 
 export const getReceiverSocketId = (receiverId: string) => {
     return userSocketMap[receiverId]
@@ -416,12 +515,11 @@ io.on('connection', (socket) => {
     })
 })
 
-
-const httpApp = express();
+const httpApp = express()
 httpApp.use((req, res) => {
-  res.redirect(`https://${req.headers.host}${req.url}`);
-});
-const httpServer = http.createServer(httpApp);
+    res.redirect(`https://${req.headers.host}${req.url}`)
+})
+const httpServer = http.createServer(httpApp)
 
 app.all('*', (_req, res) => {
     res.status(200).send({
@@ -431,5 +529,5 @@ app.all('*', (_req, res) => {
     })
 })
 
-export default httpsServer;
-export { io, httpsServer, httpServer };
+export default httpsServer
+export { io, httpsServer, httpServer }
