@@ -81,23 +81,20 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
             },
             include: { messages: true, participants: {select: {user: {select: {username: true, image: true, id: true}}}}}
         })
-
+        console.log(convo?.messages, 'messages');
+        console.log(convo?.messages.length, 'length');
         if(convo?.messages.length === 1){
             const sender = await prisma.user.findUnique({ where: { id: senderId } });
             const senderProfilePic = sender?.image ?? '';
-            convo.participants.forEach(async (element) => {
-                if (!element.user.id === senderId) {
-                    sendMessageNotif(senderId, element.user.id, senderProfilePic, 'New Message', `${sender?.username} sent you a message`, String(convo.id));
-                    const receiverToken = await getUserToken(element.user.id);
-                    if (receiverToken) {
-                        const payload = {
-                            title: 'New Message',
-                            body: `${sender?.username} sent you a message`
-                        };
-                        sendMessageNotification(receiverToken, payload, String(convo.id));
-                    }
-                }
-            });
+            sendMessageNotif(senderId, Number(receiverId), senderProfilePic, 'New Message', `${sender?.username} sent you a message`, String(convo.id));
+            const receiverToken = await getUserToken(receiverId);
+            if (receiverToken) {
+                const payload = {
+                    title: 'New Message',
+                    body: `${sender?.username} sent you a message`
+                };
+                sendMessageNotification(receiverToken, payload, String(convo.id));
+            }
         }
 
         return res.status(200).send({ message: 'Message sent' })

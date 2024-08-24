@@ -131,6 +131,51 @@ export const sendNotif = async (
         },
     })
 }
+export const sendTripNotif = async (
+    senderId: number,
+    receiverId: number,
+    senderProfile: string,
+    title: string,
+    message: string,
+    tripId: string
+) => {
+    const notif = await prisma.notification.create({
+        data: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+            sender_profile: senderProfile,
+            title,
+            message,
+            type: 'trip',
+            type_id: tripId,
+        },
+    })
+}
+export const sendTripNotification = async (
+    registrationToken: string,
+    payload: { title: string; body: string },
+    tripId: string
+) => {
+    try {
+        const message = {
+            token: registrationToken,
+            notification: {
+                title: payload.title,
+                body: payload.body,
+            },
+            data: {
+                type: 'trip',
+                tripId: tripId,
+            },
+        }
+
+        const response = await admin.messaging().send(message)
+        return response
+    } catch (error) {
+        console.error('Error sending message:', error)
+        throw error
+    }
+}
 export const sendPostNotif = async (
     senderId: number,
     receiverId: number,

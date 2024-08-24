@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 import Razorpay from 'razorpay'
 import crypto from 'node:crypto'
-import { sendNotif, sendNotification } from '../app'
+import { sendTripNotif, sendTripNotification } from '../app'
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID!,
@@ -171,8 +171,8 @@ export const createCustomService = async (req: ExtendedRequest, res: Response, n
                         title: 'Bid Alert',
                         body: `An agency placed a bid for your trip.`,
                     }
-                    sendNotif(3, user_id, ezio?.image ?? '', payload.title, payload.body)
-                    if (registrationToken) await sendNotification(registrationToken, payload)
+                    sendTripNotif(3, user_id, ezio?.image ?? '', payload.title, payload.body, String(customTrip.id))
+                    if (registrationToken) await sendTripNotification(registrationToken, payload, String(customTrip.id))
         }catch(err){
             return next(err)
         }
