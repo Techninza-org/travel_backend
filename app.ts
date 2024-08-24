@@ -462,7 +462,7 @@ cron.schedule('0 0 * * *', async () => {
     }
 })
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('30 0 * * *', async () => {
     console.log('Running trips notifications...')
     try {
         const trips = await prisma.trip.findMany({})
