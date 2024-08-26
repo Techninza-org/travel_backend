@@ -67,5 +67,7 @@ userRouter
     .put('/notifications/read', userController.markAsRead)
     //@ts-ignore
     .get('/suggestions', userController.friendsSuggestions)
+    //@ts-ignore
+    .put('/switch-notifications', userController.switchPushNotifications)
 
 export default userRouter

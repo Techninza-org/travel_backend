@@ -970,6 +970,24 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
     }
 }
 
+const switchPushNotifications = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const user = req.user
+        const { pushNotifications } = req.body
+        if (typeof pushNotifications !== 'boolean') {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Invalid Payload' })
+        }
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: { pushNotifications: pushNotifications },
+        })
+        delete (updatedUser as any).password
+        return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
+    }catch(err){
+        return next(err)
+    }
+}
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -1001,7 +1019,8 @@ const userController = {
     getNotifications,
     deleteNotification,
     markAsRead,
-    friendsSuggestions
+    friendsSuggestions,
+    switchPushNotifications
 }
 
 export default userController

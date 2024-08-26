@@ -59,6 +59,7 @@ model User {
   kyc             KYC?
   kycStatus       Int?             @default(-1) // -1 = not submitted, 0 = submitted, 1 = accepted
   isSocialLogin   Boolean          @default(false)
+  pushNotifications Boolean        @default(true)
 }
 
 model KYC {
