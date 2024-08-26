@@ -29,11 +29,11 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             error_description: 'destination, start_date, end_date is required.',
         })
     }
-    if(req.body.cost > 100000){
+    if(req.body.cost > 10000000){
         return res.status(200).send({
             status: 400,
             error: 'Invalid payload',
-            error_description: 'cost should be less than 100000.',
+            error_description: 'cost should be less than 10000000.',
         })
     }
     if (service.type === 1) {

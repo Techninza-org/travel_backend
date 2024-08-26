@@ -246,6 +246,13 @@ export const acceptBid = async (req: ExtendedRequest, res: Response, next: NextF
         if (!service) {
             return res.status(404).send({ error: 'Not found', error_description: 'Service not found.' })
         }
+        if(service.price > 10000000){
+            return res.status(200).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'cost should be less than 10000000.',
+            })
+        }
         if (service.user_id !== user.id) {
             return res.status(403).send({
                 error: 'Forbidden',
