@@ -173,7 +173,6 @@ export const sendTripNotification = async (
         return response
     } catch (error) {
         console.error('Error sending message:', error)
-        throw error
     }
 }
 export const sendPostNotif = async (
@@ -218,7 +217,6 @@ export const sendPostNotification = async (
         return response
     } catch (error) {
         console.error('Error sending message:', error)
-        throw error
     }
 }
 export const sendForumNotif = async (
@@ -263,7 +261,6 @@ export const sendForumNotification = async (
         return response
     } catch (error) {
         console.error('Error sending message:', error)
-        throw error
     }
 }
 export const sendMessageNotif = async (
@@ -307,8 +304,7 @@ export const sendMessageNotification = async (
         const response = await admin.messaging().send(message)
         return response
     } catch (error) {
-        console.error('Error sending message:', error)
-        throw error
+       console.log('Error sending message:', error);
     }
 }
 export const sendFollowNotif = async (
@@ -352,7 +348,6 @@ export const sendFollowNotification = async (
         return response
     } catch (error) {
         console.error('Error sending message:', error)
-        throw error
     }
 }
 export const sendNotification = async (registrationToken: string, payload: { title: string; body: string }) => {
@@ -370,7 +365,6 @@ export const sendNotification = async (registrationToken: string, payload: { tit
         return response
     } catch (error) {
         console.error('Error sending message:', error)
-        throw error
     }
 }
 
