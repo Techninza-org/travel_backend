@@ -1,11 +1,9 @@
-// import { Router } from 'express'
 import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import helper from '../utils/helpers'
 import { PrismaClient } from '@prisma/client'
 import { getUserToken, sendFollowNotif, sendFollowNotification, sendPostNotif, sendPostNotification } from '../app'
 
-// const actionRouter = Router()
 const prisma = new PrismaClient()
 
 export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -25,7 +23,6 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
     const isAlreadyLiked = await prisma.likes.findFirst({ where: { post_id: post_id, user_id: req.user.id } })
     if (Number(action) === 1) {
         try {
-            // creating new like entry then updating the likes count
             if (isAlreadyLiked) {
                 return res
                     .status(200)

@@ -155,6 +155,7 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
 export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
     try {
         const id = Number(req.body.userId)
+        if(isNaN(id)) return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'id should be a number.' })
         const isFollowing = await prisma.follows.findFirst({
             where: { user_id: id, follower_id: req.user.id },
         })

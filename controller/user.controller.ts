@@ -963,6 +963,11 @@ const deleteNotification = async (req: ExtendedRequest, res: Response, next: Nex
     if (!id) {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
     }
+    if(isNaN(Number(id))){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+    }
     const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
     if(!notif){
         return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
@@ -981,6 +986,11 @@ const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunctio
     const { id } = req.body
     if (!id) {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+    }
+    if(isNaN(Number(id))){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
     const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
     if(!notif){
@@ -1042,6 +1052,9 @@ const switchPushNotifications = async (req: ExtendedRequest, res: Response, next
     try{
         const user = req.user
         const { pushNotifications } = req.body
+        if(!pushNotifications){
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'pushNotifications field is required' })
+        }
         if (typeof pushNotifications !== 'boolean') {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Invalid Payload' })
         }
