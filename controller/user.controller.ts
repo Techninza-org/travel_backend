@@ -577,6 +577,11 @@ const updateRegistrationToken = async (req: ExtendedRequest, res: Response, next
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Registration Token is required' })
     }
+    if(typeof registrationToken !== 'string'){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Registration Token should be a string' })
+    }
     try {
         const updatedUser = await prisma.user.update({
             where: { id: user.id },
@@ -674,6 +679,13 @@ const changePassword = async (req: ExtendedRequest, res: Response, next: NextFun
             error_description: 'oldPassword, newPassword are required.',
         })
     }
+    if(typeof oldPassword !== 'string' || typeof newPassword !== 'string'){
+        return res.status(200).send({
+            status: 400,
+            error: 'Invalid payload',
+            error_description: 'oldPassword, newPassword should be a string.',
+        })
+    }
     let hash_old_password: string | Buffer = crypto.pbkdf2Sync(
         oldPassword,
         SALT_ROUND,
@@ -717,6 +729,13 @@ const rateService = async (req: ExtendedRequest, res: Response, next: NextFuncti
             status: 400,
             error: 'Invalid payload',
             error_description: 'service_id, rating are required.',
+        })
+    }
+    if (isNaN(Number(service_id))) {
+        return res.status(200).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Service Id should be a number.',
         })
     }
     if (isNaN(Number(rating))) {
@@ -874,6 +893,18 @@ const pinLocation = async (req: ExtendedRequest, res: Response, next: NextFuncti
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude is required' })
     }
+    if(isNaN(latitude) || isNaN(longitude)){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
+    }
+    if(title){
+        if(typeof title !== 'string'){
+            return res
+                .status(400)
+                .json({ status: 400, error: 'Bad Request', error_description: 'Title should be a string' })
+        }
+    }
     try {
         const addedPin = await prisma.pinnedLocation.create({
             data: {
@@ -894,6 +925,11 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
     const { id } = req.params
     if (!id) {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+    }
+    if(isNaN(Number(id))){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
     try {
         await prisma.pinnedLocation.delete({
