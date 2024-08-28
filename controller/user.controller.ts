@@ -603,6 +603,14 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' })
     }
+    console.log(typeof latitude, typeof longitude, 'latitude and longitude');
+    
+    if(typeof latitude === "string" || typeof longitude === "string"){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
+    }
+    
     if(isNaN(latitude) || isNaN(longitude)){
         return res
             .status(400)
