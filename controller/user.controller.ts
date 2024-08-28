@@ -122,7 +122,7 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
     if(username){
         const userExists = await prisma.user.findFirst({ where: { username: username } })
-        if(userExists){
+        if(userExists && username !== user.username){
             return res.status(200).send({
                 status: 200,
                 error: 'Invalid Payload',
@@ -326,8 +326,11 @@ const getSuggestion = async (req: ExtendedRequest, res: Response, next: NextFunc
 const userTravelingStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const { is_traveling } = req.body
+    if(!is_traveling){
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'is_traveling is required' })
+    }
     if (typeof is_traveling !== 'boolean') {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Invalid Payload' })
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Boolean value required' })
     }
     try {
         const updatedUser = await prisma.user.update({
