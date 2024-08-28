@@ -931,6 +931,10 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
+    const exists = await prisma.pinnedLocation.findFirst({ where: { id: Number(id), user_id: user.id } })
+    if(!exists){
+        return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Pinned location not found' })
+    }
     try {
         await prisma.pinnedLocation.delete({
             where: { id: Number(id) },
