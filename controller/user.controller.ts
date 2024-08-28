@@ -442,9 +442,12 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
 const visibleStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const { visible } = req.body
+    if(!visible){
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'visible field is required' })
+    }
 
     if (typeof visible !== 'boolean') {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Invalid Payload' })
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Boolean value required' })
     }
     try {
         const updatedUser = await prisma.user.update({
@@ -462,7 +465,7 @@ const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction
     const user = req.user
     const { blocked_user_id } = req.body
     if (!blocked_user_id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'User Id is required' })
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
     if (typeof blocked_user_id !== 'number') {
         return res
@@ -499,7 +502,7 @@ const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFuncti
     const user = req.user
     const { blocked_user_id } = req.body
     if (!blocked_user_id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'User Id is required' })
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
     if (typeof blocked_user_id !== 'number') {
         return res
@@ -599,6 +602,11 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
         return res
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' })
+    }
+    if(isNaN(latitude) || isNaN(longitude)){
+        return res
+            .status(400)
+            .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
     }
     try {
         const nearbyUsers = await prisma.user.findMany({
