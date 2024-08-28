@@ -326,9 +326,6 @@ const getSuggestion = async (req: ExtendedRequest, res: Response, next: NextFunc
 const userTravelingStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const { is_traveling } = req.body
-    if(!is_traveling){
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'is_traveling is required' })
-    }
     if (typeof is_traveling !== 'boolean') {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Boolean value required' })
     }
@@ -442,9 +439,6 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
 const visibleStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const { visible } = req.body
-    if(!visible){
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'visible field is required' })
-    }
 
     if (typeof visible !== 'boolean') {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Boolean value required' })
@@ -1052,9 +1046,6 @@ const switchPushNotifications = async (req: ExtendedRequest, res: Response, next
     try{
         const user = req.user
         const { pushNotifications } = req.body
-        if(!pushNotifications){
-            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'pushNotifications field is required' })
-        }
         if (typeof pushNotifications !== 'boolean') {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Invalid Payload' })
         }

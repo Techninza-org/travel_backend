@@ -53,6 +53,9 @@ export const deleteCustomTrip = async (req: ExtendedRequest, res: Response, next
     if (!customTripId) {
         return res.status(400).send({ error: 'Invalid payload', error_description: 'custom trip id is required.' })
     }
+    if(Number.isNaN(customTripId)){
+        return res.status(400).send({ error: 'Invalid payload', error_description: 'custom trip id should be a number.' })
+    }
     try {
         const customTrip = await prisma.customTrip.findFirst({ where: { id: customTripId } })
         if (!customTrip) {
