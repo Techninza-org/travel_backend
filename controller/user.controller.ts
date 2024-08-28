@@ -108,6 +108,18 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
         }
     }
 
+    if(email){
+        const emailExists = await prisma.user.findFirst({ where: { email: email } })
+        if(emailExists){
+            return res.status(200).send({
+                status: 200,
+                error: 'Invalid Payload',
+                error_description: 'Email already exists',
+            })
+        }
+    }
+
+
     if(username){
         const userExists = await prisma.user.findFirst({ where: { username: username } })
         if(userExists){
@@ -211,7 +223,6 @@ const update_user_bg = async (req: ExtendedRequest, res: Response, next: NextFun
 }catch(err){
     return next(err)
 }
-
 }
 
 const Get_follower = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
