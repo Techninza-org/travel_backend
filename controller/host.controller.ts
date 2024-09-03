@@ -152,13 +152,11 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
                 Body: req.file?.buffer,
                 ContentType: req.file?.mimetype,
             }
-            const command = new PutObjectCommand(params)
-            await s3.send(command)
-            const kyc = await prisma.vendorKyc.update({
-                where: {host_id: user.id},
+            const kyc = await prisma.vendorKyc.create({
                 data: {
                     gst: gst,
-                    coi: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`
+                    coi: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
+                    host: { connect: { id: user.id } }
                 }
             })
             const notif = await prisma.kycNotification.create({
@@ -169,10 +167,10 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
             })
             return res.status(201).send({kyc})
         }else {
-            const kyc = await prisma.vendorKyc.update({
-                where: {host_id: user.id},
+            const kyc = await prisma.vendorKyc.create({
                 data: {
                     gst: gst,
+                    host: { connect: { id: user.id } }
                 }
             })
             const notif = await prisma.kycNotification.create({
