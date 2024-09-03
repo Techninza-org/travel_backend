@@ -138,6 +138,8 @@ const changeHostPassword = async (req: ExtendedRequest, res: Response, next: Nex
 
 const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
+        console.log(req.file, 'file');
+        console.log(req.body, 'body');
         const user = req.user
         const { gst } = req.body
         if(!gst) {
@@ -152,6 +154,8 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
                 Body: req.file?.buffer,
                 ContentType: req.file?.mimetype,
             }
+            const command = new PutObjectCommand(params)
+            await s3.send(command)
             const kyc = await prisma.vendorKyc.create({
                 data: {
                     gst: gst,
