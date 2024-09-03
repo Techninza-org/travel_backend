@@ -189,8 +189,11 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
 
 const getKycDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
+        const user = req.user
+        const submitted = user.submitted;
+        const verified = user.verified;
         const details = await prisma.vendorKyc.findUnique({where: {host_id: req.user.id}})
-        return res.status(200).send({details})
+        return res.status(200).send({details: details, submitted: submitted, verified: verified})
     }catch(err){
         return next(err)
     }
