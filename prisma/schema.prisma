@@ -291,6 +291,7 @@ model Host {
   services            Service[]
   customTrips         CustomTrip[]
   kyc                 VendorKyc?
+  submitted           Boolean      @default(false)
   verified            Boolean      @default(false)
   created_at          DateTime     @default(now())
 }
