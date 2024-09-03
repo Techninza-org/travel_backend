@@ -242,6 +242,7 @@ const rejectKyc = async (req: ExtendedRequest, res: Response, next: NextFunction
             return res.status(400).send({message: "host id is required"})
         }
         await prisma.vendorKyc.delete({where: {host_id: host_id}})
+        await prisma.host.update({where: {id: host_id}, data: {submitted: false}})
         return res.status(200).send({message: "Vendor kyc rejected successfully"})
     }catch(err){
         return next(err)

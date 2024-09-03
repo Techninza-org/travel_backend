@@ -165,6 +165,7 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
                     notif: `${req.user.username} has submitted KYC documents.`
                 }
             })
+            await prisma.host.update({where: {id: user.id}, data: {submitted: true}})
             return res.status(201).send({kyc})
         }else {
             const kyc = await prisma.vendorKyc.create({
