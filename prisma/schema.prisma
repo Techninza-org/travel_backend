@@ -290,7 +290,21 @@ model Host {
   trips               Trip[]
   services            Service[]
   customTrips         CustomTrip[]
+  kyc                 VendorKyc?
+  verified            Boolean @default(false)
   created_at          DateTime     @default(now())
+}
+
+model VendorKyc {
+  id              Int      @id @default(autoincrement())
+  host_id         Int      @unique
+  gst             String
+  coi             String?
+  image           String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  host Host @relation(fields: [host_id], references: [id], onDelete: Cascade)
 }
 
 model PaymentOrder {

@@ -198,6 +198,58 @@ const deleteServiceOption = async (req: ExtendedRequest, res: Response, next: Ne
     }
 }
 
+const getAllVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const kycList = await prisma.vendorKyc.findMany({})
+        return res.status(200).send({kycList})
+    }catch(err){
+        return next(err)
+    }
+}
+
+const getSpecificVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {host_id} = req.body
+        const kyc = await prisma.vendorKyc.findUnique({where: {host_id: host_id}})
+        return res.status(200).send({kyc: kyc})
+    }catch(err){
+        return next(err)
+    }
+}
+
+const acceptKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {host_id} = req.body
+        if(!host_id){
+            return res.status(400).send({message: "host id is required"})
+        }
+        const accepted = await prisma.host.update({
+            where: {id: host_id},
+            data: {
+                verified: true
+            }
+        })
+        return res.status(200).send({message: "Vendor verified successfully"})
+    }catch(err){
+        return next(err)
+    }
+}
+
+const rejectKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {host_id} = req.body
+        if(!host_id){
+            return res.status(400).send({message: "host id is required"})
+        }
+        await prisma.vendorKyc.delete({where: {host_id: host_id}})
+        return res.status(200).send({message: "Vendor kyc rejected successfully"})
+    }catch(err){
+        return next(err)
+    }
+}
+
+
+
 const superAdminController = {
     getAllUsers,
     getAllVendors,
@@ -210,6 +262,10 @@ const superAdminController = {
     getServiceOptions,
     addServiceOption,
     deleteServiceOption,
-    deleteVendor
+    deleteVendor,
+    getAllVendorKyc,
+    getSpecificVendorKyc,
+    acceptKyc,
+    rejectKyc
 }
 export default superAdminController
