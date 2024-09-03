@@ -17,5 +17,9 @@ HostRouter
     .put('/profile/update/:id', hostController.updateProfile)
     //@ts-ignore
     .put('/password/:id', hostController.changeHostPassword)
+    //@ts-ignore
+    .post('/kyc', upload.single("image"), hostController.submitKycDetails)
+    //@ts-ignore
+    .get('/kyc', hostController.getKycDetails)
     
 export default HostRouter

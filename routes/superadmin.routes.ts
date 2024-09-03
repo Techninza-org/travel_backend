@@ -29,6 +29,15 @@ SuperAdminRouter
     .delete('/service-option/:id', superAdminController.deleteServiceOption)
     //@ts-ignore
     .delete('/vendor/:host_id', superAdminController.deleteVendor)
-    
+    //@ts-ignore
+    .get('/kyc/all', superAdminController.getAllVendorKyc)
+    //@ts-ignore
+    .get('/kyc', superAdminController.getSpecificVendorKyc)
+    //@ts-ignore
+    .put('/accept', superAdminController.acceptKyc)
+    //@ts-ignore
+    .put('/reject', superAdminController.rejectKyc)
+    //@ts-ignore
+    .get('/notifications', superAdminController.getNotifs)
 
 export default SuperAdminRouter

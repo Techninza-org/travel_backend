@@ -275,6 +275,7 @@ const superAdminController = {
     getAllVendorKyc,
     getSpecificVendorKyc,
     acceptKyc,
-    rejectKyc
+    rejectKyc,
+    getNotifs
 }
 export default superAdminController
