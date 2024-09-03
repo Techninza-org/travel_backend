@@ -248,6 +248,15 @@ const rejectKyc = async (req: ExtendedRequest, res: Response, next: NextFunction
     }
 }
 
+const getNotifs = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const notifs = await prisma.kycNotification.findMany({orderBy: {created_at: 'desc'}})
+        return res.status(200).send({notifs: notifs})
+    }catch(err){
+        return next(err)
+    }
+}
+
 
 
 const superAdminController = {

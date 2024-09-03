@@ -161,12 +161,24 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
                     coi: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`
                 }
             })
+            const notif = await prisma.kycNotification.create({
+                data: {
+                    host_id: user.id,
+                    notif: `${req.user.username} has submitted KYC documents.`
+                }
+            })
             return res.status(201).send({kyc})
         }else {
             const kyc = await prisma.vendorKyc.update({
                 where: {host_id: user.id},
                 data: {
                     gst: gst,
+                }
+            })
+            const notif = await prisma.kycNotification.create({
+                data: {
+                    host_id: user.id,
+                    notif: `${req.user.username} has submitted KYC documents.`
                 }
             })
             return res.status(201).send({kyc})
