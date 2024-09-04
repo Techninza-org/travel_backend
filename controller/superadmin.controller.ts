@@ -200,7 +200,9 @@ const deleteServiceOption = async (req: ExtendedRequest, res: Response, next: Ne
 
 const getAllVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
-        const kycList = await prisma.vendorKyc.findMany({})
+        const kycList = await prisma.vendorKyc.findMany({include:{
+            host: true
+        }})
         return res.status(200).send({kycList})
     }catch(err){
         return next(err)
@@ -210,7 +212,9 @@ const getAllVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFu
 const getSpecificVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const {host_id} = req.body
-        const kyc = await prisma.vendorKyc.findUnique({where: {host_id: host_id}})
+        const kyc = await prisma.vendorKyc.findUnique({where: {host_id: host_id},include:{
+            host: true
+        }})
         return res.status(200).send({kyc: kyc})
     }catch(err){
         return next(err)
