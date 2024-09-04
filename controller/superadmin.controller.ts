@@ -215,7 +215,7 @@ const getSpecificVendorKyc = async (req: ExtendedRequest, res: Response, next: N
         const kyc = await prisma.vendorKyc.findUnique({where: {host_id: host_id},include:{
             host: true
         }})
-        return res.status(200).send({kyc: kyc})
+        return res.status(200).send({kyc})
     }catch(err){
         return next(err)
     }

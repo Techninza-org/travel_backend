@@ -32,7 +32,7 @@ SuperAdminRouter
     //@ts-ignore
     .get('/kyc/all', superAdminController.getAllVendorKyc)
     //@ts-ignore
-    .get('/kyc', superAdminController.getSpecificVendorKyc)
+    .post('/kyc/vendor', superAdminController.getSpecificVendorKyc)
     //@ts-ignore
     .put('/accept', superAdminController.acceptKyc)
     //@ts-ignore
