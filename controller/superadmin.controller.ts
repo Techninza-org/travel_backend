@@ -41,6 +41,8 @@ const getAllVendors = async (req: ExtendedRequest, res: Response, next: NextFunc
                 services: true,
                 customTrips: true,
                 photo: true,
+                verified: true,
+                submitted: true
             },
         })
         return res.status(200).send({ status: 200, vendors: vendors, count: vendors.length })
