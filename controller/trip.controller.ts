@@ -13,6 +13,7 @@ const razorpayInstance = new Razorpay({
 })
 
 export const CreateTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const user = req.user
     const body = req.body
     if (!helper.isValidatePaylod(body, ['destination', 'start_date', 'number_of_people', 'service_id', 'cost'])) {
@@ -93,6 +94,8 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             error: 'order failed.',
             error_description: (err as Error)?.message,
         })
+    }}catch(err){
+        return next(err)
     }
 }
 
