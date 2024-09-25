@@ -133,7 +133,10 @@ export const Follows = async (req: ExtendedRequest, res: Response, next: NextFun
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id, action should be a number.' })
     }
-    user_id = Math.floor(Number(user_id))
+    user_id = Number(user_id)
+    if(user_id.toString().length > 8){
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'user_id too large' })
+    }
     const isAlreadyFollowing = await prisma.follows.findFirst({
         where: { user_id: user_id, follower_id: req.user.id },
     })
@@ -182,7 +185,10 @@ const unfollowUser = async (req: ExtendedRequest, res: Response, next: NextFunct
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
     }
-    user_id = Math.floor(Number(user_id))
+    user_id = Number(user_id)
+    if(user_id.toString().length > 8){
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'user_id too large' })
+    }
     const isAlreadyFollowing = await prisma.follows.findFirst({
         where: { user_id: user_id, follower_id: req.user.id },
     })
@@ -214,8 +220,11 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
     }
     user_id = Number(user_id)
+    if(user_id.toString().length > 8){
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'user_id too large' })
+    }
     const isAlreadyFollowing = await prisma.follows.findFirst({
-        where: { user_id: Math.floor(user_id), follower_id: req.user.id },
+        where: { user_id: user_id, follower_id: req.user.id },
     })
     if (isAlreadyFollowing) {
         return res
@@ -223,7 +232,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Bad Request', error_description: 'Already following this user' })
     }
     const isAlreadyRequested = await prisma.followRequest.findFirst({
-        where: { user_id: Math.floor(user_id), follower_id: req.user.id, status: 0 },
+        where: { user_id: user_id, follower_id: req.user.id, status: 0 },
     })
     if (isAlreadyRequested) {
         await prisma.followRequest.delete({ where: { id: isAlreadyRequested.id } })
@@ -286,8 +295,11 @@ const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id should be a number.' })
     }
     follower_id = Number(follower_id)
+    if(follower_id.toString().length > 8){
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'follower_id too large' })
+    }
     const followRequest = await prisma.followRequest.findFirst({
-        where: { user_id: req.user.id, follower_id: Math.floor(follower_id), status: 0 },
+        where: { user_id: req.user.id, follower_id: follower_id, status: 0 },
     })
     if (!followRequest) {
         return res
@@ -316,8 +328,11 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id should be a number.' })
     }
     follower_id = Number(follower_id)
+    if(follower_id.toString().length > 8){
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'follower_id too large' })
+    }
     const followRequest = await prisma.followRequest.findFirst({
-        where: { user_id: req.user.id, follower_id: Math.floor(follower_id), status: 0 },
+        where: { user_id: req.user.id, follower_id: follower_id, status: 0 },
     })
     if (!followRequest) {
         return res
@@ -325,7 +340,7 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Bad Request', error_description: 'No follow request found.' })
     }
     try {
-        const entry = await prisma.follows.create({ data: { user_id: req.user.id, follower_id: Math.floor(follower_id) } })
+        const entry = await prisma.follows.create({ data: { user_id: req.user.id, follower_id: follower_id} })
         const deletedEntry = await prisma.followRequest.delete({ where: { id: followRequest.id } })
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
