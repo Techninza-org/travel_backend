@@ -133,7 +133,7 @@ export const Follows = async (req: ExtendedRequest, res: Response, next: NextFun
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id, action should be a number.' })
     }
-    user_id = Number(user_id)
+    user_id = Math.floor(Number(user_id))
     const isAlreadyFollowing = await prisma.follows.findFirst({
         where: { user_id: user_id, follower_id: req.user.id },
     })
@@ -182,7 +182,7 @@ const unfollowUser = async (req: ExtendedRequest, res: Response, next: NextFunct
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
     }
-    user_id = Number(user_id)
+    user_id = Math.floor(Number(user_id))
     const isAlreadyFollowing = await prisma.follows.findFirst({
         where: { user_id: user_id, follower_id: req.user.id },
     })
@@ -213,7 +213,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
     }
-    user_id = Number(user_id)
+    user_id = Math.floor(Number(user_id))
     const isAlreadyFollowing = await prisma.follows.findFirst({
         where: { user_id: user_id, follower_id: req.user.id },
     })
