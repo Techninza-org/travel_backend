@@ -213,9 +213,9 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
     }
-    user_id = Math.floor(Number(user_id))
+    user_id = Number(user_id)
     const isAlreadyFollowing = await prisma.follows.findFirst({
-        where: { user_id: user_id, follower_id: req.user.id },
+        where: { user_id: Math.floor(user_id), follower_id: req.user.id },
     })
     if (isAlreadyFollowing) {
         return res
@@ -223,7 +223,7 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Bad Request', error_description: 'Already following this user' })
     }
     const isAlreadyRequested = await prisma.followRequest.findFirst({
-        where: { user_id: user_id, follower_id: req.user.id, status: 0 },
+        where: { user_id: Math.floor(user_id), follower_id: req.user.id, status: 0 },
     })
     if (isAlreadyRequested) {
         await prisma.followRequest.delete({ where: { id: isAlreadyRequested.id } })
