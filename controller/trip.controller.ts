@@ -22,6 +22,15 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             error_description: 'destination, start_date, end_date, service_id, cost is required.',
         })
     }
+
+    if(body.service_id === null){
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid payload',
+            error_description: 'service_id is cant be null.',
+        })
+
+    }
     const service = await prisma.service.findFirst({ where: { id: Number(body.service_id) } })
 
     if (!service) {
