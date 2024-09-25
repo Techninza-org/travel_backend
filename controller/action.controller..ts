@@ -287,7 +287,7 @@ const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
     }
     follower_id = Number(follower_id)
     const followRequest = await prisma.followRequest.findFirst({
-        where: { user_id: req.user.id, follower_id: follower_id, status: 0 },
+        where: { user_id: req.user.id, follower_id: Math.floor(follower_id), status: 0 },
     })
     if (!followRequest) {
         return res
@@ -317,7 +317,7 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
     }
     follower_id = Number(follower_id)
     const followRequest = await prisma.followRequest.findFirst({
-        where: { user_id: req.user.id, follower_id: follower_id, status: 0 },
+        where: { user_id: req.user.id, follower_id: Math.floor(follower_id), status: 0 },
     })
     if (!followRequest) {
         return res
@@ -325,7 +325,7 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Bad Request', error_description: 'No follow request found.' })
     }
     try {
-        const entry = await prisma.follows.create({ data: { user_id: req.user.id, follower_id: follower_id } })
+        const entry = await prisma.follows.create({ data: { user_id: req.user.id, follower_id: Math.floor(follower_id) } })
         const deletedEntry = await prisma.followRequest.delete({ where: { id: followRequest.id } })
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
