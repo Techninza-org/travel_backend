@@ -15,19 +15,19 @@ const razorpayInstance = new Razorpay({
 export const CreateTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const body = req.body
-    const service = await prisma.service.findFirst({ where: { id: body.service_id } })
+    if (!helper.isValidatePaylod(body, ['destination', 'start_date', 'number_of_people', 'service_id', 'cost'])) {
+        return res.status(200).send({
+            status: 200,
+            error: 'Invalid payload',
+            error_description: 'destination, start_date, end_date, service_id, cost is required.',
+        })
+    }
+    const service = await prisma.service.findFirst({ where: { id: Number(body.service_id) } })
 
     if (!service) {
         return res
             .status(404)
             .send({ status: 404, error: 'Service not found', error_description: 'Service not found for the given id.' })
-    }
-    if (!helper.isValidatePaylod(body, ['destination', 'start_date', 'number_of_people', 'service_id', 'cost'])) {
-        return res.status(200).send({
-            status: 200,
-            error: 'Invalid payload',
-            error_description: 'destination, start_date, end_date is required.',
-        })
     }
     if(req.body.cost > 10000000){
         return res.status(200).send({
@@ -45,7 +45,7 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
             })
         }
         await prisma.service.update({
-            where: { id: body.service_id },
+            where: { id: Number(body.service_id) },
             data: {
                 available_seats:
                     service.available_seats !== null ? service.available_seats - body.number_of_people : null,
@@ -64,7 +64,7 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                 start_date: body.start_date,
                 end_date: body.end_date,
                 number_of_people: body.number_of_people,
-                service_id: body.service_id,
+                service_id: Number(body.service_id),
                 user_id: user.id,
                 cost: body.cost,
                 host_id: service.host_id,
