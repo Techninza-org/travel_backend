@@ -1060,6 +1060,56 @@ const switchPushNotifications = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+const createTransaction = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const user = req.user
+        const { amount, status, order_id } = req.body
+        if(!helper.isValidatePaylod(req.body, ['amount', 'status', 'order_id'])){
+            return res.status(200).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'amount, status and order_id are required.',
+            })
+        }
+        if(isNaN(Number(amount))){
+            return res.status(200).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Amount should be a number.',
+            })
+        }
+        if(typeof status !== 'string' || typeof order_id !== 'string'){
+            return res.status(200).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Status and Order_id should be a string.',
+            })
+        }
+        const transaction = await prisma.transactions.create({
+            data: {
+                amount: amount,
+                status: status,
+                order_id: order_id,
+                ezi_order_id: `EZI${order_id}`,
+                user_id: user.id,
+            },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', transaction: transaction })
+    }catch(err){
+        return next(err)
+    }
+}
+
+const getTransactions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const user = req.user
+        const transactions = await prisma.transactions.findMany({where: {id: user.id}, orderBy: {created_at: 'desc'}})
+        return res.status(200).send({ status: 200, message: 'Ok', transactions: transactions })
+    }catch(err){
+        return next(err)
+    }
+}
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -1092,7 +1142,9 @@ const userController = {
     deleteNotification,
     markAsRead,
     friendsSuggestions,
-    switchPushNotifications
+    switchPushNotifications,
+    createTransaction,
+    getTransactions
 }
 
 export default userController
