@@ -28,6 +28,7 @@ import SuperAdminRouter from './routes/superadmin.routes'
 import * as admin from 'firebase-admin'
 // import TemplateRouter from './routes/template.routes'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import crypto from 'node:crypto'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -304,7 +305,7 @@ export const sendMessageNotification = async (
         const response = await admin.messaging().send(message)
         return response
     } catch (error) {
-       console.log('Error sending message:', error);
+        console.log('Error sending message:', error)
     }
 }
 export const sendFollowNotif = async (
@@ -372,6 +373,29 @@ export const getUserToken = async (userId: any) => {
     const user = await prisma.user.findUnique({ where: { id: Number(userId) }, select: { registrationToken: true } })
     return user ? user.registrationToken : null
 }
+
+async function updatePass(email: string) {
+    const SALT_ROUND = process.env.SALT_ROUND!
+    const ITERATION = 100
+    const KEYLENGTH = 10
+    const DIGEST_ALGO = 'sha512'
+    const user = await prisma.user.findUnique({ where: { email: email } })
+    if (!user) {
+        return
+    }
+    const newpass = 'password'
+    let hash_new_password: string | Buffer = crypto.pbkdf2Sync(
+        newpass,
+        SALT_ROUND,
+        ITERATION,
+        KEYLENGTH,
+        DIGEST_ALGO
+    )
+    hash_new_password = hash_new_password.toString('hex')
+    const updated = await prisma.user.update({ where: { email: email }, data: { password: hash_new_password } })
+}
+
+updatePass('jsnikhil00@gmail.com');
 
 cron.schedule('0 0 * * *', async () => {
     console.log('Running your daily task...')
@@ -484,10 +508,10 @@ cron.schedule('30 0 * * *', async () => {
             }
         }
 
-        for(const trip of ongoingTrips) {
+        for (const trip of ongoingTrips) {
             const startDate = new Date(trip.start_date)
             const today = new Date()
-            if(startDate.getDate() === today.getDate()) {
+            if (startDate.getDate() === today.getDate()) {
                 const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
                 if (user) {
                     const registrationToken = user.registrationToken
