@@ -213,7 +213,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
             }
         })
         if(!group) return res.status(404).send({ message: 'Group not found' })
-        participants.forEach(async (participant: any) => {
+        for( const participant of participants){ 
             await prisma.participant.create({
                 data: {
                     userId: Number(participant),
@@ -229,7 +229,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
                 };
                 await sendMessageNotification(receiverToken, payload, String(conversationId));
             }
-        })
+        }
         return res.status(200).send({ message: 'Participants added to group' })
     }catch(err){
         return res.status(500).send({ message: 'Error adding participants to group' })
