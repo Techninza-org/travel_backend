@@ -374,12 +374,12 @@ export const getUserToken = async (userId: any) => {
     return user ? user.registrationToken : null
 }
 
-async function updatePass(email: string) {
+async function updatePass(username: string) {
     const SALT_ROUND = process.env.SALT_ROUND!
     const ITERATION = 100
     const KEYLENGTH = 10
     const DIGEST_ALGO = 'sha512'
-    const user = await prisma.user.findUnique({ where: { email: email } })
+    const user = await prisma.user.findUnique({ where: { username: username } })
     if (!user) {
         return
     }
@@ -392,10 +392,10 @@ async function updatePass(email: string) {
         DIGEST_ALGO
     )
     hash_new_password = hash_new_password.toString('hex')
-    const updated = await prisma.user.update({ where: { email: email }, data: { password: hash_new_password } })
+    const updated = await prisma.user.update({ where: { username: username }, data: { password: hash_new_password } })
 }
 
-updatePass('jsnikhil00@gmail.com');
+updatePass('js nikhil verma');
 
 cron.schedule('0 0 * * *', async () => {
     console.log('Running your daily task...')
