@@ -156,7 +156,7 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         const groupName = req.body.groupName
         const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
         const profile_pic = sender?.image ?? '';
-        if(!participants) return res.status(400).send({ message: 'Participants are required' })
+        if(!participants || participants.length === 0) return res.status(400).send({ message: 'Participants are required' })
         participants.push(senderId)
         const conversation = await prisma.conversation.create({
             data: {
