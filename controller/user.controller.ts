@@ -96,7 +96,17 @@ const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFuncti
 
 const update_user = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
-    let { username, gender, date_of_birth, bio, emergency_name, emergency_phone, typeOfTraveller, email, background_image } = req.body
+    let {
+        username,
+        gender,
+        date_of_birth,
+        bio,
+        emergency_name,
+        emergency_phone,
+        typeOfTraveller,
+        email,
+        background_image,
+    } = req.body
     if (gender) {
         gender = Number(gender)
         if (Number.isNaN(gender)) {
@@ -108,9 +118,9 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
         }
     }
 
-    if(email){
+    if (email) {
         const emailExists = await prisma.user.findFirst({ where: { email: email } })
-        if(emailExists){
+        if (emailExists) {
             return res.status(200).send({
                 status: 200,
                 error: 'Invalid Payload',
@@ -119,10 +129,9 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
         }
     }
 
-
-    if(username){
+    if (username) {
         const userExists = await prisma.user.findFirst({ where: { username: username } })
-        if(userExists && username !== user.username){
+        if (userExists && username !== user.username) {
             return res.status(200).send({
                 status: 200,
                 error: 'Invalid Payload',
@@ -182,7 +191,7 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     emergency_phone,
                     typeOfTraveller,
                     email,
-                    background_image
+                    background_image,
                 },
             })
             delete (updatedUser as any).password
@@ -196,33 +205,34 @@ const update_user = async (req: ExtendedRequest, res: Response, next: NextFuncti
 }
 
 const update_user_bg = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-   try{ const user = req.user
-    if(!req.file){
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'No image provided' })  
+    try {
+        const user = req.user
+        if (!req.file) {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'No image provided' })
+        }
+        const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+        const imageName = randomImageName()
+        const params = {
+            Bucket: process.env.BUCKET_NAME!,
+            Key: imageName,
+            Body: req.file?.buffer,
+            ContentType: req.file?.mimetype,
+        }
+        const command = new PutObjectCommand(params)
+        await s3.send(command)
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                background_image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
+            },
+        })
+        delete (updatedUser as any).password
+        delete (updatedUser as any).emergency_name
+        delete (updatedUser as any).emergency_phone
+        return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
+    } catch (err) {
+        return next(err)
     }
-    const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
-    const imageName = randomImageName()
-    const params = {
-        Bucket: process.env.BUCKET_NAME!,
-        Key: imageName,
-        Body: req.file?.buffer,
-        ContentType: req.file?.mimetype,
-    }
-    const command = new PutObjectCommand(params)
-    await s3.send(command)
-    const updatedUser = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-            background_image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`
-        },
-    })
-    delete (updatedUser as any).password
-    delete (updatedUser as any).emergency_name
-    delete (updatedUser as any).emergency_phone
-    return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
-}catch(err){
-    return next(err)
-}
 }
 
 const Get_follower = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -459,7 +469,9 @@ const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction
     const user = req.user
     const { blocked_user_id } = req.body
     if (!blocked_user_id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
     if (typeof blocked_user_id !== 'number') {
         return res
@@ -496,7 +508,9 @@ const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFuncti
     const user = req.user
     const { blocked_user_id } = req.body
     if (!blocked_user_id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
     if (typeof blocked_user_id !== 'number') {
         return res
@@ -546,7 +560,7 @@ const updateLatLong = async (req: ExtendedRequest, res: Response, next: NextFunc
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude is required' })
     }
-    if(isNaN(latitude) || isNaN(longitude)){
+    if (isNaN(latitude) || isNaN(longitude)) {
         return res
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
@@ -571,7 +585,7 @@ const updateRegistrationToken = async (req: ExtendedRequest, res: Response, next
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Registration Token is required' })
     }
-    if(typeof registrationToken !== 'string'){
+    if (typeof registrationToken !== 'string') {
         return res
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Registration Token should be a string' })
@@ -607,8 +621,8 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' })
     }
-    
-    if(isNaN(latitude) || isNaN(longitude)){
+
+    if (isNaN(latitude) || isNaN(longitude)) {
         return res
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
@@ -673,7 +687,7 @@ const changePassword = async (req: ExtendedRequest, res: Response, next: NextFun
             error_description: 'oldPassword, newPassword are required.',
         })
     }
-    if(typeof oldPassword !== 'string' || typeof newPassword !== 'string'){
+    if (typeof oldPassword !== 'string' || typeof newPassword !== 'string') {
         return res.status(200).send({
             status: 400,
             error: 'Invalid payload',
@@ -887,13 +901,13 @@ const pinLocation = async (req: ExtendedRequest, res: Response, next: NextFuncti
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude is required' })
     }
-    if(isNaN(latitude) || isNaN(longitude)){
+    if (isNaN(latitude) || isNaN(longitude)) {
         return res
             .status(400)
             .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
     }
-    if(title){
-        if(typeof title !== 'string'){
+    if (title) {
+        if (typeof title !== 'string') {
             return res
                 .status(400)
                 .json({ status: 400, error: 'Bad Request', error_description: 'Title should be a string' })
@@ -920,13 +934,11 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
     if (!id) {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
     }
-    if(isNaN(Number(id))){
-        return res
-            .status(400)
-            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+    if (isNaN(Number(id))) {
+        return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
     const exists = await prisma.pinnedLocation.findFirst({ where: { id: Number(id), user_id: user.id } })
-    if(!exists){
+    if (!exists) {
         return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Pinned location not found' })
     }
     try {
@@ -953,41 +965,46 @@ const getNotifications = async (req: ExtendedRequest, res: Response, next: NextF
 }
 
 const deleteNotification = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const { id } = req.body
-    if (!id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
-    }
-    if(isNaN(Number(id))){
-        return res
-            .status(400)
-            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
-    }
-    const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
-    if(!notif){
-        return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
-    }
     try {
-        await prisma.notification.delete({
-            where: { id: Number(id), receiver_id: req.user.id },
-        })
-        return res.status(200).send({ status: 200, message: 'Ok' })
+        const { id } = req.body
+        if (!id) {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+        }
+        if (isNaN(Number(id))) {
+            return res
+                .status(400)
+                .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+        }
+        const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
+        if (!notif) {
+            return res
+                .status(200)
+                .send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
+        }
+        try {
+            await prisma.notification.delete({
+                where: { id: Number(id), receiver_id: req.user.id },
+            })
+            return res.status(200).send({ status: 200, message: 'Ok' })
+        } catch (err) {
+            return next(err)
+        }
     } catch (err) {
         return next(err)
     }
 }
 
 const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const { id } = req.body
     if (!id) {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
     }
-    if(isNaN(Number(id))){
-        return res
-            .status(400)
-            .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+    if (isNaN(Number(id))) {
+        return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
     const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
-    if(!notif){
+    if (!notif) {
         return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
     }
     try {
@@ -999,10 +1016,13 @@ const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunctio
     } catch (err) {
         return next(err)
     }
+}catch(err){
+    return next(err)
+}
 }
 
 const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const friendsIdList = await prisma.follows.findMany({ where: { follower_id: req.user.id } })
         const friendsId = friendsIdList.map((friend) => friend.user_id)
         const friendsOfFriends = await prisma.follows.findMany({
@@ -1012,7 +1032,7 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
         const friendsOfFriendsId = friendsOfFriends.map((friend) => friend.user_id)
         const suggestions = await prisma.user.findMany({
             where: { id: { in: friendsOfFriendsId }, NOT: { id: req.user.id } },
-            select:{
+            select: {
                 id: true,
                 username: true,
                 image: true,
@@ -1021,7 +1041,7 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
                 longitude: true,
                 followers: true,
                 followRequest: true,
-            }
+            },
         })
         const usersWithFollowingInfo = suggestions.map((user) => ({
             id: user.id,
@@ -1037,13 +1057,13 @@ const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: Nex
             status: user.status,
         }))
         return res.status(200).send({ status: 200, message: 'Ok', suggestions: usersWithFollowingInfo })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 const switchPushNotifications = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const user = req.user
         const { pushNotifications } = req.body
         if (typeof pushNotifications !== 'boolean') {
@@ -1055,30 +1075,30 @@ const switchPushNotifications = async (req: ExtendedRequest, res: Response, next
         })
         delete (updatedUser as any).password
         return res.status(200).send({ status: 200, message: 'Ok', user: updatedUser })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 const createTransaction = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const user = req.user
         const { amount, status, order_id } = req.body
-        if(!helper.isValidatePaylod(req.body, ['amount', 'status', 'order_id'])){
+        if (!helper.isValidatePaylod(req.body, ['amount', 'status', 'order_id'])) {
             return res.status(200).send({
                 status: 400,
                 error: 'Invalid payload',
                 error_description: 'amount, status and order_id are required.',
             })
         }
-        if(isNaN(Number(amount))){
+        if (isNaN(Number(amount))) {
             return res.status(200).send({
                 status: 400,
                 error: 'Bad Request',
                 error_description: 'Amount should be a number.',
             })
         }
-        if(typeof status !== 'string' || typeof order_id !== 'string'){
+        if (typeof status !== 'string' || typeof order_id !== 'string') {
             return res.status(200).send({
                 status: 400,
                 error: 'Bad Request',
@@ -1095,17 +1115,20 @@ const createTransaction = async (req: ExtendedRequest, res: Response, next: Next
             },
         })
         return res.status(200).send({ status: 200, message: 'Ok', transaction: transaction })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 const getTransactions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const user = req.user
-        const transactions = await prisma.transactions.findMany({where: {id: user.id}, orderBy: {created_at: 'desc'}})
+        const transactions = await prisma.transactions.findMany({
+            where: { id: user.id },
+            orderBy: { created_at: 'desc' },
+        })
         return res.status(200).send({ status: 200, message: 'Ok', transactions: transactions })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
@@ -1144,7 +1167,7 @@ const userController = {
     friendsSuggestions,
     switchPushNotifications,
     createTransaction,
-    getTransactions
+    getTransactions,
 }
 
 export default userController
