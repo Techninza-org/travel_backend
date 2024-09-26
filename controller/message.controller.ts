@@ -164,7 +164,7 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                 type: 'GROUP'
             }
         })
-        participants.forEach(async (participant: any) => {
+        for(const participant of participants){
             const participantExists = await prisma.user.findUnique({ where: { id: Number(participant) } });
             console.log('...'); 
             if(!participantExists) return res.status(404).send({ message: 'Participant not found' })
@@ -187,7 +187,7 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
                 await sendMessageNotification(receiverToken, payload, String(conversation.id));
             }
             }
-        })
+        }
         return res.status(200).send({ message: 'Group created', conversationId: conversation.id})
     }catch(err){
         return res.status(500).send({ message: 'Error creating group' })
