@@ -130,6 +130,9 @@ const createAnswer = async (req: ExtendedRequest, res: Response, next: NextFunct
 export const likeQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const questionId = Number(req.params.id)
+    if(!questionId) {
+        return res.status(400).send({ error: 'Invalid payload', error_description: 'question id is required.' })
+    }
     const postedBy = await prisma.forumQuestion.findUnique({ where: { id: questionId }, select: { user_id: true } })
     const postedById = Number(postedBy?.user_id)
     try {

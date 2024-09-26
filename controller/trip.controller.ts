@@ -79,6 +79,7 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                 cost: body.cost,
                 host_id: service.host_id,
                 order_id: order.id,
+                ezi_order_id: `EZI${order.id}`,
             },
         })
         
