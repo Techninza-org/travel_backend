@@ -273,8 +273,8 @@ export const sendMessageNotif = async (
 ) => {
     const notif = await prisma.notification.create({
         data: {
-            sender_id: senderId,
-            receiver_id: receiverId,
+            sender_id: Number(senderId),
+            receiver_id: Number(receiverId),
             sender_profile: senderProfile,
             title,
             message,
