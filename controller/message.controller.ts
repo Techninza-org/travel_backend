@@ -74,6 +74,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
         }
         
         io.emit("newMessage", { message: newMessage })
+        console.log('msg emitted');
+        
 
         const convo = await prisma.conversation.findFirst({
             where: {
@@ -96,10 +98,11 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 console.log(res, 'res');
             }
         }
-
+        console.log('convo updated');
         return res.status(200).send({ message: 'Message sent' })
     } catch (err) {
-        return res.status(500).send({ message: 'Error sending message' })
+        console.log(err);
+        return res.status(400).send({ message: 'Error sending message' })
     }
 }
 
