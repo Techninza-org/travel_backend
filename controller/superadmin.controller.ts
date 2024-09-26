@@ -264,6 +264,21 @@ const getNotifs = async (req: ExtendedRequest, res: Response, next: NextFunction
     }
 }
 
+const getTransactionsByUserId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {user_id} = req.body
+        if(!user_id){
+            return res.status(400).send({message: "User id is required"})
+        }
+        if(isNaN(Number(user_id))){
+            return res.status(400).send({message: "Invalid user id"})
+        }
+        const transactions = await prisma.transactions.findMany({where: {user_id: user_id}, orderBy: {created_at: 'desc'}})
+        return res.status(200).send({transactions: transactions})
+    }catch(err){
+        return next(err)
+    }
+}
 
 
 const superAdminController = {
@@ -283,6 +298,7 @@ const superAdminController = {
     getSpecificVendorKyc,
     acceptKyc,
     rejectKyc,
-    getNotifs
+    getNotifs,
+    getTransactionsByUserId
 }
 export default superAdminController

@@ -39,5 +39,7 @@ SuperAdminRouter
     .put('/reject', superAdminController.rejectKyc)
     //@ts-ignore
     .get('/notifications', superAdminController.getNotifs)
+    //@ts-ignore
+    .get('/transactions', superAdminController.getTransactionsByUserId)
 
 export default SuperAdminRouter
