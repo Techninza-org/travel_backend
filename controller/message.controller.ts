@@ -166,13 +166,16 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         })
         participants.forEach(async (participant: any) => {
             const participantExists = await prisma.user.findUnique({ where: { id: Number(participant) } });
+            console.log('...'); 
             if(!participantExists) return res.status(404).send({ message: 'Participant not found' })
+            console.log(',,,');
             await prisma.participant.create({
                 data: {
                     userId: Number(participant),
                     conversationId: conversation.id,
                 }
             })
+            console.log('///');
             if(Number(participant) !== senderId){
                 await sendMessageNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`, String(conversation.id));
                 const receiverToken = await getUserToken(participant);
