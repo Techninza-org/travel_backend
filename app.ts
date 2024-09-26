@@ -369,7 +369,7 @@ export const sendNotification = async (registrationToken: string, payload: { tit
 }
 
 export const getUserToken = async (userId: any) => {
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { registrationToken: true } })
+    const user = await prisma.user.findUnique({ where: { id: Number(userId) }, select: { registrationToken: true } })
     return user ? user.registrationToken : null
 }
 
