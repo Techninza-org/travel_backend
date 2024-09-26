@@ -8,6 +8,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
     try {
         const senderId = req.user.id
         const receiverId = req.params.receiverId
+        const rec = await prisma.user.findUnique({ where: { id: Number(receiverId) } });
+        if (!rec) return res.status(404).send({ message: 'Receiver not found' })
         const message = req.body.message
         if (!message || !receiverId) return res.status(400).send({ message: 'Receiver and message are required' })
         if (senderId === receiverId) return res.status(400).send({ message: 'You can not send message to yourself' })
