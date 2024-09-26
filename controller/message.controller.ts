@@ -167,11 +167,11 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         participants.forEach(async (participant: any) => {
             await prisma.participant.create({
                 data: {
-                    userId: participant,
+                    userId: Number(participant),
                     conversationId: conversation.id,
                 }
             })
-            if(participant !== senderId){
+            if(Number(participant) !== senderId){
                 await sendMessageNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`, String(conversation.id));
                 const receiverToken = await getUserToken(participant);
             if (receiverToken) {
@@ -211,7 +211,7 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
         participants.forEach(async (participant: any) => {
             await prisma.participant.create({
                 data: {
-                    userId: participant,
+                    userId: Number(participant),
                     conversationId: Number(conversationId),
                 }
             })
