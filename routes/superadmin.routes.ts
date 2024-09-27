@@ -44,5 +44,7 @@ SuperAdminRouter
     .get('/transactions', superAdminController.getTransactionsByUserId)
     //@ts-ignore
     .post('/blog', upload.single('image'), superAdminController.createBlog)
+    //@ts-ignore
+    .delete('/blog/:id', superAdminController.deleteBlog)
 
 export default SuperAdminRouter

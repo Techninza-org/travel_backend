@@ -324,6 +324,23 @@ const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
     }
 }
 
+const deleteBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params
+        if (!id) {
+            return res.status(400).send({ message: 'Blog id is required' })
+        }
+        const blogExists = await prisma.blog.findUnique({ where: { id: Number(id) } })
+        if(!blogExists) {
+            return res.status(400).send({ message: 'Blog does not exist' })
+        }
+        await prisma.blog.delete({ where: { id: Number(id) } })
+        return res.status(200).send({ message: 'Blog deleted successfully' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
     getAllUsers,
     getAllVendors,
@@ -344,5 +361,6 @@ const superAdminController = {
     getNotifs,
     getTransactionsByUserId,
     createBlog,
+    deleteBlog,
 }
 export default superAdminController
