@@ -500,7 +500,7 @@ model Notification {
 model Blog {
   id          Int      @id @default(autoincrement())
   title       String
-  description String
+  description String   @db.Text
   image       String?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
