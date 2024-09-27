@@ -41,5 +41,7 @@ SuperAdminRouter
     .get('/notifications', superAdminController.getNotifs)
     //@ts-ignore
     .get('/transactions', superAdminController.getTransactionsByUserId)
+    //@ts-ignore
+    .post('/blog', superAdminController.createBlog)
 
 export default SuperAdminRouter
