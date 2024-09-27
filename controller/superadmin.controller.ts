@@ -291,6 +291,8 @@ const getTransactionsByUserId = async (req: ExtendedRequest, res: Response, next
 }
 
 const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    console.log(req.body, 'body');
+    console.log(req.files, 'files');
     try {
         const body = req.body
         const { title, description } = body
