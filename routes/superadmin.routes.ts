@@ -43,6 +43,8 @@ SuperAdminRouter
     //@ts-ignore
     .get('/transactions', superAdminController.getTransactionsByUserId)
     //@ts-ignore
+    .get('/transactions/all', superAdminController.getAllTransactions)
+    //@ts-ignore
     .post('/blog', upload.single('image'), superAdminController.createBlog)
     //@ts-ignore
     .delete('/blog/:id', superAdminController.deleteBlog)

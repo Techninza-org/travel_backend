@@ -290,6 +290,18 @@ const getTransactionsByUserId = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+const getAllTransactions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const transactions = await prisma.transactions.findMany({ orderBy: { created_at: 'desc' }, include: { user: {select: {
+            username: true,
+            phone: true,
+        }} } })
+        return res.status(200).send({ transactions: transactions })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     console.log(req.body, 'body');
     console.log(req.files, 'files');
@@ -360,6 +372,7 @@ const superAdminController = {
     rejectKyc,
     getNotifs,
     getTransactionsByUserId,
+    getAllTransactions,
     createBlog,
     deleteBlog,
 }
