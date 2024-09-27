@@ -14,5 +14,7 @@ authRouter.post('/verifyPhone', authController.VerifyOtpPhone)
 authRouter.post('/host-login', authController.HostLogin)
 authRouter.post('/social-login', authController.socialLogin)
 authRouter.post('/super-admin-login', authController.superAdminLogin)
+authRouter.get('/blogs', authController.getBlogs)
+authRouter.get('/blog/:id', authController.getBlogById)
 
 export default authRouter

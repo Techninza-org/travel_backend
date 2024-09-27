@@ -2,6 +2,9 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
+import crypto from 'crypto'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { s3 } from '../app'
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -42,7 +45,7 @@ const getAllVendors = async (req: ExtendedRequest, res: Response, next: NextFunc
                 customTrips: true,
                 photo: true,
                 verified: true,
-                submitted: true
+                submitted: true,
             },
         })
         return res.status(200).send({ status: 200, vendors: vendors, count: vendors.length })
@@ -66,7 +69,6 @@ export const deleteVendor = async (req: ExtendedRequest, res: Response, next: Ne
         return next(err)
     }
 }
-
 
 export const hostServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const host_id = req.params.host_id
@@ -201,85 +203,124 @@ const deleteServiceOption = async (req: ExtendedRequest, res: Response, next: Ne
 }
 
 const getAllVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const kycList = await prisma.vendorKyc.findMany({include:{
-            host: true
-        }})
-        return res.status(200).send({kycList})
-    }catch(err){
+    try {
+        const kycList = await prisma.vendorKyc.findMany({
+            include: {
+                host: true,
+            },
+        })
+        return res.status(200).send({ kycList })
+    } catch (err) {
         return next(err)
     }
 }
 
 const getSpecificVendorKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const {host_id} = req.body
-        const kyc = await prisma.vendorKyc.findUnique({where: {host_id: host_id},include:{
-            host: true
-        }})
-        return res.status(200).send({kyc})
-    }catch(err){
+    try {
+        const { host_id } = req.body
+        const kyc = await prisma.vendorKyc.findUnique({
+            where: { host_id: host_id },
+            include: {
+                host: true,
+            },
+        })
+        return res.status(200).send({ kyc })
+    } catch (err) {
         return next(err)
     }
 }
 
 const acceptKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const {host_id} = req.body
-        if(!host_id){
-            return res.status(400).send({message: "host id is required"})
+    try {
+        const { host_id } = req.body
+        if (!host_id) {
+            return res.status(400).send({ message: 'host id is required' })
         }
         const accepted = await prisma.host.update({
-            where: {id: host_id},
+            where: { id: host_id },
             data: {
-                verified: true
-            }
+                verified: true,
+            },
         })
-        return res.status(200).send({message: "Vendor verified successfully"})
-    }catch(err){
+        return res.status(200).send({ message: 'Vendor verified successfully' })
+    } catch (err) {
         return next(err)
     }
 }
 
 const rejectKyc = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const {host_id} = req.body
-        if(!host_id){
-            return res.status(400).send({message: "host id is required"})
+    try {
+        const { host_id } = req.body
+        if (!host_id) {
+            return res.status(400).send({ message: 'host id is required' })
         }
-        await prisma.vendorKyc.delete({where: {host_id: host_id}})
-        await prisma.host.update({where: {id: host_id}, data: {submitted: false}})
-        return res.status(200).send({message: "Vendor kyc rejected successfully"})
-    }catch(err){
+        await prisma.vendorKyc.delete({ where: { host_id: host_id } })
+        await prisma.host.update({ where: { id: host_id }, data: { submitted: false } })
+        return res.status(200).send({ message: 'Vendor kyc rejected successfully' })
+    } catch (err) {
         return next(err)
     }
 }
 
 const getNotifs = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const notifs = await prisma.kycNotification.findMany({orderBy: {created_at: 'desc'}})
-        return res.status(200).send({notifs: notifs})
-    }catch(err){
+    try {
+        const notifs = await prisma.kycNotification.findMany({ orderBy: { created_at: 'desc' } })
+        return res.status(200).send({ notifs: notifs })
+    } catch (err) {
         return next(err)
     }
 }
 
 const getTransactionsByUserId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const {user_id} = req.body
-        if(!user_id){
-            return res.status(400).send({message: "User id is required"})
+    try {
+        const { user_id } = req.body
+        if (!user_id) {
+            return res.status(400).send({ message: 'User id is required' })
         }
-        if(isNaN(Number(user_id))){
-            return res.status(400).send({message: "Invalid user id"})
+        if (isNaN(Number(user_id))) {
+            return res.status(400).send({ message: 'Invalid user id' })
         }
-        const transactions = await prisma.transactions.findMany({where: {user_id: user_id}, orderBy: {created_at: 'desc'}})
-        return res.status(200).send({transactions: transactions})
-    }catch(err){
+        const transactions = await prisma.transactions.findMany({
+            where: { user_id: user_id },
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ transactions: transactions })
+    } catch (err) {
         return next(err)
     }
 }
 
+const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const body = req.body
+        const { title, description } = body
+        if (!title || !description) {
+            return res.status(400).send({ message: 'Title and description is required' })
+        }
+        const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+        const imageName = randomImageName()
+
+        const params = {
+            Bucket: process.env.BUCKET_NAME!,
+            Key: imageName,
+            Body: req.file?.buffer,
+            ContentType: req.file?.mimetype,
+        }
+        const command = new PutObjectCommand(params)
+        await s3.send(command)
+
+        const blog = await prisma.blog.create({
+            data: {
+                title: title,
+                description: description,
+                image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
+            },
+        })
+        return res.status(200).send({ status: 201, message: 'Created', blog: blog })
+    } catch (err) {
+        return next(err)
+    }
+}
 
 const superAdminController = {
     getAllUsers,
@@ -299,6 +340,7 @@ const superAdminController = {
     acceptKyc,
     rejectKyc,
     getNotifs,
-    getTransactionsByUserId
+    getTransactionsByUserId,
+    createBlog,
 }
 export default superAdminController

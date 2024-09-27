@@ -496,3 +496,12 @@ model Notification {
   isRead         Boolean  @default(false)
   created_at     DateTime @default(now())
 }
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  image       String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}

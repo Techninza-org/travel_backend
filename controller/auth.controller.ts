@@ -469,5 +469,23 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
     }
 }
 
-const authController = { Login, ForgotPassword, Signup, SendOtp, VerifyOtp, HostLogin, socialLogin, superAdminLogin, SendOtpPhone, VerifyOtpPhone }
+const getBlogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const blogs = await prisma.blog.findMany()
+        return res.status(200).send({ status: 200, message: 'Ok', blogs })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getBlogById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const blog = await prisma.blog.findUnique({ where: { id: Number(req.params.id) } })
+        return res.status(200).send({ status: 200, message: 'Ok', blog })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const authController = { Login, ForgotPassword, Signup, SendOtp, VerifyOtp, HostLogin, socialLogin, superAdminLogin, SendOtpPhone, VerifyOtpPhone, getBlogs, getBlogById }
 export default authController
