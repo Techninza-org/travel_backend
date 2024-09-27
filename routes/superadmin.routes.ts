@@ -2,6 +2,7 @@ import { Router } from 'express'
 import superAdminController from '../controller/superadmin.controller'
 import middleware from '../utils/middleware'
 const SuperAdminRouter = Router()
+import { upload } from '..'
 
 //@ts-ignore
 SuperAdminRouter
@@ -42,6 +43,6 @@ SuperAdminRouter
     //@ts-ignore
     .get('/transactions', superAdminController.getTransactionsByUserId)
     //@ts-ignore
-    .post('/blog', superAdminController.createBlog)
+    .post('/blog', upload.single('image'), superAdminController.createBlog)
 
 export default SuperAdminRouter
