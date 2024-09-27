@@ -232,6 +232,7 @@ export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _nex
                 },
             },
         })
+        if(!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'User not found.' })
         delete (user as any).password
         const follower_count = await prisma.follows.count({ where: { user_id: id } })
         const trip_count = await prisma.trip.count({ where: { user_id: id } })
