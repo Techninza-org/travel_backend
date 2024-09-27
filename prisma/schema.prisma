@@ -69,6 +69,7 @@ model Transactions {
   amount     Int
   status     String
   order_id   String
+  type       String?
   ezi_order_id  String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

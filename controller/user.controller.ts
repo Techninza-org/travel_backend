@@ -1083,8 +1083,8 @@ const switchPushNotifications = async (req: ExtendedRequest, res: Response, next
 const createTransaction = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const { amount, status, order_id } = req.body
-        if (!helper.isValidatePaylod(req.body, ['amount', 'status', 'order_id'])) {
+        const { amount, status, order_id, type } = req.body
+        if (!helper.isValidatePaylod(req.body, ['amount', 'status', 'order_id', 'type'])) {
             return res.status(200).send({
                 status: 400,
                 error: 'Invalid payload',
@@ -1098,11 +1098,11 @@ const createTransaction = async (req: ExtendedRequest, res: Response, next: Next
                 error_description: 'Amount should be a number.',
             })
         }
-        if (typeof status !== 'string' || typeof order_id !== 'string') {
+        if (typeof status !== 'string' || typeof order_id !== 'string' || typeof type !== 'string') {
             return res.status(200).send({
                 status: 400,
                 error: 'Bad Request',
-                error_description: 'Status and Order_id should be a string.',
+                error_description: 'Status, Order_id and type should be a string.',
             })
         }
         const transaction = await prisma.transactions.create({
@@ -1112,6 +1112,7 @@ const createTransaction = async (req: ExtendedRequest, res: Response, next: Next
                 order_id: order_id,
                 ezi_order_id: `EZI${order_id}`,
                 user_id: user.id,
+                type: type,
             },
         })
         return res.status(200).send({ status: 200, message: 'Ok', transaction: transaction })
