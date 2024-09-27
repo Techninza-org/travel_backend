@@ -69,5 +69,9 @@ userRouter
     .get('/suggestions', userController.friendsSuggestions)
     //@ts-ignore
     .put('/switch-notifications', userController.switchPushNotifications)
+    //@ts-ignore
+    .post('/create-transaction', userController.createTransaction)
+    //@ts-ignore
+    .get('/transactions', userController.getTransactions)
 
 export default userRouter
