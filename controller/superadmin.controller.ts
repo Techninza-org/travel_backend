@@ -305,7 +305,7 @@ const getAllTransactions = async (req: ExtendedRequest, res: Response, next: Nex
 const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const body = req.body
-        const { title, description } = body
+        const { title, description, meta, keywords } = body
         if (!title || !description) {
             return res.status(400).send({ message: 'Title and description is required' })
         }
@@ -329,6 +329,8 @@ const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
                 title: title,
                 description: description,
                 slug: blogSlug,
+                meta: meta,
+                keywords: keywords,
                 image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
             },
         })
