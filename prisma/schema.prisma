@@ -500,6 +500,7 @@ model Notification {
 
 model Blog {
   id          Int      @id @default(autoincrement())
+  slug        String   @unique
   title       String
   description String   @db.Text
   image       String?

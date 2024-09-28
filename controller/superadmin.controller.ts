@@ -303,8 +303,6 @@ const getAllTransactions = async (req: ExtendedRequest, res: Response, next: Nex
 }
 
 const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    console.log(req.body, 'body');
-    console.log(req.files, 'files');
     try {
         const body = req.body
         const { title, description } = body
@@ -322,11 +320,15 @@ const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
         }
         const command = new PutObjectCommand(params)
         await s3.send(command)
+        
+        const currentDate = new Date().toISOString().slice(0, 10)
+        const blogSlug = `${currentDate}-${title.toLowerCase().replace(/ /g, '-')}`
 
         const blog = await prisma.blog.create({
             data: {
                 title: title,
                 description: description,
+                slug: blogSlug,
                 image: `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`,
             },
         })

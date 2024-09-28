@@ -480,7 +480,7 @@ const getBlogs = async (req: Request, res: Response, next: NextFunction) => {
 
 const getBlogById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const blog = await prisma.blog.findUnique({ where: { id: Number(req.params.id) } })
+        const blog = await prisma.blog.findUnique({ where: { slug: String(req.params.slug) } })
         return res.status(200).send({ status: 200, message: 'Ok', blog })
     } catch (err) {
         return next(err)
