@@ -506,6 +506,7 @@ model Blog {
   image       String?
   meta        String?
   keywords    String?
+  category    String?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
