@@ -16,5 +16,6 @@ authRouter.post('/social-login', authController.socialLogin)
 authRouter.post('/super-admin-login', authController.superAdminLogin)
 authRouter.get('/blogs', authController.getBlogs)
 authRouter.get('/blog/:slug', authController.getBlogById)
+authRouter.get('/blogs/recent', authController.getRecentBlogs)
 
 export default authRouter
