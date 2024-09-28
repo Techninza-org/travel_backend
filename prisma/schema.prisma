@@ -504,7 +504,7 @@ model Blog {
   title       String
   description String   @db.Text
   image       String?
-  meta        String?
+  meta        String?  @db.Text
   keywords    String?
   category    String?
   created_at  DateTime @default(now())
