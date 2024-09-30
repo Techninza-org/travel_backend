@@ -60,19 +60,19 @@ model User {
   kycStatus         Int?             @default(-1) // -1 = not submitted, 0 = submitted, 1 = accepted
   isSocialLogin     Boolean          @default(false)
   pushNotifications Boolean          @default(true)
-  transactions       Transactions[]
+  transactions      Transactions[]
 }
 
 model Transactions {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  amount     Int
-  status     String
-  order_id   String
-  type       String?
-  ezi_order_id  String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  amount       Int
+  status       String
+  order_id     String
+  type         String?
+  ezi_order_id String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
@@ -292,9 +292,9 @@ model Destination {
 }
 
 model Host {
-  id                  Int          @id @default(autoincrement())
-  type                String       @default("host")
-  username            String       @unique
+  id                  Int                  @id @default(autoincrement())
+  type                String               @default("host")
+  username            String               @unique
   password            String
   name                String
   description         String?
@@ -307,9 +307,20 @@ model Host {
   services            Service[]
   customTrips         CustomTrip[]
   kyc                 VendorKyc?
-  submitted           Boolean      @default(false)
-  verified            Boolean      @default(false)
-  created_at          DateTime     @default(now())
+  notifs              VendorNotification[]
+  submitted           Boolean              @default(false)
+  verified            Boolean              @default(false)
+  created_at          DateTime             @default(now())
+}
+
+model VendorNotification {
+  id         Int      @id @default(autoincrement())
+  host_id    Int      
+  title      String
+  isRead     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  host       Host     @relation(fields: [host_id], references: [id], onDelete: Cascade)
 }
 
 model VendorKyc {

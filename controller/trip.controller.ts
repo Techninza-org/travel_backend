@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 import Razorpay from 'razorpay'
-import { sendTripNotif, sendTripNotification } from '../app'
+import { sendTripNotif, sendTripNotification, sendVendordNotif } from '../app'
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID!,
@@ -82,6 +82,8 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                 ezi_order_id: `EZI${order.id}`,
             },
         })
+
+        await sendVendordNotif(service.host_id, `${user.username} booked a trip.`)
         
         return res.status(200).send({
             status: 201,
@@ -269,6 +271,7 @@ export const cancelTrip = async (req: ExtendedRequest, res: Response, next: Next
         data: { cancelled: true },
     })
     try{
+        await sendVendordNotif(trip.host_id, `${user.username} cancelled a trip.`)
         const registrationToken = user.registrationToken
         const payload = {
             title: 'Trip Update',

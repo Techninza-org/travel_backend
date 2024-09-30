@@ -203,6 +203,15 @@ const getKycDetails = async (req: ExtendedRequest, res: Response, next: NextFunc
     }
 }
 
+const getVendorNotifs = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{    
+        const notifs = await prisma.vendorNotification.findMany({where: {host_id: req.user.id}, orderBy: {created_at: 'desc'}})
+        return res.status(200).send({notifications: notifs})
+    }catch(err){
+        return next(err)
+    }
+}
+
 const hostController = {
     getHostedTrips,
     GetSpecificTripHost,
@@ -211,6 +220,7 @@ const hostController = {
     updateProfile,
     changeHostPassword,
     submitKycDetails,
-    getKycDetails
+    getKycDetails,
+    getVendorNotifs
 }
 export default hostController

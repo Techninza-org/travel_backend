@@ -21,5 +21,7 @@ HostRouter
     .post('/kyc', upload.single("image"), hostController.submitKycDetails)
     //@ts-ignore
     .get('/kyc', hostController.getKycDetails)
+    //@ts-ignore
+    .get('/notifs', hostController.getVendorNotifs)
     
 export default HostRouter

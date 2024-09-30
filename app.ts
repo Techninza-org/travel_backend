@@ -115,6 +115,19 @@ app.use('/message', middleware.AuthMiddleware, messageRouter)
 app.use('/superAdmin', SuperAdminRouter)
 // app.use('/template', TemplateRouter)
 
+
+export const sendVendordNotif = async (
+    hostId: number,
+    title: string,
+) => {
+    const notif = await prisma.vendorNotification.create({
+        data: {
+            host_id: hostId, 
+            title,
+        },
+    })
+}
+
 export const sendNotif = async (
     senderId: number,
     receiverId: number,
