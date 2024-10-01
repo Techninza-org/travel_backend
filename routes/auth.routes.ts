@@ -17,5 +17,6 @@ authRouter.post('/super-admin-login', authController.superAdminLogin)
 authRouter.get('/blogs', authController.getBlogs)
 authRouter.get('/blog/:slug', authController.getBlogById)
 authRouter.get('/blogs/recent', authController.getRecentBlogs)
+authRouter.post('/otp', authController.sendOTPPhone)
 
 export default authRouter

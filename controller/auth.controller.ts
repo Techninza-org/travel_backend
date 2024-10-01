@@ -1,9 +1,10 @@
-import type { NextFunction, Request, Response } from 'express'
+import { type NextFunction, type Request, type Response } from 'express'
 import helper from '../utils/helpers'
 import crypto from 'node:crypto'
 import { PrismaClient } from '@prisma/client'
 import jwt from 'jsonwebtoken'
 import { ExtendedRequest } from '../utils/middleware'
+import axios from 'axios'
 const prisma = new PrismaClient()
 
 const SALT_ROUND = process.env.SALT_ROUND!
@@ -39,7 +40,7 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
             })
         }
         //update registration token
-        if(body.registrationToken){
+        if (body.registrationToken) {
             await prisma.user.update({
                 where: { id: userDetails.id },
                 data: { registrationToken: body.registrationToken },
@@ -98,15 +99,21 @@ const Signup = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const isUsernameExists = await prisma.user.findFirst({ where: { username } })
         if (isUsernameExists) {
-            return res.status(200).send({ status: 400, error: 'BAD REQUEST', error_description: 'username already exists.' })
+            return res
+                .status(200)
+                .send({ status: 400, error: 'BAD REQUEST', error_description: 'username already exists.' })
         }
         const isPhoneExists = await prisma.user.findFirst({ where: { phone } })
         if (isPhoneExists) {
-            return res.status(200).send({ status: 400, error: 'BAD REQUEST', error_description: 'phone already exists.' })
+            return res
+                .status(200)
+                .send({ status: 400, error: 'BAD REQUEST', error_description: 'phone already exists.' })
         }
         const isEmailExists = await prisma.user.findFirst({ where: { email } })
-        if(isEmailExists){
-            return res.status(200).send({ status: 400, error: 'BAD REQUEST', error_description: 'email already exists.' })
+        if (isEmailExists) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'BAD REQUEST', error_description: 'email already exists.' })
         }
     } catch (err) {
         return next(err)
@@ -228,45 +235,45 @@ const VerifyOtp = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
-    try{
+    try {
         const body = req.body
 
-    if (!helper.isValidatePaylod(body, ['username', 'password'])) {
-        return res.status(400).send({
-            status: 400,
-            error: 'Invalid payload',
-            error_description: 'username, password are requried.',
+        if (!helper.isValidatePaylod(body, ['username', 'password'])) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'username, password are requried.',
+            })
+        }
+        const userDetails = await prisma.host.findUnique({
+            where: { username: body.username, password: body.password },
         })
-    }
-    const userDetails = await prisma.host.findUnique({
-        where: { username: body.username, password: body.password },
-    })
 
-    if (!userDetails) {
-        return res.status(400).send({
-            status: 400,
-            error: 'Invalid credentials.',
-            error_description: 'username or password is not valid',
+        if (!userDetails) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Invalid credentials.',
+                error_description: 'username or password is not valid',
+            })
+        }
+        const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
+            expiresIn: '7d',
         })
-    }
-    const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
-        expiresIn: '7d',
-    })
 
-    return res.status(200).send({
-        status: 200,
-        message: 'Ok',
-        user: {
-            username: userDetails.username,
-            name: userDetails.name,
-            id: userDetails.id,
-            photo: userDetails.photo,
-        },
-        token: token,
-    })
-}catch(err){
-    return next(err)
-}
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            user: {
+                username: userDetails.username,
+                name: userDetails.name,
+                id: userDetails.id,
+                photo: userDetails.photo,
+            },
+            token: token,
+        })
+    } catch (err) {
+        return next(err)
+    }
 }
 
 const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -334,7 +341,7 @@ const socialSignUp = async (req: Request, res: Response, next: NextFunction, ema
                         email,
                         password: hash_password,
                         userReferralCode: referralCode,
-                        isSocialLogin: true
+                        isSocialLogin: true,
                     },
                 })
                 .then((createdUser) => {
@@ -357,38 +364,40 @@ const socialSignUp = async (req: Request, res: Response, next: NextFunction, ema
 }
 
 const superAdminLogin = async (req: Request, res: Response, next: NextFunction) => {
-    try{const body = req.body
+    try {
+        const body = req.body
 
-    if (!helper.isValidatePaylod(body, ['username', 'password'])) {
-        return res.status(400).send({
-            status: 400,
-            error: 'Invalid payload',
-            error_description: 'username, password are requried.',
+        if (!helper.isValidatePaylod(body, ['username', 'password'])) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'username, password are requried.',
+            })
+        }
+        const userDetails = await prisma.superAdmin.findUnique({
+            where: { username: body.username, password: body.password },
         })
-    }
-    const userDetails = await prisma.superAdmin.findUnique({
-        where: { username: body.username, password: body.password },
-    })
 
-    if (!userDetails) {
-        return res.status(400).send({
-            status: 400,
-            error: 'Invalid credentials.',
-            error_description: 'username or password is not valid',
+        if (!userDetails) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Invalid credentials.',
+                error_description: 'username or password is not valid',
+            })
+        }
+        const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
+            expiresIn: '7d',
         })
-    }
-    const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
-        expiresIn: '7d',
-    })
 
-    return res.status(200).send({
-        status: 200,
-        message: 'Ok',
-        user: {
-            username: userDetails.username,
-        },
-        token: token,
-    })}catch(err){
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            user: {
+                username: userDetails.username,
+            },
+            token: token,
+        })
+    } catch (err) {
         return next(err)
     }
 }
@@ -496,5 +505,48 @@ const getRecentBlogs = async (req: Request, res: Response, next: NextFunction) =
     }
 }
 
-const authController = { Login, ForgotPassword, Signup, SendOtp, VerifyOtp, HostLogin, socialLogin, superAdminLogin, SendOtpPhone, VerifyOtpPhone, getBlogs, getBlogById, getRecentBlogs }
+const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => {
+    const { phone, otp, username } = req.body
+
+    if (!phone || !otp) {
+        return res.status(400).json({ error: 'Phone number and OTP are required' })
+    }
+
+    try {
+        const msg = `Dear ${username}, welcome to EZIO! Your OTP for completing the sign-up process is ${otp}. This OTP is valid for 10 minutes. Please do not share it with anyone.`
+        const response = await axios.get('https://api.datagenit.com/sms', {
+            params: {
+                auth: 'D!~9969GozvD4fWD7', 
+                senderid: 'DATAGN', 
+                msisdn: phone,
+                message: msg,   
+            },
+            headers: {
+                'cache-control': 'no-cache',
+            },
+        })
+
+        console.log(response.data)
+        res.status(200).json({ message: 'OTP sent successfully'})
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to send OTP' })
+    }
+}
+
+const authController = {
+    Login,
+    ForgotPassword,
+    Signup,
+    SendOtp,
+    VerifyOtp,
+    HostLogin,
+    socialLogin,
+    superAdminLogin,
+    SendOtpPhone,
+    VerifyOtpPhone,
+    getBlogs,
+    getBlogById,
+    getRecentBlogs,
+    sendOTPPhone
+}
 export default authController
