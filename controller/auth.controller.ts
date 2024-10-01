@@ -527,7 +527,7 @@ const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => 
         })
 
         console.log(response.data)
-        res.status(200).json({ message: 'OTP sent successfully'})
+        res.status(200).json({ message: 'OTP sent successfully', response: response.data})
     } catch (error) {
         res.status(500).json({ error: 'Failed to send OTP' })
     }
