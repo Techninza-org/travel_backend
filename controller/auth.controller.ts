@@ -517,7 +517,7 @@ const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => 
         const response = await axios.get('https://api.datagenit.com/sms', {
             params: {
                 auth: 'D!~9969GozvD4fWD7', 
-                senderid: 'DATAGN', 
+                senderid: 'EZITVL', 
                 msisdn: phone,
                 message: msg,   
             },
