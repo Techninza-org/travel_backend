@@ -403,55 +403,59 @@ const superAdminLogin = async (req: Request, res: Response, next: NextFunction) 
 }
 
 const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) => {
-    if (!helper.isValidatePaylod(req.body, ['phone'])) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid Payload', error_description: 'phone is requried' })
-    }
-    const { phone } = req.body
-    const otp = Math.floor(10000 + Math.random() * 90000)
-    const user = await prisma.user.findFirst({ where: { phone } })
-    if (!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'user not found' })
-    const previousSendOtp = await prisma.otp.findUnique({ where: { user_id: user.id } })
-    const userid = user.id
-    if (!previousSendOtp) {
-        try {
-            const otpData = await prisma.otp.create({ data: { user_id: userid, otp: otp } })
-            const msg = `Dear ${user.username}, welcome to EZIO! Your OTP for completing the sign-up process is ${otp}. This OTP is valid for 10 minutes. Please do not share it with anyone.`
-            const response = await axios.get('https://api.datagenit.com/sms', {
-                params: {
-                    auth: 'D!~9969GozvD4fWD7',
-                    senderid: 'EZITVL',
-                    msisdn: phone,
-                    message: msg,
-                },
-                headers: {
-                    'cache-control': 'no-cache',
-                },
-            })
-        } catch (err) {
-            return _next(err)
+    try {
+        if (!helper.isValidatePaylod(req.body, ['phone'])) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid Payload', error_description: 'phone is requried' })
         }
-        return res.status(200).send({ status: 200, message: 'Otp sent successfully' })
-    } else {
-        try {
-            const otpData = await prisma.otp.update({ where: { user_id: userid }, data: { otp: otp } })
-            const msg = `Dear ${user.username}, welcome to EZIO! Your OTP for completing the sign-up process is ${otp}. This OTP is valid for 10 minutes. Please do not share it with anyone.`
-            const response = await axios.get('https://api.datagenit.com/sms', {
-                params: {
-                    auth: 'D!~9969GozvD4fWD7',
-                    senderid: 'EZITVL',
-                    msisdn: phone,
-                    message: msg,
-                },
-                headers: {
-                    'cache-control': 'no-cache',
-                },
-            })
-        } catch (err) {
-            return _next(err)
+        const { phone } = req.body
+        const otp = Math.floor(10000 + Math.random() * 90000)
+        const user = await prisma.user.findFirst({ where: { phone } })
+        if (!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'user not found' })
+        const previousSendOtp = await prisma.otp.findUnique({ where: { user_id: user.id } })
+        const userid = user.id
+        if (!previousSendOtp) {
+            try {
+                const otpData = await prisma.otp.create({ data: { user_id: userid, otp: otp } })
+                const msg = `Dear ${user.username}, welcome to EZIO! Your OTP for completing the sign-up process is ${otp}. This OTP is valid for 10 minutes. Please do not share it with anyone.`
+                const response = await axios.get('https://api.datagenit.com/sms', {
+                    params: {
+                        auth: 'D!~9969GozvD4fWD7',
+                        senderid: 'EZITVL',
+                        msisdn: phone,
+                        message: msg,
+                    },
+                    headers: {
+                        'cache-control': 'no-cache',
+                    },
+                })
+            } catch (err) {
+                return _next(err)
+            }
+            return res.status(200).send({ status: 200, message: 'Otp sent successfully' })
+        } else {
+            try {
+                const otpData = await prisma.otp.update({ where: { user_id: userid }, data: { otp: otp } })
+                const msg = `Dear ${user.username}, welcome to EZIO! Your OTP for completing the sign-up process is ${otp}. This OTP is valid for 10 minutes. Please do not share it with anyone.`
+                const response = await axios.get('https://api.datagenit.com/sms', {
+                    params: {
+                        auth: 'D!~9969GozvD4fWD7',
+                        senderid: 'EZITVL',
+                        msisdn: phone,
+                        message: msg,
+                    },
+                    headers: {
+                        'cache-control': 'no-cache',
+                    },
+                })
+            } catch (err) {
+                return _next(err)
+            }
+            return res.status(200).send({ status: 200, message: 'Otp sent successfully' })
         }
-        return res.status(200).send({ status: 200, message: 'Otp sent successfully' })
+    } catch (err) {
+        return _next(err)
     }
 }
 
