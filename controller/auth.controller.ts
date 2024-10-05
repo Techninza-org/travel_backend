@@ -476,7 +476,7 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
     }
     const user = await prisma.user.findFirst({ where: { phone } })
     if (user?.is_verified) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'User already verified' })
+        return res.status(201).send({ status: 201, msg: 'User already verified' })
     }
     if (!user)
         return res
