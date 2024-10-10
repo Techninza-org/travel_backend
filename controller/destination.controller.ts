@@ -42,7 +42,8 @@ export const createDestination = async (req: ExtendedRequest, res: Response, nex
             longitude: Number(body.longitude),
         },
     })
-    return res.status(200).send({ status: 201, message: 'Created', destination: destination })}catch(err){
+    return res.status(200).send({ status: 201, message: 'Created', destination: destination })
+}catch(err){
         return next(err)
     }
 }

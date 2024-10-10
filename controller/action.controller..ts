@@ -282,6 +282,7 @@ const getFollowRequests = async (req: ExtendedRequest, res: Response, next: Next
 }
 
 const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['follower_id'])) {
         return res
@@ -312,9 +313,13 @@ const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
     } catch (err) {
         return next(err)
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['follower_id'])) {
         return res
@@ -358,9 +363,13 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
     } catch (err) {
         return next(err)
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const reportPost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['post_id'])) {
         return res
@@ -399,9 +408,13 @@ const reportPost = async (req: ExtendedRequest, res: Response, next: NextFunctio
     } catch (err) {
         return next(err)
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const reportForumQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['question_id'])) {
         return res
@@ -442,6 +455,9 @@ const reportForumQuestion = async (req: ExtendedRequest, res: Response, next: Ne
     } catch (err) {
         return next(err)
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const actionController = {

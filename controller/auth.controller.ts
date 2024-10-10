@@ -13,55 +13,59 @@ const KEYLENGTH = 10
 const DIGEST_ALGO = 'sha512'
 
 const Login = async (req: Request, res: Response, next: NextFunction) => {
-    const body = req.body
-    const isValidPayload = helper.isValidatePaylod(body, ['username', 'password'])
-    if (!isValidPayload) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'username, password are requried.' })
-    }
-    let hash_password: string | Buffer = crypto.pbkdf2Sync(
-        body?.password,
-        SALT_ROUND,
-        ITERATION,
-        KEYLENGTH,
-        DIGEST_ALGO
-    )
-    hash_password = hash_password.toString('hex')
     try {
-        const userDetails = await prisma.user.findUnique({
-            where: { username: String(body.username), password: hash_password },
-        })
-        if (!userDetails) {
+        const body = req.body
+        const isValidPayload = helper.isValidatePaylod(body, ['username', 'password'])
+        if (!isValidPayload) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'username, password are requried.' })
+        }
+        let hash_password: string | Buffer = crypto.pbkdf2Sync(
+            body?.password,
+            SALT_ROUND,
+            ITERATION,
+            KEYLENGTH,
+            DIGEST_ALGO
+        )
+        hash_password = hash_password.toString('hex')
+        try {
+            const userDetails = await prisma.user.findUnique({
+                where: { username: String(body.username), password: hash_password },
+            })
+            if (!userDetails) {
+                return res.status(200).send({
+                    status: 200,
+                    error: 'Invalid credentials.',
+                    error_description: 'username or password is not valid',
+                })
+            }
+            //update registration token
+            if (body.registrationToken) {
+                await prisma.user.update({
+                    where: { id: userDetails.id },
+                    data: { registrationToken: body.registrationToken },
+                })
+            }
+            delete (userDetails as any).password
+            const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
+                expiresIn: '7d',
+            })
+
+            return res.status(200).send({
+                status: 200,
+                message: 'Ok',
+                user: { ...userDetails, token },
+            })
+        } catch (err) {
             return res.status(200).send({
                 status: 200,
                 error: 'Invalid credentials.',
-                error_description: 'username or password is not valid',
+                error_description: (err as any).message,
             })
         }
-        //update registration token
-        if (body.registrationToken) {
-            await prisma.user.update({
-                where: { id: userDetails.id },
-                data: { registrationToken: body.registrationToken },
-            })
-        }
-        delete (userDetails as any).password
-        const token = jwt.sign({ phone: userDetails.phone }, process.env.JWT_SECRET!, {
-            expiresIn: '7d',
-        })
-
-        return res.status(200).send({
-            status: 200,
-            message: 'Ok',
-            user: { ...userDetails, token },
-        })
     } catch (err) {
-        return res.status(200).send({
-            status: 200,
-            error: 'Invalid credentials.',
-            error_description: (err as any).message,
-        })
+        return next(err)
     }
 }
 
@@ -87,6 +91,7 @@ const ForgotPassword = async (req: ExtendedRequest, res: Response, next: NextFun
 }
 
 const Signup = async (req: Request, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['phone', 'username', 'password', 'email'])) {
         return res.status(200).send({
@@ -157,9 +162,13 @@ const Signup = async (req: Request, res: Response, next: NextFunction) => {
                 })
         }
     })
+} catch (err) {
+    return next(err)
+}
 }
 
 const SendOtp = async (req: Request, res: Response, _next: NextFunction) => {
+    try{
     if (!helper.isValidatePaylod(req.body, ['email'])) {
         return res.status(200).send({ status: 400, error: 'Invalid Payload', error_description: 'Email requried' })
     }
@@ -189,6 +198,9 @@ const SendOtp = async (req: Request, res: Response, _next: NextFunction) => {
         }
         return res.status(200).send({ status: 200, message: 'Ok' })
     }
+} catch (err) {
+    return _next(err)
+}
 }
 
 /**
@@ -200,6 +212,7 @@ const SendOtp = async (req: Request, res: Response, _next: NextFunction) => {
  * @returns responses
  */
 const VerifyOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try{
     const { email, otp } = req.body
     if (!helper.isValidatePaylod(req.body, ['email', 'otp'])) {
         return res
@@ -232,6 +245,9 @@ const VerifyOtp = async (req: Request, res: Response, next: NextFunction) => {
     } else {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'OTP is not valid.' })
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -277,99 +293,107 @@ const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-    const body = req.body
-    if (!helper.isValidatePaylod(body, ['email', 'password'])) {
-        return res.status(200).send({
-            status: 400,
-            error: 'Invalid Payload',
-            error_description: 'email, password are requried.',
-        })
-    }
-    const { email, password } = body
-    let hash_password: string | Buffer = crypto.pbkdf2Sync(
-        body?.password,
-        SALT_ROUND,
-        ITERATION,
-        KEYLENGTH,
-        DIGEST_ALGO
-    )
-    hash_password = hash_password.toString('hex')
-    const userDetails = await prisma.user.findUnique({
-        where: { email: body.email, password: hash_password },
-    })
-
-    if (userDetails) {
-        delete (userDetails as any).password
-        const token = jwt.sign({ email: userDetails.email }, process.env.JWT_SECRET!, {
-            expiresIn: '7d',
-        })
-
-        return res.status(200).send({
-            status: 200,
-            message: 'Ok',
-            user: userDetails,
-            token,
-        })
-    }
-    return socialSignUp(req, res, next, email, password)
-}catch(err){
-    return next(err)
-}
-}
-
-const socialSignUp = async (req: Request, res: Response, next: NextFunction, email: string, password: string) => {
-    try{
-
-    let isAlreadyExists: any = false
     try {
-        isAlreadyExists = await prisma.user.findFirst({ where: { email } })
+        const body = req.body
+        if (!helper.isValidatePaylod(body, ['email', 'password'])) {
+            return res.status(200).send({
+                status: 400,
+                error: 'Invalid Payload',
+                error_description: 'email, password are requried.',
+            })
+        }
+        const { email, password } = body
+        let hash_password: string | Buffer = crypto.pbkdf2Sync(
+            body?.password,
+            SALT_ROUND,
+            ITERATION,
+            KEYLENGTH,
+            DIGEST_ALGO
+        )
+        hash_password = hash_password.toString('hex')
+        const userDetails = await prisma.user.findUnique({
+            where: { email: body.email, password: hash_password },
+        })
+
+        if (userDetails) {
+            delete (userDetails as any).password
+            const token = jwt.sign({ email: userDetails.email }, process.env.JWT_SECRET!, {
+                expiresIn: '7d',
+            })
+
+            return res.status(200).send({
+                status: 200,
+                message: 'Ok',
+                user: userDetails,
+                token,
+            })
+        }
+        return socialSignUp(req, res, next, email, password)
     } catch (err) {
         return next(err)
     }
-    if (isAlreadyExists) {
-        return res.status(200).send({ status: 400, error: 'BAD REQUEST', error_description: 'user already exists.' })
-    }
-    const token = jwt.sign({ email: email }, process.env.JWT_SECRET!, {
-        expiresIn: '7d',
-    })
-    function generateReferralCode() {
-        return 'EZI' + Math.floor(1000 + Math.random() * 9000) + email.slice(0, 3).toUpperCase()
-    }
-    const referralCode = generateReferralCode()
-    crypto.pbkdf2(password, SALT_ROUND, ITERATION, KEYLENGTH, DIGEST_ALGO, (err, hash_password: Buffer | string) => {
-        hash_password = hash_password.toString('hex')
-        if (err) return next(err)
-        else {
-            prisma.user
-                .create({
-                    data: {
-                        email,
-                        password: hash_password,
-                        userReferralCode: referralCode,
-                        isSocialLogin: true,
-                    },
-                })
-                .then((createdUser) => {
-                    const userId = createdUser.id
-                    return prisma.follows.create({
-                        data: {
-                            user_id: 2,
-                            follower_id: userId,
-                        },
-                    })
-                })
-                .then((follow) => {
-                    return res.status(201).send({ status: 201, message: 'Created', token })
-                })
-                .catch((err) => {
-                    return next(err)
-                })
-        }
-    })
-}catch(err){
-    return next(err)
 }
+
+const socialSignUp = async (req: Request, res: Response, next: NextFunction, email: string, password: string) => {
+    try {
+        let isAlreadyExists: any = false
+        try {
+            isAlreadyExists = await prisma.user.findFirst({ where: { email } })
+        } catch (err) {
+            return next(err)
+        }
+        if (isAlreadyExists) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'BAD REQUEST', error_description: 'user already exists.' })
+        }
+        const token = jwt.sign({ email: email }, process.env.JWT_SECRET!, {
+            expiresIn: '7d',
+        })
+        function generateReferralCode() {
+            return 'EZI' + Math.floor(1000 + Math.random() * 9000) + email.slice(0, 3).toUpperCase()
+        }
+        const referralCode = generateReferralCode()
+        crypto.pbkdf2(
+            password,
+            SALT_ROUND,
+            ITERATION,
+            KEYLENGTH,
+            DIGEST_ALGO,
+            (err, hash_password: Buffer | string) => {
+                hash_password = hash_password.toString('hex')
+                if (err) return next(err)
+                else {
+                    prisma.user
+                        .create({
+                            data: {
+                                email,
+                                password: hash_password,
+                                userReferralCode: referralCode,
+                                isSocialLogin: true,
+                            },
+                        })
+                        .then((createdUser) => {
+                            const userId = createdUser.id
+                            return prisma.follows.create({
+                                data: {
+                                    user_id: 2,
+                                    follower_id: userId,
+                                },
+                            })
+                        })
+                        .then((follow) => {
+                            return res.status(201).send({ status: 201, message: 'Created', token })
+                        })
+                        .catch((err) => {
+                            return next(err)
+                        })
+                }
+            }
+        )
+    } catch (err) {
+        return next(err)
+    }
 }
 
 const superAdminLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -419,7 +443,7 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
                 .send({ status: 400, error: 'Invalid Payload', error_description: 'phone is requried, 10 digits only' })
         }
         const { phone } = req.body
-        if(typeof phone !== "string") return res.status(400).json({msg: "phone should be string"})
+        if (typeof phone !== 'string') return res.status(400).json({ msg: 'phone should be string' })
         const otp = Math.floor(1000 + Math.random() * 9000)
         const user = await prisma.user.findFirst({ where: { phone } })
         if (!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'user not found' })
@@ -478,6 +502,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
  * @returns responses
  */
 const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
     const { phone, otp } = req.body
     if (!helper.isValidatePaylod(req.body, ['phone', 'otp'])) {
         return res
@@ -513,6 +539,9 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
     } else {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'OTP is not valid.' })
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const getBlogs = async (req: Request, res: Response, next: NextFunction) => {
@@ -543,6 +572,7 @@ const getRecentBlogs = async (req: Request, res: Response, next: NextFunction) =
 }
 
 const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => {
+    try{
     const { phone, username } = req.body
 
     if (!phone || !username) {
@@ -575,6 +605,9 @@ const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => 
     } catch (error) {
         res.status(500).json({ error: 'Failed to send OTP' })
     }
+} catch (err) {
+    return next(err)
+}
 }
 
 const authController = {
