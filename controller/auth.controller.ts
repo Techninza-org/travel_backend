@@ -30,7 +30,7 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
     hash_password = hash_password.toString('hex')
     try {
         const userDetails = await prisma.user.findUnique({
-            where: { username: body.username, password: hash_password },
+            where: { username: String(body.username), password: hash_password },
         })
         if (!userDetails) {
             return res.status(200).send({
