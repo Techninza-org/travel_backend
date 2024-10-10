@@ -277,6 +277,7 @@ const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
+    try{
     const body = req.body
     if (!helper.isValidatePaylod(body, ['email', 'password'])) {
         return res.status(200).send({
@@ -312,9 +313,14 @@ const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
         })
     }
     return socialSignUp(req, res, next, email, password)
+}catch(err){
+    return next(err)
+}
 }
 
 const socialSignUp = async (req: Request, res: Response, next: NextFunction, email: string, password: string) => {
+    try{
+
     let isAlreadyExists: any = false
     try {
         isAlreadyExists = await prisma.user.findFirst({ where: { email } })
@@ -361,6 +367,9 @@ const socialSignUp = async (req: Request, res: Response, next: NextFunction, ema
                 })
         }
     })
+}catch(err){
+    return next(err)
+}
 }
 
 const superAdminLogin = async (req: Request, res: Response, next: NextFunction) => {
