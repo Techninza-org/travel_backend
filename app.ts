@@ -387,28 +387,28 @@ export const getUserToken = async (userId: any) => {
     return user ? user.registrationToken : null
 }
 
-async function updatePass(username: string) {
-    const SALT_ROUND = process.env.SALT_ROUND!
-    const ITERATION = 100
-    const KEYLENGTH = 10
-    const DIGEST_ALGO = 'sha512'
-    const user = await prisma.user.findUnique({ where: { username: username } })
-    if (!user) {
-        return
-    }
-    const newpass = 'password'
-    let hash_new_password: string | Buffer = crypto.pbkdf2Sync(
-        newpass,
-        SALT_ROUND,
-        ITERATION,
-        KEYLENGTH,
-        DIGEST_ALGO
-    )
-    hash_new_password = hash_new_password.toString('hex')
-    const updated = await prisma.user.update({ where: { username: username }, data: { password: hash_new_password } })
-}
+// async function updatePass(username: string) {
+//     const SALT_ROUND = process.env.SALT_ROUND!
+//     const ITERATION = 100
+//     const KEYLENGTH = 10
+//     const DIGEST_ALGO = 'sha512'
+//     const user = await prisma.user.findUnique({ where: { username: username } })
+//     if (!user) {
+//         return
+//     }
+//     const newpass = 'password'
+//     let hash_new_password: string | Buffer = crypto.pbkdf2Sync(
+//         newpass,
+//         SALT_ROUND,
+//         ITERATION,
+//         KEYLENGTH,
+//         DIGEST_ALGO
+//     )
+//     hash_new_password = hash_new_password.toString('hex')
+//     const updated = await prisma.user.update({ where: { username: username }, data: { password: hash_new_password } })
+// }
 
-updatePass('js nikhil verma');
+// updatePass('js nikhil verma');
 
 cron.schedule('0 0 * * *', async () => {
     console.log('Running your daily task...')
