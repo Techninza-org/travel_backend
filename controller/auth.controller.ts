@@ -21,15 +21,9 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
                 .status(200)
                 .send({ status: 400, error: 'Invalid payload', error_description: 'username, password are requried.' })
         }
-        const {password} = req.body
-        if(typeof password !== 'string') return res.status(400).send({error: "password must be a string"})
-        let hash_password: string | Buffer = crypto.pbkdf2Sync(
-            password,
-            SALT_ROUND,
-            ITERATION,
-            KEYLENGTH,
-            DIGEST_ALGO
-        )
+        const { password } = req.body
+        if (typeof password !== 'string') return res.status(400).send({ error: 'password must be a string' })
+        let hash_password: string | Buffer = crypto.pbkdf2Sync(password, SALT_ROUND, ITERATION, KEYLENGTH, DIGEST_ALGO)
         hash_password = hash_password.toString('hex')
         try {
             const userDetails = await prisma.user.findUnique({
@@ -104,21 +98,44 @@ const Signup = async (req: Request, res: Response, next: NextFunction) => {
         }
         const { password, username, referredByCode } = req.body
         const phone = String(req.body.phone).trim()
-        const email = String(req.body.email).trim();
-        
+        const email = String(req.body.email).trim()
+
+        if (username.length > 25) {
+            return res.status(400).send({ status: 400, error: 'Username too long' })
+        }
+
+        const escapePattern = /^[\S]*$/
+        if (!escapePattern.test(username)) {
+            return res.status(400).send({ status: 400, error: 'Username cannot contain control characters' })
+        }
+
+        const emojiPattern =
+            /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/
+        if (emojiPattern.test(username)) {
+            return res
+                .status(400)
+                .send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' })
+        }
+
         const phoneRegex = /^[0-9]{10}$/
         if (!phoneRegex.test(phone)) {
             return res.status(400).send({ status: 400, error: 'Invalid Phone number, 10 digits required' })
         }
-        
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
-            return res.status(400).send({ status: 400, error: "Invalid Email address" });
+            return res.status(400).send({ status: 400, error: 'Invalid Email address' })
         }
-        
-        if(typeof password !== 'string') return res.status(400).send({error: "password should be a string"})
-        if(password.includes(" ") || password.length < 7){
-            return res.status(400).send({ status: 400, error: "Password should not contain any spaces, minimum length 7 required" });
+
+        if (typeof password !== 'string') return res.status(400).send({ error: 'password should be a string' })
+        if (password.includes(' ') || password.length < 7) {
+            return res
+                .status(400)
+                .send({ status: 400, error: 'Password should not contain any spaces, minimum length 7 required' })
+        }
+
+        if (!escapePattern.test(password)) {
+            return res.status(400).send({ status: 400, error: 'Password cannot contain control characters' })
         }
 
         try {
@@ -330,13 +347,23 @@ const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
             })
         }
         const { email, password } = body
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
-            return res.status(400).send({ status: 400, error: "Invalid Email address" });
+            return res.status(400).send({ status: 400, error: 'Invalid Email address' })
         }
-        if(typeof password !== 'string') return res.status(400).send({error: "password must be a string"})
-        if(password.includes(" ") || password.length < 7){
-            return res.status(400).send({ status: 400, error: "Password should not contain any spaces, minimum length 7 required" });
+        if (email.length > 74) {
+            return res.status(400).send({ status: 400, error: 'Invalid Email address' })
+        }
+        if (typeof password !== 'string') return res.status(400).send({ error: 'password must be a string' })
+        if (password.includes(' ') || password.length < 7 || password.length > 16) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Password should not contain any spaces, minimum length 7, maximum 16 required',
+            })
+        }
+        const escapePattern = /^[\S]*$/
+        if (!escapePattern.test(password)) {
+            return res.status(400).send({ status: 400, error: 'Password cannot contain control characters' })
         }
         let hash_password: string | Buffer = crypto.pbkdf2Sync(
             body?.password,

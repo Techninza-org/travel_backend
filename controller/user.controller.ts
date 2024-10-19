@@ -8,58 +8,83 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const query = req.query;
-    const { page = 1, limit = 10 } = query;
+    const query = req.query
+    const { page = 1, limit = 10 } = query
 
     if (
-        isNaN(Number(page)) || 
-        isNaN(Number(limit)) || 
-        Number(page) <= 0 || 
-        Number(limit) <= 0 || 
-        !Number.isInteger(Number(page)) || 
+        isNaN(Number(page)) ||
+        isNaN(Number(limit)) ||
+        Number(page) <= 0 ||
+        Number(limit) <= 0 ||
+        !Number.isInteger(Number(page)) ||
         !Number.isInteger(Number(limit))
     ) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
-            error_description: 'Invalid Query Parameters. Page and limit must be positive integers.'
-        });
+            error_description: 'Invalid Query Parameters. Page and limit must be positive integers.',
+        })
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const skip = (Number(page) - 1) * Number(limit)
 
-    const MAX_LIMIT = 100;
-    const finalLimit = Math.min(Number(limit), MAX_LIMIT);
+    const MAX_LIMIT = 100
+    const finalLimit = Math.min(Number(limit), MAX_LIMIT)
 
     try {
         const users = await prisma.user.findMany({
             skip: skip,
             take: finalLimit,
-            where: { NOT: { id: req.user.id } }, 
-        });
+            where: { NOT: { id: req.user.id } },
+        })
 
-        const sanitizedUsers = users.map(user => {
-            const { password, ...safeUser } = user;
-            return safeUser;
-        });
+        const sanitizedUsers = users.map((user) => {
+            const { password, ...safeUser } = user
+            return safeUser
+        })
 
-        return res.status(200).send({ status: 200, message: 'Ok', users: sanitizedUsers });
+        return res.status(200).send({ status: 200, message: 'Ok', users: sanitizedUsers })
     } catch (err) {
-        return next(err);
+        return next(err)
     }
-};
+}
 
 const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const query = req.query;
+    const query = req.query
     const { page = 1, limit = 10 } = query;
 
     const pageNum = Number(page);
     const limitNum = Number(limit);
+
     if (isNaN(pageNum) || isNaN(limitNum)) {
         return res.status(400).send({
             status: 400,
             error: 'Invalid query parameters',
             error_description: 'page and limit should be valid numbers',
+        });
+    }
+
+    if (pageNum < 1) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid pagination',
+            error_description: 'Page number must be greater than or equal to 1',
+        });
+    }
+
+    if (limitNum < 1 || limitNum > 100) { 
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid pagination',
+            error_description: 'Limit must be between 1 and 100',
+        });
+    }
+
+    if (!Number.isInteger(pageNum) || !Number.isInteger(limitNum)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid pagination',
+            error_description: 'Page and limit must be integers',
         });
     }
 
@@ -69,9 +94,9 @@ const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunc
         const userIdsObjArr = await prisma.follows.findMany({
             where: { follower_id: req.user.id },
             select: { user_id: true },
-        });
+        })
 
-        const userIds = userIdsObjArr.map(user => user.user_id);
+        const userIds = userIdsObjArr.map((user) => user.user_id)
 
         const fetchPosts = await prisma.post.findMany({
             where: { user_id: { in: [...userIds, req.user.id] } },
@@ -101,49 +126,47 @@ const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunc
             orderBy: { created_at: 'desc' },
             skip: skip,
             take: limitNum,
-        });
+        })
 
         const likedPosts = await Promise.all(
-            fetchPosts.map(async post => {
+            fetchPosts.map(async (post) => {
                 const isLiked = await prisma.likes.findFirst({
                     where: { post_id: post.id, user_id: req.user.id },
-                });
-                return { ...post, isLiked: Boolean(isLiked) }; 
+                })
+                return { ...post, isLiked: Boolean(isLiked) }
             })
-        );
+        )
 
         return res.status(200).send({
             status: 200,
             message: 'Ok',
             posts: likedPosts,
-        });
+        })
     } catch (err) {
-        console.error('Error fetching user feed:', err); 
-        return next(err);
+        console.error('Error fetching user feed:', err)
+        return next(err)
     }
-};
-
+}
 
 const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFunction) => {
-    const user = req.user;
+    const user = req.user
 
     if (!user) {
         return res.status(404).send({
             status: 404,
             error: 'User Not Found',
             error_description: 'No user details available.',
-        });
+        })
     }
 
-    const { password, ...userDetails } = user;
+    const { password, ...userDetails } = user
 
     return res.status(200).send({
         status: 200,
         message: 'Ok',
         user: userDetails,
-    });
-};
-
+    })
+}
 
 const update_user = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -452,7 +475,7 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
     const username = req.params.username
     const currentUserId = req.user.id
 
-    if (!username) {
+    if (!username || username === null || username === 'null') {
         return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Username is required' })
     }
     if (typeof username !== 'string') {
@@ -460,6 +483,27 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Username should be a string' })
     }
+
+    if (/\s/.test(username)) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Username should not contain spaces' })
+    }
+
+    if (username.length > 25) {
+        return res.status(400).send({ status: 400, error: 'Username too long' })
+    }
+
+    const escapePattern = /^[\S]*$/
+    if (!escapePattern.test(username)) {
+        return res.status(400).send({ status: 400, error: 'Username cannot contain control characters' })
+    }
+
+    const emojiPattern = /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/;
+    if (emojiPattern.test(username)) {
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' });
+    }
+
     try {
         let users = await prisma.user.findMany({
             where: { username: { contains: username } },
@@ -517,54 +561,54 @@ const visibleStatus = async (req: ExtendedRequest, res: Response, next: NextFunc
 }
 
 const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user;
-    const { blocked_user_id } = req.body;
+    const user = req.user
+    const { blocked_user_id } = req.body
 
     if (blocked_user_id === undefined) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
             error_description: 'blocked_user_id field is required',
-        });
+        })
     }
 
-    if(blocked_user_id === user.id) {
+    if (blocked_user_id === user.id) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
             error_description: 'You cannot block youself',
-        });
+        })
     }
 
-    if (typeof blocked_user_id !== 'number') {
+    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id < 0) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
-            error_description: 'User ID should be a number',
+            error_description: 'User ID should be a positive integer value',
         });
     }
 
     try {
         const isAlreadyFollowing = await prisma.follows.findFirst({
             where: { user_id: blocked_user_id, follower_id: user.id },
-        });
+        })
 
         if (isAlreadyFollowing) {
             await prisma.follows.deleteMany({
                 where: { user_id: blocked_user_id, follower_id: user.id },
-            });
+            })
         }
 
         const isAlreadyBlocked = await prisma.block.findFirst({
             where: { user_id: user.id, blocked_id: blocked_user_id },
-        });
+        })
 
         if (isAlreadyBlocked) {
             return res.status(200).send({
                 status: 200,
                 message: 'Ok',
                 error: 'User already blocked',
-            });
+            })
         }
 
         const blockedUser = await prisma.block.create({
@@ -572,19 +616,18 @@ const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction
                 user_id: user.id,
                 blocked_id: blocked_user_id,
             },
-        });
+        })
 
         return res.status(200).send({
             status: 200,
             message: 'User successfully blocked',
             blockedUser,
-        });
+        })
     } catch (err) {
-        console.error('Error blocking user:', err);
-        return next(err);
+        console.error('Error blocking user:', err)
+        return next(err)
     }
-};
-
+}
 
 const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -594,10 +637,12 @@ const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFuncti
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
-    if (typeof blocked_user_id !== 'number') {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'User Id should be a number' })
+    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id < 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User ID should be a positive integer value',
+        });
     }
     try {
         const blockedUser = await prisma.block.deleteMany({
@@ -1077,30 +1122,34 @@ const deleteNotification = async (req: ExtendedRequest, res: Response, next: Nex
 }
 
 const markAsRead = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-    const { id } = req.body
-    if (!id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
-    }
-    if (isNaN(Number(id))) {
-        return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
-    }
-    const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
-    if (!notif) {
-        return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
-    }
     try {
-        await prisma.notification.update({
-            where: { id: Number(id), receiver_id: req.user.id },
-            data: { isRead: true },
-        })
-        return res.status(200).send({ status: 200, message: 'Ok' })
+        const { id } = req.body
+        if (!id) {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+        }
+        if (isNaN(Number(id))) {
+            return res
+                .status(400)
+                .json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+        }
+        const notif = await prisma.notification.findFirst({ where: { id: Number(id), receiver_id: req.user.id } })
+        if (!notif) {
+            return res
+                .status(200)
+                .send({ status: 404, error: 'Not Found', error_description: 'Notification not found' })
+        }
+        try {
+            await prisma.notification.update({
+                where: { id: Number(id), receiver_id: req.user.id },
+                data: { isRead: true },
+            })
+            return res.status(200).send({ status: 200, message: 'Ok' })
+        } catch (err) {
+            return next(err)
+        }
     } catch (err) {
         return next(err)
     }
-}catch(err){
-    return next(err)
-}
 }
 
 const friendsSuggestions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
