@@ -15,11 +15,21 @@ export const LikePost = async (req: ExtendedRequest, res: Response, next: NextFu
             .send({ status: 200, error: 'Invalid payload', error_description: 'post_id, action is required.' })
     }
     const { post_id, action } = req.body // action 1 => like, 2 => dislike
-    if (Number.isNaN(Number(post_id) || Number.isNaN(Number(action)))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'post_id should be a number.' })
+    if (typeof post_id !== 'number' || !Number.isInteger(post_id) || post_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Post Id should be a positive integer',
+        });
     }
+    if (typeof action !== 'number' || !Number.isInteger(action) || action <= 0 || action >= 3) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Action should be a positive integer, either 1 or 2',
+        });
+    }
+
     const isAlreadyLiked = await prisma.likes.findFirst({ where: { post_id: post_id, user_id: req.user.id } })
     if (Number(action) === 1) {
         try {
@@ -68,10 +78,12 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
             .send({ status: 400, error: 'Invalid payload', error_description: 'post_id, comment is required.' })
     }
     let { post_id, comment } = req.body
-    if (Number.isNaN(Number(post_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'post_id should be a number.' })
+    if (typeof post_id !== 'number' || !Number.isInteger(post_id) || post_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Post Id should be a positive integer',
+        });
     }
     post_id = Number(post_id)
     const isPostExists = await prisma.post.findFirst({ where: { id: post_id } })
@@ -122,16 +134,19 @@ export const Follows = async (req: ExtendedRequest, res: Response, next: NextFun
     }
     let { user_id, action } = req.body // action => 1: follow, 2: unfollow
 
-    if (user_id === req.user.id) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: "You can't follow yourself." })
+    if (typeof user_id !== 'number' || !Number.isInteger(user_id) || user_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User Id should be a positive integer',
+        });
     }
-
-    if (Number.isNaN(Number(user_id)) || Number.isNaN(Number(action))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'user_id, action should be a number.' })
+    if (typeof action !== 'number' || !Number.isInteger(action) || action <= 0 || action >= 3) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Action should be a positive integer, either 1 or 2',
+        });
     }
     user_id = Number(user_id)
     if(user_id.toString().length > 8){
@@ -180,10 +195,12 @@ const unfollowUser = async (req: ExtendedRequest, res: Response, next: NextFunct
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id is required.' })
     }
     let { user_id } = req.body
-    if (Number.isNaN(Number(user_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
+    if (typeof user_id !== 'number' || !Number.isInteger(user_id) || user_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User Id should be a positive integer',
+        });
     }
     user_id = Number(user_id)
     if(user_id.toString().length > 8){
@@ -214,10 +231,12 @@ const sendFollowRequest = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Invalid payload', error_description: 'user_id is required.' })
     }
     let { user_id } = req.body
-    if (Number.isNaN(Number(user_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'user_id should be a number.' })
+    if (typeof user_id !== 'number' || !Number.isInteger(user_id) || user_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User Id should be a positive integer',
+        });
     }
     user_id = Number(user_id)
     if(user_id.toString().length > 8){
@@ -290,10 +309,12 @@ const rejectFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id is required.' })
     }
     let { follower_id } = req.body
-    if (Number.isNaN(Number(follower_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id should be a number.' })
+    if (typeof follower_id !== 'number' || !Number.isInteger(follower_id) || follower_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Follower Id should be a positive integer',
+        });
     }
     follower_id = Number(follower_id)
     if(follower_id.toString().length > 8){
@@ -327,10 +348,12 @@ const acceptFollowRequest = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id is required.' })
     }
     let { follower_id } = req.body
-    if (Number.isNaN(Number(follower_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'follower_id should be a number.' })
+    if (typeof follower_id !== 'number' || !Number.isInteger(follower_id) || follower_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Follower Id should be a positive integer',
+        });
     }
     follower_id = Number(follower_id)
     if(follower_id.toString().length > 8){
@@ -377,10 +400,12 @@ const reportPost = async (req: ExtendedRequest, res: Response, next: NextFunctio
             .send({ status: 400, error: 'Invalid payload', error_description: 'post_id is required.' })
     }
     let { post_id } = req.body
-    if (Number.isNaN(Number(post_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'post_id should be a number.' })
+    if (typeof post_id !== 'number' || !Number.isInteger(post_id) || post_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Post Id should be a positive integer',
+        });
     }
     post_id = Number(post_id)
     const post = await prisma.post.findFirst({ where: { id: post_id } })
@@ -422,10 +447,12 @@ const reportForumQuestion = async (req: ExtendedRequest, res: Response, next: Ne
             .send({ status: 400, error: 'Invalid payload', error_description: 'question_id is required.' })
     }
     let { question_id } = req.body
-    if (Number.isNaN(Number(question_id))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'question_id should be a number.' })
+    if (typeof question_id !== 'number' || !Number.isInteger(question_id) || question_id <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Question Id should be a positive integer',
+        });
     }
     question_id = Number(question_id)
     const question = await prisma.forumQuestion.findFirst({ where: { id: question_id } })

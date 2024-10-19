@@ -1062,11 +1062,11 @@ const getFollowStatus = async (req: ExtendedRequest, res: Response, next: NextFu
         });
     }
 
-    if (typeof user_id !== 'number' || !Number.isInteger(user_id)) {
+    if (typeof user_id !== 'number' || !Number.isInteger(user_id) || user_id <= 0) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
-            error_description: 'User Id should be an integer',
+            error_description: 'User Id should be a positive integer',
         });
     }
 

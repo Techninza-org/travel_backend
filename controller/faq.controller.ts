@@ -7,21 +7,28 @@ const prisma = new PrismaClient()
 const getFAQ = async (req: Request, res: Response, next: NextFunction) => {
    try{ const query = req.query
     let { page = 1, limit = 10, search } = query
-    limit = Number(limit)
-    page = Number(page)
-    if (Number.isNaN(page) || Number.isNaN(limit))
-        return res.status(200).send({
+    if (
+        isNaN(Number(page)) ||
+        isNaN(Number(limit)) ||
+        Number(page) <= 0 ||
+        Number(limit) <= 0 ||
+        !Number.isInteger(Number(page)) ||
+        !Number.isInteger(Number(limit))
+    ) {
+        return res.status(400).send({
             status: 400,
-            error: 'Invalid query parameters',
-            error_description: 'skip, limit should be a number',
+            error: 'Bad Request',
+            error_description: 'Invalid Query Parameters. Page and limit must be positive integers.',
         })
+    }
+
     const skip = (Number(page) - 1) * Number(limit)
     let faqs
     if (!search) {
         faqs = await prisma.fAQ.findMany({
             select: { id: true, title: true, description: true },
             skip: skip,
-            take: limit,
+            take: Number(limit),
         })
     } else {
         faqs = await prisma.fAQ.findMany({
@@ -29,7 +36,7 @@ const getFAQ = async (req: Request, res: Response, next: NextFunction) => {
                 title: { contains: search as string },
             },
             skip: skip,
-            take: limit,
+            take: Number(limit),
             select: { id: true, title: true, description: true },
         })
     }
@@ -57,6 +64,13 @@ const createFAQ = async (req: Request, res: Response, next: NextFunction) => {
 const getFaqById = async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id
     try {
+        if (typeof id !== 'number' || !Number.isInteger(id) || id <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Id should be a positive integer',
+            });
+        }
         const faq = await prisma.fAQ.findUnique({ where: { id: Number(id) } })
         return res.status(200).send({ message: "faq", faq })
     } catch (err) {
