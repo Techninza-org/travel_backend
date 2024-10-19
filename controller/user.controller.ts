@@ -8,44 +8,71 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const query = req.query
-    const { page = 1, limit = 10 } = query
-    if (isNaN(Number(page)) || isNaN(Number(limit))) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid Query Parameters' })
+    const query = req.query;
+    const { page = 1, limit = 10 } = query;
+
+    if (
+        isNaN(Number(page)) || 
+        isNaN(Number(limit)) || 
+        Number(page) <= 0 || 
+        Number(limit) <= 0 || 
+        !Number.isInteger(Number(page)) || 
+        !Number.isInteger(Number(limit))
+    ) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Invalid Query Parameters. Page and limit must be positive integers.'
+        });
     }
-    const skip = (Number(page) - 1) * Number(limit)
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const MAX_LIMIT = 100;
+    const finalLimit = Math.min(Number(limit), MAX_LIMIT);
+
     try {
         const users = await prisma.user.findMany({
             skip: skip,
-            take: Number(limit),
-            where: { NOT: { id: req.user.id } },
-        })
-        delete (users as any).password
-        return res.status(200).send({ status: 200, message: 'Ok', users: users })
+            take: finalLimit,
+            where: { NOT: { id: req.user.id } }, 
+        });
+
+        const sanitizedUsers = users.map(user => {
+            const { password, ...safeUser } = user;
+            return safeUser;
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', users: sanitizedUsers });
     } catch (err) {
-        return next(err)
+        return next(err);
     }
-}
+};
 
 const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const query = req.query
-    const { page = 1, limit = 10 } = query
-    if (Number.isNaN(page) || Number.isNaN(limit))
-        return res.status(200).send({
+    const query = req.query;
+    const { page = 1, limit = 10 } = query;
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    if (isNaN(pageNum) || isNaN(limitNum)) {
+        return res.status(400).send({
             status: 400,
             error: 'Invalid query parameters',
-            error_description: 'skip, limit should be a number',
-        })
+            error_description: 'page and limit should be valid numbers',
+        });
+    }
 
-    const skip = (Number(page) - 1) * Number(limit)
+    const skip = (pageNum - 1) * limitNum;
+
     try {
         const userIdsObjArr = await prisma.follows.findMany({
             where: { follower_id: req.user.id },
             select: { user_id: true },
-        })
-        const userIds = userIdsObjArr.map((user_id) => user_id.user_id)
+        });
+
+        const userIds = userIdsObjArr.map(user => user.user_id);
+
         const fetchPosts = await prisma.post.findMany({
             where: { user_id: { in: [...userIds, req.user.id] } },
             include: {
@@ -73,26 +100,50 @@ const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunc
             },
             orderBy: { created_at: 'desc' },
             skip: skip,
-            take: Number(limit),
-        })
-        for (let i = 0; i < fetchPosts.length; i++) {
-            const isLiked = await prisma.likes.findFirst({
-                where: { post_id: fetchPosts[i].id, user_id: req.user.id },
+            take: limitNum,
+        });
+
+        const likedPosts = await Promise.all(
+            fetchPosts.map(async post => {
+                const isLiked = await prisma.likes.findFirst({
+                    where: { post_id: post.id, user_id: req.user.id },
+                });
+                return { ...post, isLiked: Boolean(isLiked) }; 
             })
-            //@ts-ignore
-            fetchPosts[i].isLiked = isLiked ? true : false
-        }
-        return res.status(200).send({ status: 200, message: 'Ok', posts: fetchPosts })
+        );
+
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            posts: likedPosts,
+        });
     } catch (err) {
-        return next(err)
+        console.error('Error fetching user feed:', err); 
+        return next(err);
     }
-}
+};
+
 
 const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFunction) => {
-    const user = req.user
-    delete (user as any).password
-    return res.status(200).send({ status: 200, message: 'Ok', user: user })
-}
+    const user = req.user;
+
+    if (!user) {
+        return res.status(404).send({
+            status: 404,
+            error: 'User Not Found',
+            error_description: 'No user details available.',
+        });
+    }
+
+    const { password, ...userDetails } = user;
+
+    return res.status(200).send({
+        status: 200,
+        message: 'Ok',
+        user: userDetails,
+    });
+};
+
 
 const update_user = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -466,43 +517,74 @@ const visibleStatus = async (req: ExtendedRequest, res: Response, next: NextFunc
 }
 
 const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
-    const { blocked_user_id } = req.body
-    if (!blocked_user_id) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
+    const user = req.user;
+    const { blocked_user_id } = req.body;
+
+    if (blocked_user_id === undefined) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'blocked_user_id field is required',
+        });
     }
+
+    if(blocked_user_id === user.id) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'You cannot block youself',
+        });
+    }
+
     if (typeof blocked_user_id !== 'number') {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'User Id should be a number' })
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User ID should be a number',
+        });
     }
+
     try {
         const isAlreadyFollowing = await prisma.follows.findFirst({
             where: { user_id: blocked_user_id, follower_id: user.id },
-        })
+        });
+
         if (isAlreadyFollowing) {
-            await prisma.follows.deleteMany({ where: { user_id: blocked_user_id, follower_id: user.id } })
+            await prisma.follows.deleteMany({
+                where: { user_id: blocked_user_id, follower_id: user.id },
+            });
         }
+
         const isAlreadyBlocked = await prisma.block.findFirst({
             where: { user_id: user.id, blocked_id: blocked_user_id },
-        })
+        });
+
         if (isAlreadyBlocked) {
-            return res.status(200).send({ status: 200, message: 'Ok', error: 'User already blocked' })
+            return res.status(200).send({
+                status: 200,
+                message: 'Ok',
+                error: 'User already blocked',
+            });
         }
+
         const blockedUser = await prisma.block.create({
             data: {
                 user_id: user.id,
                 blocked_id: blocked_user_id,
             },
-        })
+        });
 
-        return res.status(200).send({ status: 200, message: 'Ok', blockedUser: blockedUser })
+        return res.status(200).send({
+            status: 200,
+            message: 'User successfully blocked',
+            blockedUser,
+        });
     } catch (err) {
-        return next(err)
+        console.error('Error blocking user:', err);
+        return next(err);
     }
-}
+};
+
 
 const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -524,7 +606,7 @@ const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFuncti
                 blocked_id: blocked_user_id,
             },
         })
-        return res.status(200).send({ status: 200, message: 'Ok', blockedUser: blockedUser })
+        return res.status(200).send({ status: 200, message: 'User unblocked successfully' })
     } catch (err) {
         return next(err)
     }
