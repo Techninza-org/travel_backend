@@ -966,15 +966,64 @@ const getUserFollowersFollowingById = async (req: ExtendedRequest, res: Response
 }
 
 const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
-    const body = req.body
-    if (!helper.isValidatePaylod(body, ['name', 'address', 'phone', 'email', 'document'])) {
-        return res.status(200).send({
+    const user = req.user;
+    const body = req.body;
+
+    const isKycSubmitted = await prisma.kYC.findUnique({
+        where: {user_id: req.user.id}
+    })
+    if(isKycSubmitted) {
+        return res.status(201).send({msg: "Kyc details already submitted"})
+    }
+
+    if (!helper.isValidatePaylod(body, ['name', 'address', 'phone', 'email', 'document']) ||
+        !['name', 'address', 'phone', 'email', 'document', 'alternate_phone', 'alternate_email', 'document_type']
+            .every(field => typeof body[field] === 'string' || body[field] === undefined)) {
+        return res.status(400).send({
             status: 400,
             error: 'Invalid payload',
-            error_description: 'name, address, phone, email, document are required.',
-        })
+            error_description: 'All fields must be strings and name, address, phone, email, document are required.',
+        });
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(body.email)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid email format',
+        });
+    }
+    if (body.email.length > 74) {
+        return res.status(400).send({ status: 400, error: 'Email address too long' })
+    }
+
+    
+    if (body.alternate_email && !emailRegex.test(body.alternate_email)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid alternate email format',
+        });
+    }
+    
+    if(body.alternate_email && body.alternate_email.length > 74){
+        return res.status(400).send({ status: 400, error: 'Alternate email address too long' })
+    }
+    
+    if (!/^\d{10}$/.test(body.phone)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid phone number format. Must be 10 digits.',
+        });
+    }
+
+    if (body.alternate_phone && !/^\d{10}$/.test(body.alternate_phone)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Invalid alternate phone number format. Must be 10 digits.',
+        });
+    }
+
     try {
         await prisma.kYC.create({
             data: {
@@ -988,42 +1037,74 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
                 document: body.document,
                 user_id: user.id,
             },
-        })
-        await prisma.user.update({ where: { id: user.id }, data: { kycStatus: 0 } })
-        return res.status(200).send({ status: 200, message: 'Ok' })
+        });
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { kycStatus: 0 },
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok' });
     } catch (err) {
-        return next(err)
+        return next(err);
     }
-}
+};
 
 const getFollowStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
-    const { user_id } = req.body
+    const user = req.user;
+    const { user_id } = req.body;
+
     if (!user_id) {
-        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'User Id is required' })
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User Id is required',
+        });
     }
-    if (typeof user_id !== 'number') {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'User Id should be a number' })
+
+    if (typeof user_id !== 'number' || !Number.isInteger(user_id)) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User Id should be an integer',
+        });
     }
+
+    if (user_id === user.id) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'User cannot check follow status for themselves',
+        });
+    }
+
     try {
         const isFollowing = await prisma.follows.findFirst({
-            where: { user_id: user_id, follower_id: user.id },
-        })
+            where: {
+                user_id: user_id,
+                follower_id: user.id,
+            },
+        });
+
         const isRequested = await prisma.followRequest.findFirst({
-            where: { user_id: user_id, follower_id: user.id, status: 0 },
-        })
+            where: {
+                user_id: user_id,
+                follower_id: user.id,
+                status: 0, 
+            },
+        });
+
         return res.status(200).send({
             status: 200,
             message: 'Ok',
-            isFollowing: isFollowing ? true : false,
-            isRequested: isRequested ? true : false,
-        })
+            isFollowing: !!isFollowing,
+            isRequested: !!isRequested,
+        });
     } catch (err) {
-        return next(err)
+        return next(err);
     }
-}
+};
+
 
 const getPinnedLocations = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -1032,39 +1113,53 @@ const getPinnedLocations = async (req: ExtendedRequest, res: Response, next: Nex
 }
 
 const pinLocation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
-    const { latitude, longitude, title } = req.body
+    const user = req.user;
+    const { latitude, longitude, title } = req.body;
+
     if (!latitude || !longitude) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude is required' })
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Latitude and Longitude are required.',
+        });
     }
-    if (isNaN(latitude) || isNaN(longitude)) {
-        return res
-            .status(400)
-            .json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' })
+
+    if (typeof latitude !== 'number' || typeof longitude !== 'number' || isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Latitude and Longitude should be numbers.',
+        });
     }
-    if (title) {
-        if (typeof title !== 'string') {
-            return res
-                .status(400)
-                .json({ status: 400, error: 'Bad Request', error_description: 'Title should be a string' })
-        }
+
+    if (title && typeof title !== 'string') {
+        return res.status(400).json({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Title should be a string.',
+        });
     }
+
     try {
         const addedPin = await prisma.pinnedLocation.create({
             data: {
                 latitude: latitude,
                 longitude: longitude,
-                title: title,
+                title: title || '', 
                 user_id: user.id,
             },
-        })
-        return res.status(200).send({ status: 200, message: 'Ok', pinned: addedPin })
+        });
+
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            pinned: addedPin,
+        });
     } catch (err) {
-        return next(err)
+        return next(err);
     }
-}
+};
+
 
 const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -1074,6 +1169,9 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
     }
     if (isNaN(Number(id))) {
         return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+    }
+    if(!Number.isInteger(id)){
+        return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a integer' })
     }
     const exists = await prisma.pinnedLocation.findFirst({ where: { id: Number(id), user_id: user.id } })
     if (!exists) {
@@ -1233,11 +1331,18 @@ const createTransaction = async (req: ExtendedRequest, res: Response, next: Next
                 error_description: 'amount, status and order_id are required.',
             })
         }
-        if (isNaN(Number(amount))) {
-            return res.status(200).send({
+        if (typeof amount !== 'number') {
+            return res.status(400).send({
                 status: 400,
                 error: 'Bad Request',
                 error_description: 'Amount should be a number.',
+            })
+        }
+        if(amount < 1){
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Amount should be greater than 0.',
             })
         }
         if (typeof status !== 'string' || typeof order_id !== 'string' || typeof type !== 'string') {

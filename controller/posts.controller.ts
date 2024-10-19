@@ -156,6 +156,8 @@ export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _nex
     try {
         const id = Number(req.body.userId)
         if(isNaN(id)) return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'id should be a number.' })
+        if(!Number.isInteger(id)) return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'id should be a integer.' })
+            
         const isFollowing = await prisma.follows.findFirst({
             where: { user_id: id, follower_id: req.user.id },
         })
@@ -261,10 +263,10 @@ export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next:
                 .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) is required in params.' })
         }
         postId = Number(postId)
-        if (Number.isNaN(postId)) {
+        if (Number.isNaN(postId) || !Number.isInteger(postId)) {
             return res
                 .status(200)
-                .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a number.' })
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a integer.' })
         }
 
         const post = await prisma.post.findFirst({
@@ -318,10 +320,10 @@ export const DeletePost = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) is required in body.' })
     }
     postId = Number(postId)
-    if (Number.isNaN(postId)) {
+    if (Number.isNaN(postId) || !Number.isInteger(postId)) {
         return res
             .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a number.' })
+            .send({ status: 400, error: 'Invalid payload', error_description: 'id(post) should be a integer.' })
     }
 
     try {
