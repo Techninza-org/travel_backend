@@ -86,12 +86,19 @@ export const CommentPost = async (req: ExtendedRequest, res: Response, next: Nex
         });
     }
     post_id = Number(post_id)
+    if(typeof comment !== 'string'){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Comment should be a string',
+        });
+    }
     const isPostExists = await prisma.post.findFirst({ where: { id: post_id } })
     if (isPostExists) {
         try {
             const commentEntry = await prisma.comment.create({
                 data: {
-                    comment: comment,
+                    comment: comment.trim(),
                     postId: post_id,
                     user_id: req.user.id,
                 },
