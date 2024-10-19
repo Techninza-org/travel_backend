@@ -499,10 +499,10 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
         return res.status(400).send({ status: 400, error: 'Username cannot contain control characters' })
     }
 
-    const emojiPattern = /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/;
-    if (emojiPattern.test(username)) {
-        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' });
-    }
+    // const emojiPattern = /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/;
+    // if (emojiPattern.test(username)) {
+    //     return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' });
+    // }
 
     try {
         let users = await prisma.user.findMany({
@@ -589,6 +589,17 @@ const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction
     }
 
     try {
+        const userToBlock = await prisma.user.findUnique({
+            where: { id: blocked_user_id },
+        });
+
+        if (!userToBlock) {
+            return res.status(404).send({
+                status: 404,
+                error: 'Not Found',
+                error_description: 'User to block does not exist',
+            });
+        }
         const isAlreadyFollowing = await prisma.follows.findFirst({
             where: { user_id: blocked_user_id, follower_id: user.id },
         })

@@ -109,13 +109,13 @@ const Signup = async (req: Request, res: Response, next: NextFunction) => {
             return res.status(400).send({ status: 400, error: 'Username cannot contain control characters' })
         }
 
-        const emojiPattern =
-            /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/
-        if (emojiPattern.test(username)) {
-            return res
-                .status(400)
-                .send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' })
-        }
+        // const emojiPattern =
+        //     /[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF\u1F900-\u1F9FF\u1FA70-\u1FAFF\u1F1E6-\u1F1FF]+/
+        // if (emojiPattern.test(username)) {
+        //     return res
+        //         .status(400)
+        //         .send({ status: 400, error: 'Bad Request', error_description: 'Username cannot contain emojis' })
+        // }
 
         const phoneRegex = /^[0-9]{10}$/
         if (!phoneRegex.test(phone)) {
