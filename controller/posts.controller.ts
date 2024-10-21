@@ -359,7 +359,7 @@ export const editPost = async (req: ExtendedRequest, res: Response, next: NextFu
                 .send({ status: 200, error: 'Invalid payload', error_description: 'id(post) is required.' })
         }
 
-        const {postId} = param
+        const postId = Number(req.params.id)
 
         const { description, latitude, longitude, place } = body
         if (typeof postId !== 'number' || !Number.isInteger(postId) || postId <= 0)
