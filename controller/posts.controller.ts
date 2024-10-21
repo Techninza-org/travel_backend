@@ -155,9 +155,15 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
 export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
     try {
         const id = Number(req.body.userId)
-        if(isNaN(id)) return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'id should be a number.' })
-        if(!Number.isInteger(id)) return res.status(200).send({ status: 400, error: 'Invalid payload', error_description: 'id should be a integer.' })
-            
+        if (isNaN(id))
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id should be a number.' })
+        if (!Number.isInteger(id))
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id should be a integer.' })
+
         const isFollowing = await prisma.follows.findFirst({
             where: { user_id: id, follower_id: req.user.id },
         })
@@ -234,7 +240,8 @@ export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _nex
                 },
             },
         })
-        if(!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'User not found.' })
+        if (!user)
+            return res.status(200).send({ status: 404, error: 'Not found', error_description: 'User not found.' })
         delete (user as any).password
         const follower_count = await prisma.follows.count({ where: { user_id: id } })
         const trip_count = await prisma.trip.count({ where: { user_id: id } })
@@ -292,15 +299,13 @@ export const GetSpecificPost = async (req: ExtendedRequest, res: Response, next:
         })
         //@ts-ignore
         post.isLiked = isLiked ? true : false
-        return res
-            .status(200)
-            .send({
-                status: 200,
-                message: 'Ok',
-                post,
-                user_follower_count: follower_count,
-                user_trip_count: trip_count,
-            })
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            post,
+            user_follower_count: follower_count,
+            user_trip_count: trip_count,
+        })
     } catch (err) {
         return next(err)
     }
@@ -364,14 +369,22 @@ export const editPost = async (req: ExtendedRequest, res: Response, next: NextFu
         const { description, latitude, longitude, place } = body
         if (typeof postId !== 'number' || !Number.isInteger(postId) || postId <= 0)
             return res.status(400).send({ status: 400, error: 'postId should be a positive integer' })
-        if (typeof description !== 'string')
-            return res.status(400).send({ status: 400, error: 'Description should be a string' })
-        if (typeof latitude !== 'string')
-            return res.status(400).send({ status: 400, error: 'latitude should be a string' })
-        if (typeof longitude !== 'string')
-            return res.status(400).send({ status: 400, error: 'longitude should be a string' })
-        if (typeof place !== 'string')
-            return res.status(400).send({ status: 400, error: 'latitude should be a string' })
+        if (description) {
+            if (typeof description !== 'string')
+                return res.status(400).send({ status: 400, error: 'Description should be a string' })
+        }
+        if (latitude) {
+            if (typeof latitude !== 'string')
+                return res.status(400).send({ status: 400, error: 'latitude should be a string' })
+        }
+        if (longitude) {
+            if (typeof longitude !== 'string')
+                return res.status(400).send({ status: 400, error: 'longitude should be a string' })
+        }
+        if (place) {
+            if (typeof place !== 'string')
+                return res.status(400).send({ status: 400, error: 'latitude should be a string' })
+        }
 
         const post = await prisma.post.findUnique({ where: { id: postId, user_id: user.id } })
         if (!post) {
@@ -401,6 +414,6 @@ const postController = {
     GetOnlyVideos,
     GetPostsByUserId,
     createTemplate,
-    editPost
+    editPost,
 }
 export default postController
