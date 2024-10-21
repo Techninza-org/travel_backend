@@ -346,6 +346,53 @@ export const DeletePost = async (req: ExtendedRequest, res: Response, next: Next
         return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Post not found.' })
     }
 }
+
+export const editPost = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const body = req.body
+
+        const param = req.params
+        if (!helper.isValidatePaylod(param, ['id'])) {
+            return res
+                .status(200)
+                .send({ status: 200, error: 'Invalid payload', error_description: 'id(post) is required.' })
+        }
+
+        const {postId} = param
+
+        const { description, latitude, longitude, place } = body
+        if (typeof postId !== 'number' || !Number.isInteger(postId) || postId <= 0)
+            return res.status(400).send({ status: 400, error: 'postId should be a positive integer' })
+        if (typeof description !== 'string')
+            return res.status(400).send({ status: 400, error: 'Description should be a string' })
+        if (typeof latitude !== 'string')
+            return res.status(400).send({ status: 400, error: 'latitude should be a string' })
+        if (typeof longitude !== 'string')
+            return res.status(400).send({ status: 400, error: 'longitude should be a string' })
+        if (typeof place !== 'string')
+            return res.status(400).send({ status: 400, error: 'latitude should be a string' })
+
+        const post = await prisma.post.findUnique({ where: { id: postId, user_id: user.id } })
+        if (!post) {
+            return res.status(400).send({ status: 400, error: 'Post not found' })
+        }
+        const updatedPost = await prisma.post.update({
+            where: { id: postId },
+            data: {
+                description: description,
+                latitude: latitude,
+                longitude: longitude,
+                place: place,
+            },
+        })
+
+        return res.status(200).send({ message: 'Post updated successfully', post: updatedPost })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const postController = {
     CreatePost,
     GetPosts,
@@ -354,5 +401,6 @@ const postController = {
     GetOnlyVideos,
     GetPostsByUserId,
     createTemplate,
+    editPost
 }
 export default postController

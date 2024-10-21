@@ -21,5 +21,7 @@ postRouter
     .delete('/:id', postController.DeletePost)
     //@ts-ignore
     .post('/user', postController.GetPostsByUserId)
+    //@ts-ignore
+    .put('/edit/:id', postController.editPost)
 
 export default postRouter
