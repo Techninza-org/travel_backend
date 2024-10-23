@@ -353,15 +353,15 @@ model PaymentOrder {
 
 model FAQ {
   id          Int      @id @default(autoincrement())
-  title       String
-  description String
+  title       String   @db.Text
+  description String   @db.Text
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
 
 model ForumQuestion {
   id          Int           @id @default(autoincrement())
-  question    String
+  question    String        @db.Text
   answers     ForumAnswer[] @relation("QuestionToAnswer")
   user_id     Int
   user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)

@@ -54,7 +54,8 @@ const createFAQ = async (req: Request, res: Response, next: NextFunction) => {
                 .status(200)
                 .send({ error: 'Invalid payload', error_description: 'description & title is required.' })
         }
-        const faq = await prisma.fAQ.create({ data: { description: body.description, title: body.title } })
+        if(typeof body.title !== 'string' || typeof body.description !== 'string') return res.status(400).send("title and description should be strings")
+        const faq = await prisma.fAQ.create({ data: { description: body.description.trim(), title: body.title.trim() } })
         return res.status(200).send({ message: "faq created", faq })
     } catch (err) {
         return next(err)

@@ -14,7 +14,7 @@ const createForumQuestion = async (req: ExtendedRequest, res: Response, next: Ne
         }
         const forumQuestion = await prisma.forumQuestion.create({
             data: {
-                question: body.question,
+                question: body.question.trim(),
                 location: body.location,
                 latitude: body.latitude,
                 longitude: body.longitude,
@@ -132,6 +132,13 @@ export const likeQuestion = async (req: ExtendedRequest, res: Response, next: Ne
     const questionId = Number(req.params.id)
     if(!questionId) {
         return res.status(400).send({ error: 'Invalid payload', error_description: 'question id is required.' })
+    }
+    if (typeof questionId !== 'number' || !Number.isInteger(questionId) || questionId <= 0) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Question Id should be a positive integer',
+        });
     }
     const postedBy = await prisma.forumQuestion.findUnique({ where: { id: questionId }, select: { user_id: true } })
     const postedById = Number(postedBy?.user_id)
