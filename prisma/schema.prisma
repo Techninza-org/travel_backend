@@ -376,7 +376,7 @@ model ForumQuestion {
 
 model ForumAnswer {
   id          Int           @id @default(autoincrement())
-  answer      String
+  answer      String        @db.Text
   question_id Int
   question    ForumQuestion @relation("QuestionToAnswer", fields: [question_id], references: [id], onDelete: Cascade)
   user_id     Int
