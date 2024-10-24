@@ -51,7 +51,10 @@ const getAllForumQuestions = async (req: ExtendedRequest, res: Response, next: N
 }
 
 const getForumQuestionsByLocation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const location = req.body.location
+    const location = req.body.location.trim()
+    if(typeof location !== 'string' || location === null || location === 'null'){
+        return res.status(400).send({error: "Invalid location"})
+    }
     try {
         const forumQuestions = await prisma.forumQuestion.findMany({
             where: { location: {contains: location} },

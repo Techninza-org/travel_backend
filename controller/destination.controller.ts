@@ -93,10 +93,12 @@ export const getSpecificDestination = async (req: ExtendedRequest, res: Response
         })
     }
     destinationId = Number(destinationId)
-    if (Number.isNaN(destinationId)) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'id(destination) should be a number.' })
+    if(typeof destinationId !== 'number' || !Number.isInteger(destinationId) || destinationId <= 0){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Destination id should be a positive integer value',
+        });
     }
     try{const destination = await prisma.destination.findUnique({
         where: {

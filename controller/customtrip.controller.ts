@@ -21,11 +21,22 @@ export const InitialiseCustomTrip = async (req: ExtendedRequest, res: Response, 
             error_description: 'number of people, itinerary, start_date, end_date is required.',
         })
     }
-    const { number_of_people, itinerary, start_date, end_date, duration } = req.body
-    if (Number.isNaN(Number(number_of_people))) {
-        return res
-            .status(400)
-            .send({ error: 'Invalid payload', error_description: 'number_of_people should be a number.' })
+    const { number_of_people, itinerary, start_date, end_date } = req.body
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if(!start_date || !dateRegex.test(String(start_date))){
+        return res.status(400).send({error: "Invalid start date"})
+    }
+    if(!end_date || !dateRegex.test(String(start_date))){
+        return res.status(400).send({error: "Invalid end date"})
+    }
+    if(number_of_people){
+        if (typeof number_of_people !== 'number' || !Number.isInteger(number_of_people) || number_of_people <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Number of people should be a positive integer value',
+            });
+        }
     }
     try {
         const customTrip = await prisma.customTrip.create({

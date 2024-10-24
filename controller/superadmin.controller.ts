@@ -60,7 +60,7 @@ export const deleteVendor = async (req: ExtendedRequest, res: Response, next: Ne
     if (isNaN(Number(host_id))) {
         return res
             .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid Query Parameters' })
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid hostid Parameters' })
     }
     try {
         const vendor = await prisma.host.delete({ where: { id: Number(host_id) } })

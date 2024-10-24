@@ -10,7 +10,7 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
         const receiverId = req.params.receiverId
         const rec = await prisma.user.findUnique({ where: { id: Number(receiverId) } });
         if (!rec) return res.status(404).send({ message: 'Receiver not found' })
-        const message = req.body.message
+        const message = req.body.message.trim()
         if (!message || !receiverId) return res.status(400).send({ message: 'Receiver and message are required' })
         if (senderId === receiverId) return res.status(400).send({ message: 'You can not send message to yourself' })
         let senderConversations = await prisma.participant.findMany({
@@ -112,7 +112,7 @@ export const sendGroupMessage = async (req: ExtendedRequest, res: Response, next
     try{
         const senderId = req.user.id
         const conversationId = req.params.conversationId
-        const message = req.body.message
+        const message = req.body.message.trim()
         if (!message || !conversationId) return res.status(400).send({ message: 'Group and message are required' })
         const group = await prisma.conversation.findFirst({
             where: {
@@ -166,16 +166,13 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         })
         for(const participant of participants){
             const participantExists = await prisma.user.findUnique({ where: { id: Number(participant) } });
-            console.log('...'); 
             if(!participantExists) return res.status(404).send({ message: 'Participant not found' })
-            console.log(',,,');
             await prisma.participant.create({
                 data: {
                     userId: Number(participant),
                     conversationId: conversation.id,
                 }
             })
-            console.log('///');
             if(Number(participant) !== senderId){
                 await sendMessageNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`, String(conversation.id));
                 const receiverToken = await getUserToken(participant);
@@ -239,7 +236,14 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
 export const getConversation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const senderId = req.user.id
-        const receiverId = req.params.receiverId
+        const receiverId = Number(req.params.receiverId)
+        if (typeof receiverId !== 'number' || !Number.isInteger(receiverId) || receiverId <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Receiver id should be a positive integer value',
+            });
+        }
 
         const getConversation = await prisma.conversation.findFirst({
             where: {

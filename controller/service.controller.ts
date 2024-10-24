@@ -87,13 +87,34 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
     if (
         isNaN(Number(page)) ||
         isNaN(Number(limit)) ||
-        isNaN(Number(seats)) ||
-        typeof destination !== 'string' ||
-        typeof start_date !== 'string'
+        Number(page) <= 0 ||
+        Number(limit) <= 0 ||
+        !Number.isInteger(Number(page)) ||
+        !Number.isInteger(Number(limit))
     ) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid Query Parameters' })
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Page and limit must be positive integers.',
+        })
+    }
+    if (!seats ||
+        isNaN(Number(seats)) ||
+        Number(seats) <= 0 ||
+        !Number.isInteger(Number(seats))
+    ) {
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'seats must be positive integers.',
+        })
+    }
+    if(!destination || typeof destination !== 'string' || destination === 'null'){
+        return res.status(400).send({error: "Invalid destination"})
+    }
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if(!start_date || !dateRegex.test(String(start_date))){
+        return res.status(400).send({error: "Invalid start date"})
     }
     const skip = (Number(page) - 1) * Number(limit)
     try {
@@ -102,8 +123,8 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
             req,
             res,
             next,
-            destination,
-            start_date,
+            destination.trim(),
+            String(start_date),
             Number(seats),
             skip,
             Number(limit)
@@ -116,7 +137,6 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
         return next(err)
     }
 }
-
 const GetDefaultServices = async (
     req: ExtendedRequest,
     res: Response,

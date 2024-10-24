@@ -469,6 +469,14 @@ const superAdminLogin = async (req: Request, res: Response, next: NextFunction) 
                 error_description: 'username, password are requried.',
             })
         }
+        const {username, password} = body
+        if(typeof username !== 'string' || username === 'null'){
+            return res.status(400).send({error: "Invalid username"})
+        }
+        if(typeof password !== 'string' ){
+            return res.status(400).send({error: "Invalid password"})
+        }
+        
         const userDetails = await prisma.superAdmin.findUnique({
             where: { username: body.username, password: body.password },
         })

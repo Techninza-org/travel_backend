@@ -7,14 +7,45 @@ const prisma = new PrismaClient()
 export const CreateExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{const user = req.user
     const body = req.body
-    const trip = await prisma.trip.findFirst({ where: { id: body.trip_id } })
-    if (!trip) {
-        return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' })
-    }
     if (!helper.isValidatePaylod(body, ['amount', 'category', 'trip_id'])) {
         return res
             .status(200)
-            .send({ status: 200, error: 'Invalid payload', error_description: 'amount, category is required.' })
+            .send({ status: 200, error: 'Invalid payload', error_description: 'trip_id, amount, category is required.' })
+    }
+    const {trip_id, amount, category, note} = body
+    if(typeof trip_id !== 'number' || !Number.isInteger(trip_id) || trip_id <= 0){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Trip id should be a positive integer value',
+        });
+    }
+    if(typeof amount !== 'number' || !Number.isInteger(amount) || amount <= 0){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Amount should be a positive integer value',
+        });
+    }
+    if(typeof category !== 'string'){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Category should be a String',
+        });
+    }
+    if(note){
+        if(typeof note !== 'string'){
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'note should be a String',
+            });
+        }
+    }
+    const trip = await prisma.trip.findFirst({ where: { id: body.trip_id } })
+    if (!trip) {
+        return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' })
     }
     const expense = await prisma.expense.create({
         data: {
@@ -32,7 +63,8 @@ export const CreateExpense = async (req: ExtendedRequest, res: Response, next: N
 }
 
 export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{let tripId: string | number = req.params.id
+    try{
+    let tripId: string | number = req.params.id
     const user = req.user
     if (!tripId) {
         return res
@@ -40,10 +72,12 @@ export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next:
             .send({ status: 400, error: 'Invalid payload', error_description: 'id(trip) is required in params.' })
     }
     tripId = Number(tripId)
-    if (Number.isNaN(tripId)) {
-        return res
-            .status(200)
-            .send({ status: 400, error: 'Invalid payload', error_description: 'id(trip) should be a number.' })
+    if(typeof tripId !== 'number' || !Number.isInteger(tripId) || tripId <= 0){
+        return res.status(400).send({
+            status: 400,
+            error: 'Bad Request',
+            error_description: 'Trip id should be a positive integer value',
+        });
     }
     const expenses = await prisma.expense.findMany({
         where: { user_id: user.id, trip_id: tripId },

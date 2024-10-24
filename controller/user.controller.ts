@@ -580,7 +580,7 @@ const blockUser = async (req: ExtendedRequest, res: Response, next: NextFunction
         })
     }
 
-    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id < 0) {
+    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id <= 0) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',
@@ -648,7 +648,7 @@ const unblockUser = async (req: ExtendedRequest, res: Response, next: NextFuncti
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'blocked_user_id field is required' })
     }
-    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id < 0) {
+    if (typeof blocked_user_id !== 'number' || !Number.isInteger(blocked_user_id) || blocked_user_id <= 0) {
         return res.status(400).send({
             status: 400,
             error: 'Bad Request',

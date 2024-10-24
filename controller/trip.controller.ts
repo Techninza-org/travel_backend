@@ -23,6 +23,41 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                 error_description: 'destination, start_date, end_date, service_id, cost is required.',
             })
         }
+        const {destination, start_date, end_date, number_of_people, cost, service_id} = body;
+        if(!destination || typeof destination !== 'string' || destination === 'null'){
+            return res.status(400).send({error: "Invalid destination"})
+        }
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if(!start_date || !dateRegex.test(String(start_date))){
+            return res.status(400).send({error: "Invalid start date"})
+        }
+        if(!end_date || !dateRegex.test(String(start_date))){
+            return res.status(400).send({error: "Invalid end date"})
+        }
+        if(number_of_people){
+            if (typeof number_of_people !== 'number' || !Number.isInteger(number_of_people) || number_of_people <= 0) {
+                return res.status(400).send({
+                    status: 400,
+                    error: 'Bad Request',
+                    error_description: 'Number of people should be a positive integer value',
+                });
+            }
+        }
+
+        if(!cost || typeof cost !== 'number' || !Number.isInteger(cost) || cost <= 0){
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Cost should be a positive integer value',
+            });
+        }
+        if(!service_id || typeof service_id !== 'number' || !Number.isInteger(service_id) || service_id <= 0){
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Service id should be a positive integer value',
+            });
+        }
 
         if (body.service_id === null) {
             return res.status(400).send({
