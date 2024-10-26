@@ -12,6 +12,9 @@ forumRouter.get("/", forumController.getAllForumQuestions)
 forumRouter.get("/:id", forumController.getForumQuestion)
 
 //@ts-ignore
+forumRouter.delete("/:id", forumController.deleteForum)
+
+//@ts-ignore
 forumRouter.post("/answer/:id", forumController.createAnswer)
 
 //@ts-ignore
