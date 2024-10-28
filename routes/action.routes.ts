@@ -25,5 +25,7 @@ actionRouter
     .post('/report-post', actionController.reportPost)
     //@ts-ignore
     .post('/report-forum', actionController.reportForumQuestion)
+    //@ts-ignore
+    .delete('/comment', actionController.deleteComment)
 
 export default actionRouter

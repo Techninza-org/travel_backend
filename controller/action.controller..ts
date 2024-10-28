@@ -494,6 +494,40 @@ const reportForumQuestion = async (req: ExtendedRequest, res: Response, next: Ne
 }
 }
 
+const deleteComment = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+        const {postId, commentId} = body
+        if (!postId || typeof postId !== 'number' || !Number.isInteger(postId) || postId <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Post Id should be a positive integer',
+            });
+        }
+        if (!commentId || typeof commentId !== 'number' || !Number.isInteger(commentId) || commentId <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Comment Id should be a positive integer',
+            });
+        }
+
+        const comment = await prisma.comment.findFirst({
+            where: { id: commentId, user_id: req.user.id, postId: postId },
+        })
+        if(!comment){
+            return res.status(400).send({msg: "Comment does not exist"})
+        }
+        const deletedComment = await prisma.comment.delete({
+            where: { id: commentId, user_id: req.user.id, postId: postId },
+        })
+        return res.status(200).send({msg: "Comment deleted.", deletedComment})
+    }catch(err){
+        return next(err)
+    }
+}
+
 const actionController = {
     LikePost,
     CommentPost,
@@ -504,6 +538,7 @@ const actionController = {
     acceptFollowRequest,
     unfollowUser,
     reportPost,
-    reportForumQuestion
+    reportForumQuestion,
+    deleteComment
 }
 export default actionController
