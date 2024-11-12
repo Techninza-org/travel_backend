@@ -382,7 +382,7 @@ model ForumAnswer {
   user_id     Int
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
-  User        User?         @relation("UsersAnswer", fields: [user_id], references: [id])
+  User        User?         @relation("UsersAnswer", fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model QLikes {
@@ -401,7 +401,7 @@ model FollowRequest {
   follower_id Int
   status      Int      @default(0) // 0 = pending, 1 = accepted, 2 = rejected
   user        User     @relation(name: "FollowRequestUser", fields: [user_id], references: [id], onDelete: Cascade)
-  follower    User     @relation(name: "FollowRequestFollower", fields: [follower_id], references: [id])
+  follower    User     @relation(name: "FollowRequestFollower", fields: [follower_id], references: [id], onDelete: Cascade)
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now()) @updatedAt
 }
