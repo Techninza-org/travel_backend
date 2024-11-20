@@ -544,6 +544,16 @@ cron.schedule('30 0 * * *', async () => {
     }
 })
 
+cron.schedule('0 0 * * *', async () => {
+    console.log('deleting notifications');
+    const notifications = await prisma.notification.findMany()
+    for await (const notification of notifications) {
+        if(notification.created_at < new Date(Date.now() - 7*24*60*60*1000)){
+            await prisma.notification.delete({where: {id: notification.id}})
+        }
+    }
+});
+
 app.use(middleware.ErrorHandler)
 
 const privateKey = fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8')
