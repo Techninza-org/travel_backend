@@ -512,7 +512,7 @@ model Notification {
 model Blog {
   id          Int      @id @default(autoincrement())
   slug        String   @unique
-  title       String
+  title       String   @db.Text
   description String   @db.Text
   image       String?
   meta        String?  @db.Text
