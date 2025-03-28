@@ -1397,7 +1397,6 @@ const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFu
         const highlight = await prisma.highlight.create({
             data: {
                 title,
-                user: { connect: { id: user.id } }, 
                 user_id: user.id,
                 postIds: [],
             },
