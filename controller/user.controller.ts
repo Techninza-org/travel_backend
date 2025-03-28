@@ -1381,6 +1381,119 @@ const getTransactions = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const { title } = req.body
+        if (!helper.isValidatePaylod(req.body, ['title'])) {
+            return res.status(200).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'title is required.',
+            })
+        }
+        if (typeof title !== 'string' || title.length < 1 || title.length > 20) {
+            return res.status(200).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Title should be a string less than 20 characters and more than 1 character',
+            })
+        }
+        const highlight = await prisma.highlight.create({
+            data: {
+                title: title,
+                user_id: user.id,
+            },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlight })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const { post_id, highlight_id } = req.body
+        if (!helper.isValidatePaylod(req.body, ['post_id', 'highlight_id'])) {
+            return res.status(200).send({
+                status: 400,
+                error: 'Invalid payload',
+                error_description: 'post_id is required.',
+            })
+        }
+        if (typeof post_id !== 'number' || !Number.isInteger(post_id) || post_id <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Post Id should be a number.',
+            })
+        }
+        if (typeof highlight_id !== 'number' || !Number.isInteger(highlight_id) || highlight_id <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Highlight Id should be a number.',
+            })
+        }
+        const post = await prisma.post.findFirst({ where: { id: post_id, user_id: req.user.id } })
+        if (!post) {
+            return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Post not found.' })
+        }
+
+        const highlight = await prisma.highlight.findFirst({ where: { id: highlight_id, user_id: req.user.id } })
+        if (!highlight) {
+            return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found.' })
+        }
+        const postIds = highlight.postIds || [];
+        if (postIds.includes(post_id)) {
+            return res.status(200).send({ status: 200, message: 'Ok', error: 'Post already added to highlight.' })
+        }
+        postIds.push(post_id)
+        await prisma.highlight.update({
+            where: { id: highlight_id },
+            data: { postIds: postIds },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlight })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getHighlightsAll = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const highlights = await prisma.highlight.findMany({ where: { user_id: user.id }, include: { posts: true } })
+
+        return res.status(200).send({ status: 200, message: 'Ok', highlights: highlights })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const { id } = req.params
+        if (!id) {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
+        }
+        if (isNaN(Number(id))) {
+            return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
+        }
+        if(!Number.isInteger(id)){
+            return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a integer' })
+        }
+        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id }, include: {posts: true} })
+        if (!highlight) {
+            return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
+        }
+        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlight })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -1416,6 +1529,10 @@ const userController = {
     switchPushNotifications,
     createTransaction,
     getTransactions,
+    createHighlight,
+    addPostToHighlight,
+    getHighlightsAll,
+    getHighlightById,
 }
 
 export default userController

@@ -20,6 +20,7 @@ model User {
   password          String
   email             String?   @unique
   image             String?
+  highlights        Highlight[]
   background_image  String?
   gender            Int? // 0 = female, 1 = male
   date_of_birth     String?
@@ -129,6 +130,7 @@ model Post {
   thumbnail   String?
   duration    String?
   postReport  PostReport[]
+  highlight   Highlight[]
   // transitionData TransitionData[]
   soundName   String?
   filterName  FilterName[]
@@ -518,6 +520,18 @@ model Blog {
   meta        String?  @db.Text
   keywords    String?
   category    String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model Highlight {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  image       String?
+  user_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  posts      Post[]
+  postIds    Json
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
