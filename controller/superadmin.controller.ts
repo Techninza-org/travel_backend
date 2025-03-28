@@ -43,6 +43,9 @@ const deleteCommentById = async (req: ExtendedRequest, res: Response, next: Next
     }
     try {
         const comment = await prisma.comment.delete({ where: { id: Number(comment_id) } })
+        if(!comment){
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Comment not found' })
+        }
         return res.status(200).send({ status: 200, comment: comment })
     } catch (err) {
         return next(err)
@@ -59,6 +62,9 @@ const deletePostById = async (req: ExtendedRequest, res: Response, next: NextFun
     }
     try {
         const post = await prisma.post.delete({ where: { id: Number(post_id) } })
+        if(!post){
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Post not found' })
+        }
         return res.status(200).send({ status: 200, post: post })
     } catch (err) {
         return next(err)
