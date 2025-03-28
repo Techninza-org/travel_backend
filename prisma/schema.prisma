@@ -528,6 +528,8 @@ model Highlight {
   title    String
   user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id   Int
+  latitude Float?
+  longitude Float?
   postIds  Json?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

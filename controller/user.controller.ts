@@ -1384,19 +1384,21 @@ const getTransactions = async (req: ExtendedRequest, res: Response, next: NextFu
 const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const { title } = req.body
+        const { title, latitude, longitude } = req.body
 
-        if (!helper.isValidatePaylod(req.body, ['title'])) {
+        if (!helper.isValidatePaylod(req.body, ['title', 'latitude', 'longitude'])) {
             return res.status(200).send({
                 status: 400,
                 error: 'Invalid payload',
-                error_description: 'title is required.',
+                error_description: 'title, latitude, longitude is required.',
             })
         }
 
         const highlight = await prisma.highlight.create({
             data: {
                 title,
+                latitude,
+                longitude,
                 user_id: user.id,
                 postIds: [],
             },
