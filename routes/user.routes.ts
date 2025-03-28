@@ -73,14 +73,14 @@ userRouter
     .post('/create-transaction', userController.createTransaction)
     //@ts-ignore
     .get('/transactions', userController.getTransactions)
-    //@ts-ignore
-    .post("/create-highlight", userController.createHighlight)
-    //@ts-ignore
-    .get("/highlights", userController.getHighlightsAll)
-    //@ts-ignore
-    .post("/addToHighlight", userController.addPostToHighlight)
-    //@ts-ignore
-    .get("/highlights/:id", userController.getHighlightById)
+    // //@ts-ignore
+    // .post("/create-highlight", userController.createHighlight)
+    // //@ts-ignore
+    // .get("/highlights", userController.getHighlightsAll)
+    // //@ts-ignore
+    // .post("/addToHighlight", userController.addPostToHighlight)
+    // //@ts-ignore
+    // .get("/highlights/:id", userController.getHighlightById)
     
 
 export default userRouter
