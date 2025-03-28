@@ -17,6 +17,54 @@ const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
     }
 }
 
+const getUserById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user_id = req.params.user_id
+
+    if (isNaN(Number(user_id))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid user id Parameters' })
+    }
+    try {
+        const user = await prisma.user.findUnique({ where: { id: Number(user_id) }, include:{post: {include:{comment: true, Likes: true}}} })
+        return res.status(200).send({ status: 200, user: user })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deleteCommentById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const comment_id = req.params.comment_id
+
+    if (isNaN(Number(comment_id))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid comment id Parameters' })
+    }
+    try {
+        const comment = await prisma.comment.delete({ where: { id: Number(comment_id) } })
+        return res.status(200).send({ status: 200, comment: comment })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deletePostById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const post_id = req.params.post_id
+
+    if (isNaN(Number(post_id))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid post id Parameters' })
+    }
+    try {
+        const post = await prisma.post.delete({ where: { id: Number(post_id) } })
+        return res.status(200).send({ status: 200, post: post })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const createVendor = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const { name, username, phone, password } = req.body
@@ -380,5 +428,8 @@ const superAdminController = {
     getAllTransactions,
     createBlog,
     deleteBlog,
+    getUserById,
+    deleteCommentById,
+    deletePostById,
 }
 export default superAdminController

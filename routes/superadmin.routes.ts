@@ -48,5 +48,11 @@ SuperAdminRouter
     .post('/blog', upload.single('image'), superAdminController.createBlog)
     //@ts-ignore
     .delete('/blog/:id', superAdminController.deleteBlog)
+    //@ts-ignore
+    .get("/user/:user_id", superAdminController.getUserById)
+    //@ts-ignore
+    .delete("/user/post/:post_id", superAdminController.deletePostById)
+    //@ts-ignore
+    .delete("/user/comment/:comment_id", superAdminController.deleteCommentById)
 
 export default SuperAdminRouter
