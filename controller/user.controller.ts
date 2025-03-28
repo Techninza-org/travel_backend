@@ -1463,9 +1463,13 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
 const getHighlightsAll = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const highlights = await prisma.highlight.findMany({ where: { user_id: user.id }, include: { posts: true } })
-
-        return res.status(200).send({ status: 200, message: 'Ok', highlights: highlights })
+        const highlights = await prisma.highlight.findMany({ where: { user_id: user.id }})
+        const hightlightsWithPosts = await Promise.all(highlights.map(async (highlight) => {
+            const postIds = highlight.postIds || '';
+            const posts = await prisma.post.findMany({ where: { id: { in: String(postIds).split(',').map(Number) } } })
+            return { ...highlight, posts }
+        }))
+        return res.status(200).send({ status: 200, message: 'Ok', highlights: hightlightsWithPosts })
     } catch (err) {
         return next(err)
     }
@@ -1484,11 +1488,12 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
         if(!Number.isInteger(id)){
             return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a integer' })
         }
-        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id }, include: {posts: true} })
+        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id }})
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
         }
-        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlight })
+        const highlightWithPosts = { ...highlight, posts: await prisma.post.findMany({ where: { id: { in: String(highlight.postIds).split(',').map(Number) } }}) }
+        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlightWithPosts })
     } catch (err) {
         return next(err)
     }
