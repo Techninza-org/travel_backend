@@ -42,10 +42,12 @@ const deleteCommentById = async (req: ExtendedRequest, res: Response, next: Next
             .send({ status: 400, error: 'Bad Request', error_description: 'Invalid comment id Parameters' })
     }
     try {
-        const comment = await prisma.comment.delete({ where: { id: Number(comment_id) } })
-        if(!comment){
+        const commentExists = await prisma.comment.findUnique({ where: { id: Number(comment_id) } })
+        if(!commentExists){
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Comment not found' })
         }
+        const comment = await prisma.comment.delete({ where: { id: Number(comment_id) } })
+        
         return res.status(200).send({ status: 200, comment: comment })
     } catch (err) {
         return next(err)
@@ -61,10 +63,12 @@ const deletePostById = async (req: ExtendedRequest, res: Response, next: NextFun
             .send({ status: 400, error: 'Bad Request', error_description: 'Invalid post id Parameters' })
     }
     try {
-        const post = await prisma.post.delete({ where: { id: Number(post_id) } })
-        if(!post){
+        const postExists = await prisma.post.findUnique({ where: { id: Number(post_id) } })
+        if(!postExists){
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Post not found' })
         }
+        const post = await prisma.post.delete({ where: { id: Number(post_id) } })
+       
         return res.status(200).send({ status: 200, post: post })
     } catch (err) {
         return next(err)
