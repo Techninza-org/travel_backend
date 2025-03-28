@@ -1484,9 +1484,6 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
         if (isNaN(Number(id))) {
             return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
         }
-        if(!Number.isInteger(id)){
-            return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a integer' })
-        }
         const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id }})
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
