@@ -1415,7 +1415,7 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
             return res.status(200).send({
                 status: 400,
                 error: 'Invalid payload',
-                error_description: 'post_id is required.',
+                error_description: 'post_id, highlight_id is required.',
             })
         }
         if (typeof post_id !== 'number' || !Number.isInteger(post_id) || post_id <= 0) {
