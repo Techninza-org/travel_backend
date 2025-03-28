@@ -1385,6 +1385,7 @@ const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFu
     try {
         const user = req.user
         const { title } = req.body
+
         if (!helper.isValidatePaylod(req.body, ['title'])) {
             return res.status(200).send({
                 status: 400,
@@ -1392,15 +1393,17 @@ const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFu
                 error_description: 'title is required.',
             })
         }
+
         const highlight = await prisma.highlight.create({
             data: {
                 title,
-                user: { connect: { id: user.id } },
+                user: { connect: { id: user.id } }, 
                 user_id: user.id,
-                postIds: [], 
+                postIds: [],
             },
         })
-        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlight })
+
+        return res.status(200).send({ status: 200, message: 'Ok', highlight })
     } catch (err) {
         return next(err)
     }
