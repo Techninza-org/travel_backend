@@ -1497,6 +1497,90 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+//====== Itinerary ======//
+
+const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+
+    const user = req.user;
+    const { lat_long, status, itinerary_id, img_url, city } = req.body;
+
+    try {
+
+        const itinerary = await prisma.itinerary.findUnique({ where: { id: itinerary_id }});
+
+        if (!itinerary) { return res.status(404).send({status: 404, message: "invalid itinerary id"}); }
+
+        if (!itinerary_id) {
+            const newItinerary = await prisma.itinerary.create({
+                data: {
+                    user_id: user.id,
+                    status: status,
+                    start_lat_long: lat_long,
+                    start_city: city,
+                    city_details: {
+                        create: {
+                            city_name: city,
+                            lat_long: lat_long,
+                            imges_url: {
+                                create: {
+                                    image_url: img_url,
+                                },
+                            }
+                        },
+                    }
+                }
+            });
+
+            return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
+        } else {
+            const updatedItinerary = await prisma.itinerary.update({
+                where: { id: itinerary.id },
+                data: {
+                    status: status,
+                    end_lat_long: status === 'END' ? lat_long : null,
+                    city_details: {
+                        create: {
+                            city_name: city,
+                            lat_long: lat_long,
+                            imges_url: {
+                                create: {
+                                    image_url: img_url,
+                                },
+                            }
+                        },
+                    }
+                }
+            });
+
+            return res.status(200).send({ status: 200, message: 'updated', itinerary: updatedItinerary });
+        }
+        
+    } catch (error) {
+        return next(error);
+    }
+};
+
+const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+
+    try {
+        const itineraries = await prisma.itinerary.findMany({
+            where: { user_id: user.id },
+            include: {
+                city_details: {
+                    include: {
+                        imges_url: true,
+                    },
+                },
+            },
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', itineraries });
+    } catch (error) {
+        return next(error);
+    }
+};
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -1536,6 +1620,8 @@ const userController = {
     addPostToHighlight,
     getHighlightsAll,
     getHighlightById,
+    createItinerary,
+    getItineraries,
 }
 
 export default userController

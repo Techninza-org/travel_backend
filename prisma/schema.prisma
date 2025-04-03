@@ -62,6 +62,8 @@ model User {
   isSocialLogin     Boolean          @default(false)
   pushNotifications Boolean          @default(true)
   transactions      Transactions[]
+
+  itineraries       Itinerary[]
 }
 
 model Transactions {
@@ -533,4 +535,59 @@ model Highlight {
   postIds  Json?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Itinerary {
+  id              Int      @id @default(autoincrement())
+
+  user_id         Int?
+  user            User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  
+  start_lat_long  String?
+  end_lat_long    String?
+  start_city      String?
+  end_city        String?
+  conver_img      String?
+
+  status          ItineraryStatus @default(NOT_ASIGNED)
+  city_details    ItineraryCity[]
+  
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model ItineraryCity {
+  id              Int      @id @default(autoincrement())
+
+  itinerary_id    Int?
+  itinerary       Itinerary? @relation(fields: [itinerary_id], references: [id], onDelete: SetNull)
+
+  imges_url       CityImg[]
+  
+  city_name       String
+  lat_long        String
+  title           String?
+  description     String?
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model CityImg {
+  id              Int      @id @default(autoincrement())
+
+  iterary_city_id Int?
+  itineraryCity   ItineraryCity? @relation(fields: [iterary_city_id], references: [id], onDelete: SetNull)
+
+  image_url       String
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+enum ItineraryStatus {
+  START
+  MOVING
+  END
+  NOT_ASIGNED
 }

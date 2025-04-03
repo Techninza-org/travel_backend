@@ -81,6 +81,10 @@ userRouter
     .post("/addToHighlight", userController.addPostToHighlight)
     //@ts-ignore
     .get("/highlights/:id", userController.getHighlightById)
+    //@ts-ignore
+    .post("/add_itinerary", userController.createItinerary)
+    //@ts-ignore
+    .post("/get_itinerary", userController.getItineraries)
     
 
 export default userRouter
