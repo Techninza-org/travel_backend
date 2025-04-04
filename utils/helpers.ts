@@ -48,6 +48,11 @@ const imageUrlGen = (filePath: string) => {
     const gen_url = process.env.BACKEND_BASE_URL! + + "/images/" + filePath;
     return gen_url
 }
-const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen }
+
+const removeWhitespace = (str: string) : string => {
+    return str.replace(/\s+/g, '').trim(); // Remove all whitespace characters
+}
+
+const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace }
 export default helper
 

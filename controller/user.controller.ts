@@ -1521,12 +1521,12 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                 data: {
                     user_id: user.id,
                     status: 'START',
-                    start_lat_long: lat_long.replace(/\s+/g, ''),
+                    start_lat_long: helper.removeWhitespace(lat_long),
                     start_city: city ? city : 'START CITY',
                     city_details: {
                         create: {
                             city_name: city,
-                            lat_long: lat_long,
+                            lat_long: helper.removeWhitespace(lat_long),
                             title: city_title ? city_title : null,
                             description: city_description ? city_description : null,
                             ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
@@ -1541,12 +1541,12 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                 where: { id: itinerary.id },
                 data: {
                     status: status === 'END' ? 'END' : 'MOVING',
-                    end_lat_long: status === 'END' ? lat_long.replace(/\s+/g, '') : null,
+                    end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
                     end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
                     city_details: {
                         create: {
                             city_name: city,
-                            lat_long: lat_long,
+                            lat_long: helper.removeWhitespace(lat_long),
                             title: city_title ? city_title : null,
                             description: city_description ? city_description : null,
                             ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
