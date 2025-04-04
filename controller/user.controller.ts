@@ -1611,7 +1611,7 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
     }
 };
 
-const addDetailsToItineraryCity = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
 
     const { itinerary_city_id, img_urls, city_name, title, description } = req.body;
@@ -1688,7 +1688,7 @@ const userController = {
     getHighlightById,
     createItinerary,
     getItineraries,
-    addDetailsToItineraryCity,
+    updateDetailsToItineraryCity,
 }
 
 export default userController
