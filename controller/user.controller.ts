@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
-import { cityByCoordinates, getNearbyPlaces } from '../utils/marketplaceService'
+import { getCityByCoordinates, getNearbyPlaces } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -1661,7 +1661,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
     try {
         
         const nearbyList = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
-        const city = await cityByCoordinates(28.7041, 77.1025);
+        const city = await getCityByCoordinates(28.7041, 77.1025);
 
         const data = {
             nearbyList: nearbyList,
