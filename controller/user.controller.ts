@@ -1508,7 +1508,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
     try {
 
-        const itinerary = await prisma.itinerary.findUnique({ where: { id: itinerary_id }});
+        const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
 
         if (!itinerary) { return res.status(404).send({status: 404, message: "invalid itinerary id"}); }
 
