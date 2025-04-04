@@ -49,7 +49,7 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
     }
 }
 
-export const cityByCoordinates = async (latitude: number, longitude: number) => {
+export const cityByCoordinatesGem = async (latitude: number, longitude: number) => {
     const prompt = {
         contents: [
             {
@@ -79,6 +79,21 @@ export const cityByCoordinates = async (latitude: number, longitude: number) => 
 
         return cityName;
         
+    } catch (error) {
+        console.error("Error fetching city name:", error);
+        return null;
+    }
+};
+
+export const getCityByCoordinates = async (latitude: number, longitude: number) => {
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        const response = await axios.get(url);
+
+        // Extract city name
+        const city = response.data.address.city || response.data.address.town || response.data.address.village;
+        
+        console.log("City:", city);
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
