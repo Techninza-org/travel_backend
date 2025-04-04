@@ -93,7 +93,9 @@ export const getCityByCoordinates = async (latitude: number, longitude: number) 
         // Extract city name
         const city = response.data.address.city || response.data.address.town || response.data.address.village;
         
-        console.log("City:", city);
+        console.log("City:", response.data);
+
+        return city;
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
