@@ -1502,10 +1502,13 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const user = req.user;
-    const { lat_long, status, itinerary_id, img_url, city, city_title, city_description } = req.body;
+    const { lat_long, status, itinerary_id, img_urls, city, city_title, city_description } = req.body;
 
     if (!lat_long || !status || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
-    if (img_url && typeof img_url !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_url should be a string' }); }
+    if (!img_urls || !Array.isArray(img_urls)) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array' }); }
+    if (img_urls.length === 0) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should not be empty' }); }
+    if (img_urls.some((url) => typeof url !== 'string')) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array of string' }); }
+    
 
     try {
 
@@ -1529,7 +1532,12 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                             lat_long: helper.removeWhitespace(lat_long),
                             title: city_title ? city_title : null,
                             description: city_description ? city_description : null,
-                            ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                            // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                            imges_url: {
+                                createMany: {
+                                    data: img_urls.map((url) => ({ image_url: url })),
+                                },
+                            },
                         },
                     }
                 }
@@ -1549,12 +1557,12 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                             lat_long: helper.removeWhitespace(lat_long),
                             title: city_title ? city_title : null,
                             description: city_description ? city_description : null,
-                            ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
-                            // imges_url: {
-                            //     create: {
-                            //         image_url: img_url,
-                            //     },
-                            // }
+                            // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                            imges_url: {
+                                createMany: {
+                                    data: img_urls.map((url) => ({ image_url: url })),
+                                },
+                            },
                         },
                     }
                 }
