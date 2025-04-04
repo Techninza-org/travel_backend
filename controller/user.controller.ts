@@ -1505,50 +1505,54 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
     const { lat_long, status, itinerary_id, img_url, city } = req.body;
 
     if (!lat_long || !status || !city) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
+    if (img_url && typeof img_url !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_url should be a string' }); }
 
     try {
 
         const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
 
-        // if (!itinerary) { return res.status(404).send({status: 404, message: "invalid itinerary id"}); }
+        if (itinerary && itinerary.status === 'END') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' }); }
 
         if (!itinerary) {
             const newItinerary = await prisma.itinerary.create({
                 data: {
                     user_id: user.id,
-                    status: status,
+                    status: 'START',
                     start_lat_long: lat_long,
-                    start_city: city,
+                    start_city: city ? city : 'START CITY',
                     city_details: {
                         create: {
                             city_name: city,
                             lat_long: lat_long,
-                            imges_url: {
-                                create: {
-                                    image_url: img_url,
-                                },
-                            }
+                            ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                            // imges_url: {
+                            //     create: {
+                            //         image_url: img_url,
+                            //     },
+                            // }
                         },
                     }
                 }
             });
 
             return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
-        } else {
+        } else if (itinerary) {
             const updatedItinerary = await prisma.itinerary.update({
                 where: { id: itinerary.id },
                 data: {
-                    status: status,
+                    status: status === 'END' ? 'END' : 'MOVING',
                     end_lat_long: status === 'END' ? lat_long : null,
+                    end_city: status === 'END' ? city : null,
                     city_details: {
                         create: {
                             city_name: city,
                             lat_long: lat_long,
-                            imges_url: {
-                                create: {
-                                    image_url: img_url,
-                                },
-                            }
+                            ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                            // imges_url: {
+                            //     create: {
+                            //         image_url: img_url,
+                            //     },
+                            // }
                         },
                     }
                 }
@@ -1564,20 +1568,73 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
 const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
+    const { itinerary_id } = req.body;
 
     try {
-        const itineraries = await prisma.itinerary.findMany({
-            where: { user_id: user.id },
-            include: {
-                city_details: {
-                    include: {
-                        imges_url: true,
+
+        if (itinerary_id) {
+            const itinerary = await prisma.itinerary.findFirst({
+                where: { id: itinerary_id, user_id: user.id },
+                include: {
+                    city_details: {
+                        include: {
+                            imges_url: true,
+                        },
+                    },
+                },
+            });
+
+            if (!itinerary) { return res.status(404).send({ status: 404, message: 'Itinerary not found | invalid itinerary id' });}
+
+            return res.status(200).send({ status: 200, message: 'Ok', itinerary: itinerary });
+        } else {
+
+            const itineraries = await prisma.itinerary.findMany({
+                where: { user_id: user.id },
+                include: {
+                    city_details: {
+                        include: {
+                            imges_url: true,
+                        },
+                    },
+                },
+            });
+            
+            return res.status(200).send({ status: 200, message: 'Ok', itineraries: itineraries });
+        }
+    } catch (error) {
+        return next(error);
+    }
+};
+
+const addImagesToItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+
+    const { itinerary_city_id, img_urls } = req.body;
+
+    if (!itinerary_city_id) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'itinerary_id is required' }); }
+    if (!img_urls || !Array.isArray(img_urls)) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array' }); }
+    if (img_urls.length === 0) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should not be empty' }); }
+    if (img_urls.some((url) => typeof url !== 'string')) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array of string' }); }
+
+    try {
+
+        const itineraryCity = await prisma.itineraryCity.findFirst({ where: { id: itinerary_city_id, itinerary: { user_id: user.id } } });
+        if (!itineraryCity) { return res.status(404).send({ status: 404, message: 'Itinerary city not found | invalid itinerary city id' }); }
+
+        const updatedItineraryCity = await prisma.itineraryCity.update({
+            where: { id: itinerary_city_id },
+            data: {
+                imges_url: {
+                    createMany: {
+                        data: img_urls.map((url) => ({ image_url: url })),
                     },
                 },
             },
         });
 
-        return res.status(200).send({ status: 200, message: 'Ok', itineraries });
+        return res.status(200).send({ status: 200, message: 'Ok', itinerary_city: updatedItineraryCity });
+
     } catch (error) {
         return next(error);
     }
@@ -1624,6 +1681,7 @@ const userController = {
     getHighlightById,
     createItinerary,
     getItineraries,
+    addImagesToItinerary,
 }
 
 export default userController
