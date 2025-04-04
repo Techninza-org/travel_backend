@@ -1504,7 +1504,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
     const user = req.user;
     const { lat_long, status, itinerary_id, img_url, city, city_title, city_description } = req.body;
 
-    if (!lat_long || !status || !city) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
+    if (!lat_long || !status || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
     if (img_url && typeof img_url !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_url should be a string' }); }
 
     try {
@@ -1521,7 +1521,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                 data: {
                     user_id: user.id,
                     status: 'START',
-                    start_lat_long: lat_long,
+                    start_lat_long: lat_long.replace(/\s+/g, ''),
                     start_city: city ? city : 'START CITY',
                     city_details: {
                         create: {
@@ -1541,8 +1541,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                 where: { id: itinerary.id },
                 data: {
                     status: status === 'END' ? 'END' : 'MOVING',
-                    end_lat_long: status === 'END' ? lat_long : null,
-                    end_city: status === 'END' ? city : null,
+                    end_lat_long: status === 'END' ? lat_long.replace(/\s+/g, '') : null,
+                    end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
                     city_details: {
                         create: {
                             city_name: city,
