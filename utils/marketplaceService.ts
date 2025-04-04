@@ -95,7 +95,7 @@ export const getCityByCoordinates = async (latitude: number, longitude: number) 
         
         console.log("City:", response.data);
 
-        return city;
+        return response.data;
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
