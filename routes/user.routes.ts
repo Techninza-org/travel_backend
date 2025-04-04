@@ -86,7 +86,7 @@ userRouter
     //@ts-ignore
     .post("/get_itinerary", userController.getItineraries)
     //@ts-ignore
-    .post("/add_images_to_itinerary", userController.addImagesToItinerary)
+    .post("/add_details_to_itinerary_city", userController.addDetailsToItineraryCity)
     
 
 export default userRouter

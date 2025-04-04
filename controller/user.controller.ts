@@ -1502,7 +1502,7 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const user = req.user;
-    const { lat_long, status, itinerary_id, img_url, city } = req.body;
+    const { lat_long, status, itinerary_id, img_url, city, city_title, city_description } = req.body;
 
     if (!lat_long || !status || !city) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
     if (img_url && typeof img_url !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_url should be a string' }); }
@@ -1527,12 +1527,9 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         create: {
                             city_name: city,
                             lat_long: lat_long,
+                            title: city_title ? city_title : null,
+                            description: city_description ? city_description : null,
                             ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
-                            // imges_url: {
-                            //     create: {
-                            //         image_url: img_url,
-                            //     },
-                            // }
                         },
                     }
                 }
@@ -1550,6 +1547,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         create: {
                             city_name: city,
                             lat_long: lat_long,
+                            title: city_title ? city_title : null,
+                            description: city_description ? city_description : null,
                             ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
                             // imges_url: {
                             //     create: {
@@ -1612,10 +1611,10 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
     }
 };
 
-const addImagesToItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+const addDetailsToItineraryCity = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
 
-    const { itinerary_city_id, img_urls } = req.body;
+    const { itinerary_city_id, img_urls, city_name, title, description } = req.body;
 
     if (!itinerary_city_id) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'itinerary_id is required' }); }
     if (!img_urls || !Array.isArray(img_urls)) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array' }); }
@@ -1630,6 +1629,9 @@ const addImagesToItinerary = async (req: ExtendedRequest, res: Response, next: N
         const updatedItineraryCity = await prisma.itineraryCity.update({
             where: { id: itinerary_city_id },
             data: {
+                city_name: city_name ? city_name : itineraryCity.city_name,
+                title: title ? title : itineraryCity.title,
+                description: description ? description : itineraryCity.description,
                 imges_url: {
                     createMany: {
                         data: img_urls.map((url) => ({ image_url: url })),
@@ -1686,7 +1688,7 @@ const userController = {
     getHighlightById,
     createItinerary,
     getItineraries,
-    addImagesToItinerary,
+    addDetailsToItineraryCity,
 }
 
 export default userController
