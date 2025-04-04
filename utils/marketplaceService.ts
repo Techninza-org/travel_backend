@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API_KEY = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
-// const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
 interface GeminiResponse {
     candidates: {
@@ -49,3 +48,39 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
         return [];
     }
 }
+
+export const cityByCoordinates = async (latitude: number, longitude: number) => {
+    const prompt = {
+        contents: [
+            {
+                parts: [
+                    {
+                        text: `Get the city name for the given latitude: ${latitude} and longitude: ${longitude}. Use the following schema: { "city": "city_name" }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                    }
+                ]
+            }
+        ],
+        generationConfig: {
+            response_mime_type: "application/json",
+        }
+    };
+
+    try {
+
+        const response = await axios.post<GeminiResponse>(API_URL, prompt, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const cityName = JSON.parse(response.data.candidates[0].content.parts[0].text).city;
+
+        console.log("City name:", cityName);
+
+        return cityName;
+        
+    } catch (error) {
+        console.error("Error fetching city name:", error);
+        return null;
+    }
+};
