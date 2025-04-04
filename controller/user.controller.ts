@@ -1559,6 +1559,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
             });
 
             return res.status(200).send({ status: 200, message: 'updated', itinerary: updatedItinerary });
+        } else {
+            return res.status(404).send({ status: 404, message: 'Itinerary not found' });
         }
         
     } catch (error) {
