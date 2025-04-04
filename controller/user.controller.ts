@@ -1512,6 +1512,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
         // const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
         const itinerary: Itinerary | null = await prisma.itinerary.findUnique({ where: { id: itinerary_id ? itinerary_id : 0 }});
 
+        console.log(":::::::::::::::", itinerary);
+
         if (itinerary && itinerary.status === 'END') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' }); }
 
         if (!itinerary_id) {
