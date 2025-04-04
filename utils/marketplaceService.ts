@@ -91,11 +91,12 @@ export const getCityByCoordinates = async (latitude: number, longitude: number) 
         const response = await axios.get(url);
 
         // Extract city name
-        const city = response.data.address.city || response.data.address.town || response.data.address.village;
+        const city = response.data.address.state_district
         
         console.log("City:", response.data);
 
-        return response.data || null;
+        // return response.data || null;
+        return city || null;
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
