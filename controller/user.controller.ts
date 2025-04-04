@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
-import { PrismaClient } from '@prisma/client'
+import { Itinerary, PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
 const prisma = new PrismaClient()
 import crypto from 'node:crypto'
@@ -1509,7 +1509,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
     try {
 
-        const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
+        // const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
+        const itinerary: Itinerary | null = await prisma.itinerary.findUnique({ where: { id: itinerary_id }});
 
         if (itinerary && itinerary.status === 'END') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' }); }
 
