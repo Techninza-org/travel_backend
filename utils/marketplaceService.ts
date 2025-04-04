@@ -85,7 +85,7 @@ export const cityByCoordinatesGem = async (latitude: number, longitude: number) 
     }
 };
 
-export const getCityByCoordinates = async (latitude: number, longitude: number) : Promise<any> => {
+export const getCityByCoordinates = async (latitude: number, longitude: number) : Promise<string | null> => {
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
         const response = await axios.get(url);

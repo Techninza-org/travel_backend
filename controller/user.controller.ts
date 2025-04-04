@@ -1661,7 +1661,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
     try {
         
         const nearbyList = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
-        const city = await getCityByCoordinates(28.7041, 77.1025);
+        const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
 
         const data = {
             nearbyList: nearbyList,
