@@ -20,7 +20,7 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
             {
                 parts: [
                     {
-                        text: `List 10 cities within 100 to 500 km from the given latitude and longitude. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                        text: `List 10 cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
                     }
                 ]
             }
