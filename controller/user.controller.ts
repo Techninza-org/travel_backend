@@ -1504,6 +1504,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
     const user = req.user;
     const { lat_long, status, itinerary_id, img_url, city } = req.body;
 
+    if (!lat_long || !status || !city) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
+
     try {
 
         const itinerary = await prisma.itinerary.findUnique({ where: { id: itinerary_id }});
