@@ -6,6 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
+import { getNearbyPlaces } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -1656,6 +1657,17 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
     }
 };
 
+const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        
+        const data = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
+
+        return res.status(200).send({ status: 200, message: 'Ok', data: data });
+    } catch (error) {
+        return next(error);
+    }
+};
+
 const userController = {
     getSuggestion,
     get_all_users,
@@ -1698,6 +1710,7 @@ const userController = {
     createItinerary,
     getItineraries,
     updateDetailsToItineraryCity,
+    test,
 }
 
 export default userController
