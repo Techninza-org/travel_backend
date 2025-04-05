@@ -132,7 +132,7 @@ export const optimizedCitiesDescription = async (cities: string[]): Promise<any[
         // save in db
         const citiesToSave = ai_cities.map((city: CityDescriptionType) => {
             return {
-                name: city.name,
+                name: city.city,
                 description: city.description
             };
         });
