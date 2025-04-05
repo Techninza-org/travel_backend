@@ -1660,6 +1660,9 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
 const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const {lat, long } = req.body;
 
+    if (lat === undefined || long === undefined) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long are required' }); }
+    if (isNaN(Number(lat)) || isNaN(Number(long))) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long should be numbers' }); }
+
     try {
         
         const place: string | null = await getCityByCoordinates(lat, long)
