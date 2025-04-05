@@ -1658,9 +1658,7 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
 };
 
 const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user;
     const {lat, long } = req.body;
-
 
     try {
         
@@ -1693,7 +1691,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
-        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces, place: place, cities: citiesByLatLong});
+        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
         return next(error);
     }
