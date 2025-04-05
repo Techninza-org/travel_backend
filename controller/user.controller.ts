@@ -1673,7 +1673,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             attractions: attractions
         }
 
-        return res.status(200).send({status: 200, marketplace: marketplace});
+        return res.status(200).send({status: 200, marketplace: marketplace, place: place});
     } catch (error) {
         return next(error);
     }

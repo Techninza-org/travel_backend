@@ -116,7 +116,7 @@ export const getCityByCoordinates = async (latitude: number, longitude: number):
 
 export const marketplaceDetails = async (cityName: string, category: TripAdvisorCategory): Promise<any> => {
 
-    await axios.get(`${TRIP_ADVISOR_BASE_URL}${cityName}&category=${category}&language=en`)
+    const response = await axios.get(`${TRIP_ADVISOR_BASE_URL}${cityName}&category=${category}&language=en`)
         .then((response) => {
             const data = response.data.data;
             // const places = data.map((place: any) => ({
@@ -134,4 +134,6 @@ export const marketplaceDetails = async (cityName: string, category: TripAdvisor
             console.error("Error fetching marketplace details:", error);
             return null;
         });
+
+    return response;
 };
