@@ -142,22 +142,26 @@ export const marketplaceDetails = async (cityName: string, category: TripAdvisor
 };
 
 export const getImgByPlaceName = async (placeName: string): Promise<string | null> => {
+
+    const API_KEY = "B4825F3FE60D4D718AD0B6DFEEF1E58C";
+
+
     try {
         const locationRes = await axios.get(
-            `https://api.content.tripadvisor.com/api/v1/location/search?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&searchQuery=${placeName}&language=en`
+            `https://api.content.tripadvisor.com/api/v1/location/search?key=${API_KEY}&searchQuery=${placeName}&language=en`
         );
 
         const locationId = locationRes.data.data[0]?.location_id;
-        console.log("Location ID:", locationId);
+        // console.log("Location ID:", locationId);
 
         if (!locationId) return null;
 
         const imageRes = await axios.get(
-            `https://api.content.tripadvisor.com/api/v1/location/${locationId}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`
+            `https://api.content.tripadvisor.com/api/v1/location/${locationId}/photos?key=${API_KEY}&language=en&source=Traveler`
         );
 
         const imageUrl = imageRes.data.data[0]?.images?.original?.url;
-        console.log("Image URL:", imageUrl);
+        // console.log("Image URL:", imageUrl);
 
         return imageUrl || null;
 
@@ -166,3 +170,39 @@ export const getImgByPlaceName = async (placeName: string): Promise<string | nul
         return null;
     }
 };
+
+export const getDescriptionsByPlaceNames = async (placeNames: string[]): Promise<any[]> => {
+    const prompt = {
+        contents: [
+            {
+                parts: [
+                    {
+                        text: `List given places ${placeNames} with description of 200 words in JSON format using the following schema: places = { \"place\": \"place_name\", \"description\": \"place_description\" }. Return: list[places]`
+                    }
+                ]
+            }
+        ],
+        generationConfig: {
+            response_mime_type: "application/json",
+        }
+    };
+
+    try {
+
+        const response = await axios.post<GeminiResponse>(API_URL, prompt, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const placesDesc = JSON.parse(response.data.candidates[0].content.parts[0].text);
+
+        console.log("Places desc:", placesDesc);
+
+        return placesDesc;
+
+    } catch (error) {
+        console.error("Error fetching place names:", error);
+        return [];
+    }
+}

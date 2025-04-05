@@ -1670,34 +1670,34 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
         const citiesByLatLong: string[] = await getNearbyPlaces(lat, long, 100, 500);
 
-        const attractions:[] = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
-        const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
-        const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
+        // const attractions:[] = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+        // const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
+        // const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
 
         citiesByLatLong.push(place);
 
         const citiesWithDescriptions = await citiesDescription(citiesByLatLong);
 
         const nearbyMarketplaces = await Promise.all(citiesByLatLong.map(async (cityName, index) => {
-            const attractions = await marketplaceDetails(cityName, TripAdvisorCategory.Attractions);
-            const restaurants = await marketplaceDetails(cityName, TripAdvisorCategory.Restrurants);
-            const geos = await marketplaceDetails(cityName, TripAdvisorCategory.Geos);
+            // const attractions = await marketplaceDetails(cityName, TripAdvisorCategory.Attractions);
+            // const restaurants = await marketplaceDetails(cityName, TripAdvisorCategory.Restrurants);
+            // const geos = await marketplaceDetails(cityName, TripAdvisorCategory.Geos);
 
             return {
                 city: cityName,
                 city_description: citiesWithDescriptions[index].description,
-                attractions: attractions,
-                restaurants: restaurants,
-                geos: geos,
+                // attractions: attractions,
+                // restaurants: restaurants,
+                // geos: geos,
             }
         }));
 
         const marketplace = {
             city: place,
             city_description: citiesWithDescriptions[citiesWithDescriptions.length - 1].description,
-            attractions: attractions,
-            restaurants: restaurants,
-            geos: geos
+            // attractions: attractions,
+            // restaurants: restaurants,
+            // geos: geos
         }
 
         console.log("marketplace: ", marketplace);
