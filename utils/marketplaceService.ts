@@ -142,28 +142,27 @@ export const marketplaceDetails = async (cityName: string, category: TripAdvisor
 };
 
 export const getImgByPlaceName = async (placeName: string): Promise<string | null> => {
+    try {
+        const locationRes = await axios.get(
+            `https://api.content.tripadvisor.com/api/v1/location/search?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&searchQuery=${placeName}&language=en`
+        );
 
-    const url = await axios.get(`https://api.content.tripadvisor.com/api/v1/location/search?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&searchQuery=${placeName}&language=en`)
-    .then((response) => {
-        const id = response.data.data[0].location_id;
-        console.log("Location ID:", id);
-        return id || null;
-    }).then( async (id) => {
-        console.log("Location ID2:", id);
-        await axios.get(`https://api.content.tripadvisor.com/api/v1/location/${id}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`)
-        .then((response) => {
-            // console.log("Response:", response.data);
-            const url = response.data.data[0].images.original.url;
-            console.log("Image URL:", url);
-            return url || null;
-        }).catch((error) => {
-            console.error("Error fetching image URL:", error);
-            return null;
-        });
-    }).catch((error) => {
-        console.error("Error fetching location ID:", error);
+        const locationId = locationRes.data.data[0]?.location_id;
+        console.log("Location ID:", locationId);
+
+        if (!locationId) return null;
+
+        const imageRes = await axios.get(
+            `https://api.content.tripadvisor.com/api/v1/location/${locationId}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`
+        );
+
+        const imageUrl = imageRes.data.data[0]?.images?.original?.url;
+        console.log("Image URL:", imageUrl);
+
+        return imageUrl || null;
+
+    } catch (error) {
+        console.error("Error in getImgByPlaceName:", error);
         return null;
-    });
-
-    return url || null;
+    }
 };
