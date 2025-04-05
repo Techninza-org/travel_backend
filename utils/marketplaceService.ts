@@ -121,6 +121,10 @@ export const optimizedCitiesDescription = async (cities: string[]) => {
             return !db_existed_cities.some((db_city) => db_city.name === city);
         });
 
+        if (names_not_in_db.length === 0) {
+            return db_existed_cities;
+        }
+
         const ai_cities: [] = await citiesDescription(names_not_in_db);
 
         const cities_desc = [...db_existed_cities, ...ai_cities];
