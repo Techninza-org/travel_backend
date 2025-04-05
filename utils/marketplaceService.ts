@@ -25,7 +25,7 @@ export enum TripAdvisorCategory {
 }
 
 
-export const getNearbyPlaces = async (latitude: number, longitude: number, startRadiusRange: number, endRadiusRange: number) => {
+export const getNearbyPlaces = async (latitude: number, longitude: number, startRadiusRange: number, endRadiusRange: number): Promise<string[]> => {
 
     const prompt = {
         contents: [
