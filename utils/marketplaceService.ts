@@ -121,6 +121,8 @@ export const optimizedCitiesDescription = async (cities: string[]): Promise<any[
             return !db_existed_cities.some((db_city) => db_city.name === city);
         });
 
+        console.log("name not in db:::", names_not_in_db)
+
         if (names_not_in_db.length === 0) {
             return db_existed_cities;
         }
