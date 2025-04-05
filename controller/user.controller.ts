@@ -1675,7 +1675,6 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
 
         const mergedCities = citiesByLatLong.push(place);
-        console.log("Merged Cities: ", mergedCities);
 
         const citiesWithDescriptions = await citiesDescription(citiesByLatLong);
 
@@ -1700,7 +1699,11 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
-        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces });
+        const test = {
+            mergetArr: mergedCities,
+        }
+
+        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces, test: test });
     } catch (error) {
         return next(error);
     }
