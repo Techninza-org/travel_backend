@@ -1717,10 +1717,8 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
     try {
 
-        // const cityDetails = await citiesDescription([place]);
-        // const cityDescription = cityDetails[0].description;
-        
-        const cityData: any[] = await optimizedCitiesDescription([place]);
+        const cityDetails = await citiesDescription([place]);
+        const cityDescription = cityDetails[0].description;
         
 
         if (type === 'attractions') {
@@ -1728,9 +1726,8 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                city_description: cityData,
+                city_description: cityDescription[0].description,
                 attractions: attractions,
-                city_data: cityData[0]?.description,
             }
 
             return res.status(200).send({ status: 200, message: 'Ok', data: data });
@@ -1739,7 +1736,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                // city_description: cityDescription,
+                city_description: cityDescription,
                 restaurants: restaurants,
             }
 
@@ -1749,7 +1746,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                // city_description: cityDescription,
+                city_description: cityDescription,
                 geos: geos,
             }
 
