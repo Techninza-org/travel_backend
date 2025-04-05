@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express'
+import e, { NextFunction, Request, Response } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import { Itinerary, PrismaClient } from '@prisma/client'
 import helper from '../utils/helpers'
@@ -1709,6 +1709,31 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
     }
 };
 
+const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { place, type } = req.query;
+    if (!place || typeof place !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'place and type are required' }); }
+    if (typeof type !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be a string' }); }
+
+    try {
+        
+        if (type === 'attractions') {
+            const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+            return res.status(200).send({ status: 200, message: 'Ok', attractions: attractions });
+        } else if (type === 'restaurants') {
+            const restaurants = await marketplaceDetails(place, TripAdvisorCategory.Restrurants);
+            return res.status(200).send({ status: 200, message: 'Ok', restaurants: restaurants });
+        } else if (type === 'geos') {
+            const geos = await marketplaceDetails(place, TripAdvisorCategory.Geos);
+            return res.status(200).send({ status: 200, message: 'Ok', geos: geos });
+        } else {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be attractions, restaurants or geos' });
+        }
+    } catch (error) {
+        return next(error);
+    }
+
+};
+
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         
@@ -1773,6 +1798,7 @@ const userController = {
     getItineraries,
     updateDetailsToItineraryCity,
     marketPlace,
+    getMarketplaceDetails,
     test,
 }
 

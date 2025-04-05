@@ -91,6 +91,8 @@ userRouter
     .post("/test", userController.test)
     //@ts-ignore
     .post("/marketplace", userController.marketPlace)
+    //@ts-ignore
+    .get("/marketplace", userController.getMarketplaceDetails)
     
 
 export default userRouter
