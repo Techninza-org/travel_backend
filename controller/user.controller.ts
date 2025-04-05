@@ -1720,7 +1720,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
         // const cityDetails = await citiesDescription([place]);
         // const cityDescription = cityDetails[0].description;
         
-        const cityData = await optimizedCitiesDescription([place]);
+        const cityData: any[] = await optimizedCitiesDescription([place]);
         
 
         if (type === 'attractions') {
@@ -1730,7 +1730,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
                 city: place,
                 // city_description: cityDescription,
                 attractions: attractions,
-                city_data: cityData,
+                city_data: cityData[0]?.description,
             }
 
             return res.status(200).send({ status: 200, message: 'Ok', data: data });

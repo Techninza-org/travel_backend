@@ -106,7 +106,7 @@ export const citiesDescription = async (cities: string[]) => {
     }
 };
 
-export const optimizedCitiesDescription = async (cities: string[]) => {
+export const optimizedCitiesDescription = async (cities: string[]): Promise<any[]> => {
     try {
 
         const db_existed_cities: CityDescription[] = await prisma.cityDescription.findMany({
@@ -132,7 +132,7 @@ export const optimizedCitiesDescription = async (cities: string[]) => {
         return cities_desc;
     } catch (error) {
         console.error("Error fetching city name:", error);
-        return null;
+        return [];
     }
 };
 
