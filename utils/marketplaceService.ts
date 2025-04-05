@@ -68,7 +68,7 @@ export const citiesDescription = async (cities: string[]) => {
             {
                 parts: [
                     {
-                        text: `List given cities ['delhi', 'gurugram'] with description of 200 words in JSON format using the following schema: cities = { \"city\": \"city_name\", \"description\": \"cit_description\" }. Return: list[cities]`
+                        text: `List given cities ${cities} with description of 200 words in JSON format using the following schema: cities = { \"city\": \"city_name\", \"description\": \"cit_description\" }. Return: list[cities]`
                     }
                 ]
             }
