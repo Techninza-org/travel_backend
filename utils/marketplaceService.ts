@@ -62,7 +62,7 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
     }
 }
 
-export const citiesDescription = async () => {
+export const citiesDescription = async (cities: string[]) => {
     const prompt = {
         contents: [
             {

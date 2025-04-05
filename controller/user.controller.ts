@@ -1703,9 +1703,9 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         
-        const nearbyList = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
+        const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
         const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
-        const citiesDesc = await citiesDescription();
+        const citiesDesc: object[] = await citiesDescription(nearbyList);
 
         const data = {
             nearbyList: nearbyList,
