@@ -1700,11 +1700,11 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
-        const test = {
-            mergetArr: mergedCities,
-        }
+        // const test = {
+        //     mergetArr: mergedCities,
+        // }
 
-        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces, test: test });
+        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
         return next(error);
     }
