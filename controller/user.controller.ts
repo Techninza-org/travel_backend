@@ -1667,10 +1667,14 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const place: string | null = await getCityByCoordinates(lat, long)
         if (!place) {return res.status(404).send({ status: 200, message: 'city not found'})};
 
-        const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+        const attractions:[] = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+        const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
+        const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
 
         const marketplace = {
-            attractions: attractions
+            attractions: attractions,
+            restaurants: restaurants,
+            geos: geos
         }
 
         return res.status(200).send({status: 200, marketplace: marketplace, place: place});
