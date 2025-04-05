@@ -129,6 +129,19 @@ export const optimizedCitiesDescription = async (cities: string[]): Promise<any[
 
         const ai_cities: [] = await citiesDescription(names_not_in_db);
 
+        // save in db
+        const citiesToSave = ai_cities.map((city: CityDescriptionType) => {
+            return {
+                name: city.name,
+                description: city.description
+            };
+        });
+        await prisma.cityDescription.createMany({
+            data: citiesToSave,
+            skipDuplicates: true,
+        });
+        console.log("cities to save:::", citiesToSave)
+
         const cities_desc = [...db_existed_cities, ...ai_cities];
 
         return cities_desc;
