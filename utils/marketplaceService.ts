@@ -149,6 +149,7 @@ export const getImgByPlaceName = async (placeName: string): Promise<string | nul
         console.log("Location ID:", id);
         return id || null;
     }).then( async (id) => {
+        console.log("Location ID2:", id);
         await axios.get(`https://api.content.tripadvisor.com/api/v1/location/${id}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`)
         .then((response) => {
             const url = response.data.data[0].original.url;
