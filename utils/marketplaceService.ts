@@ -129,7 +129,7 @@ export const marketplaceDetails = async (cityName: string, category: TripAdvisor
             //     imageUrl: place.imageUrl
             // }));
 
-            console.log("Marketplace details:", data);
+            // console.log("Marketplace details:", data);
             return data;
 
         }).catch((error) => {
