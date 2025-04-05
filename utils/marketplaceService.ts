@@ -145,11 +145,15 @@ export const getImgByPlaceName = async (placeName: string): Promise<string | nul
 
     const url = await axios.get(`https://api.content.tripadvisor.com/api/v1/location/search?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&searchQuery=${placeName}&language=en`)
     .then((response) => {
-        return response.data.data[0].location_id;
-    }).then( async (location_id) => {
-        await axios.get(`https://api.content.tripadvisor.com/api/v1/location/${location_id}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`)
+        const id = response.data.data[0].location_id;
+        console.log("Location ID:", id);
+        return id || null;
+    }).then( async (id) => {
+        await axios.get(`https://api.content.tripadvisor.com/api/v1/location/${id}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`)
         .then((response) => {
-            return response.data.data[0].original.url;
+            const url = response.data.data[0].original.url;
+            console.log("Image URL:", url);
+            return url || null;
         }).catch((error) => {
             console.error("Error fetching image URL:", error);
             return null;

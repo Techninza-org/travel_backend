@@ -1709,15 +1709,15 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         
-        const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
-        const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
-        const citiesDesc: object[] = await citiesDescription(nearbyList);
+        // const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
+        // const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
+        // const citiesDesc: object[] = await citiesDescription(nearbyList);
         const imgUrl: string | null = await getImgByPlaceName("Delhi");
 
         const data = {
-            nearbyList: nearbyList,
-            city: city,
-            citiesDesc: citiesDesc,
+            // nearbyList: nearbyList,
+            // city: city,
+            // citiesDesc: citiesDesc,
             imgUrl: imgUrl,
         }
 
