@@ -21,7 +21,7 @@ interface GeminiResponse {
 }
 
 export interface CityDescriptionType {
-    name: string;
+    city: string;
     description: string;
 }
 
