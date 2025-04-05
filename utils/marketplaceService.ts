@@ -62,13 +62,13 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
     }
 }
 
-export const cityByCoordinatesGem = async (latitude: number, longitude: number) => {
+export const citiesDescription = async () => {
     const prompt = {
         contents: [
             {
                 parts: [
                     {
-                        text: `Get the city name for the given latitude: ${latitude} and longitude: ${longitude}. Use the following schema: { "city": "city_name" }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                        text: `List given cities ['delhi', 'gurugram'] with description of 200 words in JSON format using the following schema: cities = { \"city\": \"city_name\", \"description\": \"cit_description\" }. Return: list[cities]`
                     }
                 ]
             }
@@ -86,11 +86,11 @@ export const cityByCoordinatesGem = async (latitude: number, longitude: number) 
             }
         });
 
-        const cityName = JSON.parse(response.data.candidates[0].content.parts[0].text).city;
+        const citiesDesc = JSON.parse(response.data.candidates[0].content.parts[0].text);
 
-        console.log("City name:", cityName);
+        console.log("Cities desc:", citiesDesc);
 
-        return cityName;
+        return citiesDesc;
 
     } catch (error) {
         console.error("Error fetching city name:", error);
