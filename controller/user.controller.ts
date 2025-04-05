@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
-import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, TripAdvisorCategory } from '../utils/marketplaceService'
+import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, TripAdvisorCategory } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -73,7 +73,7 @@ const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunc
         });
     }
 
-    if (limitNum < 1 || limitNum > 100) { 
+    if (limitNum < 1 || limitNum > 100) {
         return res.status(400).send({
             status: 400,
             error: 'Invalid pagination',
@@ -971,10 +971,10 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
     const body = req.body;
 
     const isKycSubmitted = await prisma.kYC.findUnique({
-        where: {user_id: req.user.id}
+        where: { user_id: req.user.id }
     })
-    if(isKycSubmitted) {
-        return res.status(201).send({msg: "Kyc details already submitted"})
+    if (isKycSubmitted) {
+        return res.status(201).send({ msg: "Kyc details already submitted" })
     }
 
     if (!helper.isValidatePaylod(body, ['name', 'address', 'phone', 'email', 'document']) ||
@@ -999,18 +999,18 @@ const submitKycDetails = async (req: ExtendedRequest, res: Response, next: NextF
         return res.status(400).send({ status: 400, error: 'Email address too long' })
     }
 
-    
+
     if (body.alternate_email && !emailRegex.test(body.alternate_email)) {
         return res.status(400).send({
             status: 400,
             error: 'Invalid alternate email format',
         });
     }
-    
-    if(body.alternate_email && body.alternate_email.length > 74){
+
+    if (body.alternate_email && body.alternate_email.length > 74) {
         return res.status(400).send({ status: 400, error: 'Alternate email address too long' })
     }
-    
+
     if (!/^\d{10}$/.test(body.phone)) {
         return res.status(400).send({
             status: 400,
@@ -1091,7 +1091,7 @@ const getFollowStatus = async (req: ExtendedRequest, res: Response, next: NextFu
             where: {
                 user_id: user_id,
                 follower_id: user.id,
-                status: 0, 
+                status: 0,
             },
         });
 
@@ -1146,7 +1146,7 @@ const pinLocation = async (req: ExtendedRequest, res: Response, next: NextFuncti
             data: {
                 latitude: latitude,
                 longitude: longitude,
-                title: title || '', 
+                title: title || '',
                 user_id: user.id,
             },
         });
@@ -1171,7 +1171,7 @@ const deletePinnedLocation = async (req: ExtendedRequest, res: Response, next: N
     if (isNaN(Number(id))) {
         return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
     }
-    if(!Number.isInteger(id)){
+    if (!Number.isInteger(id)) {
         return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a integer' })
     }
     const exists = await prisma.pinnedLocation.findFirst({ where: { id: Number(id), user_id: user.id } })
@@ -1339,7 +1339,7 @@ const createTransaction = async (req: ExtendedRequest, res: Response, next: Next
                 error_description: 'Amount should be a number.',
             })
         }
-        if(amount < 1){
+        if (amount < 1) {
             return res.status(400).send({
                 status: 400,
                 error: 'Bad Request',
@@ -1446,7 +1446,7 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
         }
         const postIds = highlight.postIds || '';
         const postIdsArray = String(postIds).split(',')
-        if(postIdsArray.includes(String(post_id))){
+        if (postIdsArray.includes(String(post_id))) {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Post already added to highlight.' })
         }
         postIdsArray.push(String(post_id))
@@ -1455,7 +1455,7 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
             where: { id: highlight_id },
             data: { postIds: postIdsNew },
         })
-        
+
         return res.status(200).send({ status: 200, message: 'Ok', highlight: updatedHighlight })
     } catch (err) {
         return next(err)
@@ -1465,7 +1465,7 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
 const getHighlightsAll = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const highlights = await prisma.highlight.findMany({ where: { user_id: user.id }})
+        const highlights = await prisma.highlight.findMany({ where: { user_id: user.id } })
         const hightlightsWithPosts = await Promise.all(highlights.map(async (highlight) => {
             const postIds = highlight.postIds || '';
             const posts = await prisma.post.findMany({ where: { id: { in: String(postIds).split(',').map(Number) } } })
@@ -1487,11 +1487,11 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
         if (isNaN(Number(id))) {
             return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
         }
-        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id }})
+        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id } })
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
         }
-        const highlightWithPosts = { ...highlight, posts: await prisma.post.findMany({ where: { id: { in: String(highlight.postIds).split(',').map(Number) } }}) }
+        const highlightWithPosts = { ...highlight, posts: await prisma.post.findMany({ where: { id: { in: String(highlight.postIds).split(',').map(Number) } } }) }
         return res.status(200).send({ status: 200, message: 'Ok', highlight: highlightWithPosts })
     } catch (err) {
         return next(err)
@@ -1510,12 +1510,12 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
     if (!img_urls || !Array.isArray(img_urls)) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array' }); }
     if (img_urls.length === 0) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should not be empty' }); }
     if (img_urls.some((url) => typeof url !== 'string')) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array of string' }); }
-    
+
 
     try {
 
         // const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
-        const itinerary: Itinerary | null = await prisma.itinerary.findUnique({ where: { id: itinerary_id ? itinerary_id : 0 }});
+        const itinerary: Itinerary | null = await prisma.itinerary.findUnique({ where: { id: itinerary_id ? itinerary_id : 0 } });
 
         console.log(":::::::::::::::", itinerary);
 
@@ -1574,7 +1574,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
         } else {
             return res.status(404).send({ status: 404, message: 'Itinerary not found' });
         }
-        
+
     } catch (error) {
         return next(error);
     }
@@ -1598,7 +1598,7 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
                 },
             });
 
-            if (!itinerary) { return res.status(404).send({ status: 404, message: 'Itinerary not found | invalid itinerary id' });}
+            if (!itinerary) { return res.status(404).send({ status: 404, message: 'Itinerary not found | invalid itinerary id' }); }
 
             return res.status(200).send({ status: 200, message: 'Ok', itinerary: itinerary });
         } else {
@@ -1613,7 +1613,7 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
                     },
                 },
             });
-            
+
             return res.status(200).send({ status: 200, message: 'Ok', itineraries: itineraries });
         }
     } catch (error) {
@@ -1658,15 +1658,15 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
 };
 
 const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const {lat, long } = req.body;
+    const { lat, long } = req.body;
 
     if (lat === undefined || long === undefined) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long are required' }); }
     if (isNaN(Number(lat)) || isNaN(Number(long))) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long should be numbers' }); }
 
     try {
-        
+
         const place: string | null = await getCityByCoordinates(lat, long);
-        if (!place) {return res.status(404).send({ status: 200, message: 'city not found'})};
+        if (!place) { return res.status(404).send({ status: 200, message: 'city not found' }) };
 
         const citiesByLatLong: string[] = await getNearbyPlaces(lat, long, 100, 500);
 
@@ -1677,6 +1677,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         citiesByLatLong.push(place);
 
         const citiesWithDescriptions = await citiesDescription(citiesByLatLong);
+        // const citiesWithDescriptions = await optimizedCitiesDescription(citiesByLatLong);
 
         const nearbyMarketplaces = await Promise.all(citiesByLatLong.map(async (cityName, index) => {
             // const attractions = await marketplaceDetails(cityName, TripAdvisorCategory.Attractions);
@@ -1703,7 +1704,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         console.log("marketplace: ", marketplace);
         nearbyMarketplaces.unshift(marketplace); //adding marketplace object to nearbyMarketplaces array (marketplace is the first element of nearbyMarketplaces)
 
-        return res.status(200).send({status: 200, /*marketplace: marketplace,*/ nearbyMarketplaces: nearbyMarketplaces });
+        return res.status(200).send({ status: 200, /*marketplace: marketplace,*/ nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
         return next(error);
     }
@@ -1715,13 +1716,20 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
     if (typeof type !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be a string' }); }
 
     try {
-        
+
+        const cityDetails = await citiesDescription([place]);
+        const cityDescription = cityDetails[0].description;
+
+        const cityData = await optimizedCitiesDescription([place]);
+
         if (type === 'attractions') {
             const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
 
             const data = {
                 city: place,
+                city_description: cityDescription,
                 attractions: attractions,
+                city_data: cityData,
             }
 
             return res.status(200).send({ status: 200, message: 'Ok', data: data });
@@ -1730,6 +1738,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
+                city_description: cityDescription,
                 restaurants: restaurants,
             }
 
@@ -1739,6 +1748,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
+                city_description: cityDescription,
                 geos: geos,
             }
 
@@ -1754,7 +1764,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        
+
         // const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
         // const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
         // const citiesDesc: object[] = await citiesDescription(nearbyList);

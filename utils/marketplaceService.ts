@@ -1,5 +1,7 @@
+import { CityDescription, PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { response } from "express";
+const prisma = new PrismaClient();
 
 const API_KEY = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
@@ -16,6 +18,11 @@ interface GeminiResponse {
             parts: { text: string; }[];
         };
     }[];
+}
+
+export interface CityDescriptionType {
+    name: string;
+    description: string;
 }
 
 export enum TripAdvisorCategory {
@@ -99,6 +106,32 @@ export const citiesDescription = async (cities: string[]) => {
     }
 };
 
+export const optimizedCitiesDescription = async (cities: string[]) => {
+    try {
+
+        const db_existed_cities: CityDescription[] = await prisma.cityDescription.findMany({
+            where: {
+                name: {
+                    in: cities
+                }
+            }
+        });
+
+        const names_not_in_db = cities.filter((city) => {
+            return !db_existed_cities.some((db_city) => db_city.name === city);
+        });
+
+        const ai_cities: [] = await citiesDescription(names_not_in_db);
+
+        const cities_desc = [...db_existed_cities, ...ai_cities];
+
+        return cities_desc;
+    } catch (error) {
+        console.error("Error fetching city name:", error);
+        return null;
+    }
+};
+
 export const getCityByCoordinates = async (latitude: number, longitude: number): Promise<string | null> => {
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
@@ -171,7 +204,7 @@ export const getImgByPlaceName = async (placeName: string): Promise<string | nul
     }
 };
 
-export const getDescriptionsByPlaceNames = async (placeNames: string[]): Promise<any[]> => {
+export const getDescriptionsByPlaceNamesClient = async (placeNames: string[]): Promise<any[]> => {
     const prompt = {
         contents: [
             {

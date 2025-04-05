@@ -585,6 +585,16 @@ model CityImg {
   updated_at      DateTime @updatedAt
 }
 
+model CityDescription {
+  id             Int      @id @default(autoincrement())
+
+  name          String    @unique
+  description   String    @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 enum ItineraryStatus {
   START
   MOVING
