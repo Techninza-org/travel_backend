@@ -1718,13 +1718,31 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
         
         if (type === 'attractions') {
             const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
-            return res.status(200).send({ status: 200, message: 'Ok', attractions: attractions });
+
+            const data = {
+                city: place,
+                attractions: attractions,
+            }
+
+            return res.status(200).send({ status: 200, message: 'Ok', data: data });
         } else if (type === 'restaurants') {
             const restaurants = await marketplaceDetails(place, TripAdvisorCategory.Restrurants);
-            return res.status(200).send({ status: 200, message: 'Ok', restaurants: restaurants });
+
+            const data = {
+                city: place,
+                restaurants: restaurants,
+            }
+
+            return res.status(200).send({ status: 200, message: 'Ok', data: data });
         } else if (type === 'geos') {
             const geos = await marketplaceDetails(place, TripAdvisorCategory.Geos);
-            return res.status(200).send({ status: 200, message: 'Ok', geos: geos });
+
+            const data = {
+                city: place,
+                geos: geos,
+            }
+
+            return res.status(200).send({ status: 200, message: 'Ok', data: data });
         } else {
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be attractions, restaurants or geos' });
         }
