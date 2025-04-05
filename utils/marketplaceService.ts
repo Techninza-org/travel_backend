@@ -3,12 +3,23 @@ import axios from "axios";
 const API_KEY = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
+const TRIP_ADVISOR_API_KEY = "B4825F3FE60D4D718AD0B6DFEEF1E58C";
+const TRIP_ADVISOR_BASE_URL = `https://api.content.tripadvisor.com/api/v1/location/search?key=${TRIP_ADVISOR_API_KEY}&searchQuery=`;
+
+
 interface GeminiResponse {
     candidates: {
         content: {
             parts: { text: string; }[];
         };
     }[];
+}
+
+export enum TripAdvisorCategory {
+    Attractions = "attractions",
+    Restrurants = "restaurants",
+    Geos = "geos",
+    hotels = "hotels",
 }
 
 
@@ -42,7 +53,7 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
         console.log("Nearby cities:", citiesList);
 
         return citiesList;
-        
+
     } catch (error) {
         console.error("Error fetching nearby places:", error);
         return [];
@@ -78,21 +89,21 @@ export const cityByCoordinatesGem = async (latitude: number, longitude: number) 
         console.log("City name:", cityName);
 
         return cityName;
-        
+
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
     }
 };
 
-export const getCityByCoordinates = async (latitude: number, longitude: number) : Promise<string | null> => {
+export const getCityByCoordinates = async (latitude: number, longitude: number): Promise<string | null> => {
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
         const response = await axios.get(url);
 
         // Extract city name
         const city = response.data.address.state_district
-        
+
         console.log("City:", response.data);
 
         // return response.data || null;
@@ -101,4 +112,26 @@ export const getCityByCoordinates = async (latitude: number, longitude: number) 
         console.error("Error fetching city name:", error);
         return null;
     }
+};
+
+export const marketplaceDetails = async (cityName: string, category: TripAdvisorCategory): Promise<any> => {
+
+    await axios.get(`${TRIP_ADVISOR_BASE_URL}${cityName}&category=${category}&language=en`)
+        .then((response) => {
+            const data = response.data.data;
+            // const places = data.map((place: any) => ({
+            //     name: place.name,
+            //     address: place.address,
+            //     rating: place.rating,
+            //     category: place.category,
+            //     imageUrl: place.imageUrl
+            // }));
+
+            console.log("Marketplace details:", data);
+            return data;
+
+        }).catch((error) => {
+            console.error("Error fetching marketplace details:", error);
+            return null;
+        });
 };

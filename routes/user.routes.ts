@@ -89,6 +89,8 @@ userRouter
     .post("/update_details_to_itinerary_city", userController.updateDetailsToItineraryCity)
     //@ts-ignore
     .post("/test", userController.test)
+    //@ts-ignore
+    .post("/marketplace", userController.marketPlace)
     
 
 export default userRouter

@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
-import { getCityByCoordinates, getNearbyPlaces } from '../utils/marketplaceService'
+import { getCityByCoordinates, getNearbyPlaces, marketplaceDetails, TripAdvisorCategory } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -1657,6 +1657,28 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
     }
 };
 
+const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const {lat, long } = req.body;
+
+
+    try {
+        
+        const place: string | null = await getCityByCoordinates(lat, long)
+        if (!place) {return res.status(404).send({ status: 200, message: 'city not found'})};
+
+        const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+
+        const marketplace = {
+            attractions: attractions
+        }
+
+        return res.status(200).send({status: 200, marketplace: marketplace});
+    } catch (error) {
+        return next(error);
+    }
+};
+
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         
@@ -1716,6 +1738,7 @@ const userController = {
     createItinerary,
     getItineraries,
     updateDetailsToItineraryCity,
+    marketPlace,
     test,
 }
 
