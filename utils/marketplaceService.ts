@@ -6,6 +6,8 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-
 const TRIP_ADVISOR_API_KEY = "B4825F3FE60D4D718AD0B6DFEEF1E58C";
 const TRIP_ADVISOR_BASE_URL = `https://api.content.tripadvisor.com/api/v1/location/search?key=${TRIP_ADVISOR_API_KEY}&searchQuery=`;
 
+const RADIUS_KM = 100;
+
 
 interface GeminiResponse {
     candidates: {
@@ -116,7 +118,7 @@ export const getCityByCoordinates = async (latitude: number, longitude: number):
 
 export const marketplaceDetails = async (cityName: string, category: TripAdvisorCategory): Promise<any> => {
 
-    const response = await axios.get(`${TRIP_ADVISOR_BASE_URL}${cityName}&category=${category}&language=en`)
+    const response = await axios.get(`${TRIP_ADVISOR_BASE_URL}${cityName}&category=${category}&radiusUnit=${RADIUS_KM}km&language=en`)
         .then((response) => {
             const data = response.data.data;
             // const places = data.map((place: any) => ({
