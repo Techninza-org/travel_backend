@@ -1673,6 +1673,19 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
         const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
 
+        const nearbyMarketplaces = await Promise.all(citiesByLatLong.map(async (cityName) => {
+            const attractions = await marketplaceDetails(cityName, TripAdvisorCategory.Attractions);
+            const restaurants = await marketplaceDetails(cityName, TripAdvisorCategory.Restrurants);
+            const geos = await marketplaceDetails(cityName, TripAdvisorCategory.Geos);
+
+            return {
+                city: cityName,
+                attractions: attractions,
+                restaurants: restaurants,
+                geos: geos
+            }
+        }));
+
         const marketplace = {
             city: place,
             attractions: attractions,
@@ -1680,7 +1693,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
-        return res.status(200).send({status: 200, marketplace: marketplace, place: place, cities: citiesByLatLong});
+        return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces, place: place, cities: citiesByLatLong});
     } catch (error) {
         return next(error);
     }
