@@ -1717,17 +1717,18 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
     try {
 
-        const cityDetails = await citiesDescription([place]);
-        const cityDescription = cityDetails[0].description;
-
+        // const cityDetails = await citiesDescription([place]);
+        // const cityDescription = cityDetails[0].description;
+        
         const cityData = await optimizedCitiesDescription([place]);
+        
 
         if (type === 'attractions') {
             const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
 
             const data = {
                 city: place,
-                city_description: cityDescription,
+                // city_description: cityDescription,
                 attractions: attractions,
                 city_data: cityData,
             }
@@ -1738,7 +1739,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                city_description: cityDescription,
+                // city_description: cityDescription,
                 restaurants: restaurants,
             }
 
@@ -1748,7 +1749,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                city_description: cityDescription,
+                // city_description: cityDescription,
                 geos: geos,
             }
 
