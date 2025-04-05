@@ -1700,6 +1700,12 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
+        //merged marketplace and nearbyMarketplaces (marketplace is the first element of nearbyMarketplaces)
+
+        console.log("marketplace: ", marketplace);
+        nearbyMarketplaces.unshift(marketplace);
+        // const nearbyMarketplaces = [marketplace, ...nearbyMarketplaces];
+
         return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
         return next(error);
