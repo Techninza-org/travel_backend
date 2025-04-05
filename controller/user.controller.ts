@@ -1673,6 +1673,10 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const attractions:[] = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
         const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
         const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
+
+        const mergedCities = citiesByLatLong.push(place);
+        console.log("Merged Cities: ", mergedCities);
+
         const citiesWithDescriptions = await citiesDescription(citiesByLatLong);
 
         const nearbyMarketplaces = await Promise.all(citiesByLatLong.map(async (cityName, index) => {
