@@ -100,12 +100,12 @@ export const citiesDescription = async (cities: string[]) => {
 
 export const getCityByCoordinates = async (latitude: number, longitude: number): Promise<string | null> => {
     try {
-        // const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=28.5120775&lon=77.0250982`;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        // const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=28.5120775&lon=77.0250982`;
         const response = await axios.get(url);
 
         // Extract city name
-        const city = response.data.address.state_district
+        const city = response.data.address.state_district || response.data.address.city || response.data.address.town || response.data.address.village;
 
         console.log("City:", response.data);
 
