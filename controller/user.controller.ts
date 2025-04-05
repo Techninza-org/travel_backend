@@ -1728,7 +1728,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
             const data = {
                 city: place,
-                // city_description: cityDescription,
+                city_description: cityData,
                 attractions: attractions,
                 city_data: cityData[0]?.description,
             }
