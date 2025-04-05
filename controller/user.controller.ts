@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
-import { citiesDescription, getCityByCoordinates, getNearbyPlaces, marketplaceDetails, TripAdvisorCategory } from '../utils/marketplaceService'
+import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, TripAdvisorCategory } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -1665,7 +1665,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
     try {
         
-        const place: string | null = await getCityByCoordinates(lat, long)
+        const place: string | null = await getCityByCoordinates(lat, long);
         if (!place) {return res.status(404).send({ status: 200, message: 'city not found'})};
 
         const citiesByLatLong: string[] = await getNearbyPlaces(lat, long, 100, 500);
@@ -1674,7 +1674,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const restaurants:[] = await marketplaceDetails((place), TripAdvisorCategory.Restrurants);
         const geos:[] = await marketplaceDetails(place, TripAdvisorCategory.Geos);
 
-        const mergedCities = citiesByLatLong.push(place);
+        citiesByLatLong.push(place);
 
         const citiesWithDescriptions = await citiesDescription(citiesByLatLong);
 
@@ -1700,10 +1700,6 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
             geos: geos
         }
 
-        // const test = {
-        //     mergetArr: mergedCities,
-        // }
-
         return res.status(200).send({status: 200, marketplace: marketplace, nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
         return next(error);
@@ -1716,11 +1712,13 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
         const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
         const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
         const citiesDesc: object[] = await citiesDescription(nearbyList);
+        const imgUrl: string | null = await getImgByPlaceName("Delhi");
 
         const data = {
             nearbyList: nearbyList,
             city: city,
-            citiesDesc: citiesDesc
+            citiesDesc: citiesDesc,
+            imgUrl: imgUrl,
         }
 
         return res.status(200).send({ status: 200, message: 'Ok', data: data });

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { response } from "express";
 
 const API_KEY = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
@@ -101,16 +102,15 @@ export const citiesDescription = async (cities: string[]) => {
 export const getCityByCoordinates = async (latitude: number, longitude: number): Promise<string | null> => {
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-        // const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=28.5120775&lon=77.0250982`;
         const response = await axios.get(url);
 
         // Extract city name
-        const city = response.data.address.state_district || response.data.address.city || response.data.address.town || response.data.address.village;
+        const place = response.data.address.state_district || response.data.address.city || response.data.address.town || response.data.address.village;
 
-        console.log("City:", response.data);
+        // console.log("City:", response.data);
 
         // return response.data || null;
-        return city || null;
+        return place || null;
     } catch (error) {
         console.error("Error fetching city name:", error);
         return null;
@@ -139,4 +139,25 @@ export const marketplaceDetails = async (cityName: string, category: TripAdvisor
         });
 
     return response;
+};
+
+export const getImgByPlaceName = async (placeName: string): Promise<string | null> => {
+
+    const url = await axios.get(`https://api.content.tripadvisor.com/api/v1/location/search?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&searchQuery=${placeName}&language=en`)
+    .then((response) => {
+        return response.data.data[0].location_id;
+    }).then( async (location_id) => {
+        await axios.get(`https://api.content.tripadvisor.com/api/v1/location/${location_id}/photos?key=B4825F3FE60D4D718AD0B6DFEEF1E58C&language=en&source=Traveler`)
+        .then((response) => {
+            return response.data.data[0].original.url;
+        }).catch((error) => {
+            console.error("Error fetching image URL:", error);
+            return null;
+        });
+    }).catch((error) => {
+        console.error("Error fetching location ID:", error);
+        return null;
+    });
+
+    return url || null;
 };
