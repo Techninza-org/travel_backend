@@ -1702,8 +1702,8 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
         }
 
         console.log("marketplace: ", marketplace);
-        // nearbyMarketplaces.unshift(marketplace); //adding marketplace object to nearbyMarketplaces array (marketplace is the first element of nearbyMarketplaces)
-        // nearbyMarketplaces.pop(); // remove last element from nearbyMarketplaces array (which is the same as marketplace object)
+        nearbyMarketplaces.unshift(marketplace); //adding marketplace object to nearbyMarketplaces array (marketplace is the first element of nearbyMarketplaces)
+        nearbyMarketplaces.pop(); // remove last element from nearbyMarketplaces array (which is the same as marketplace object)
 
         return res.status(200).send({ status: 200, /*marketplace: marketplace,*/ nearbyMarketplaces: nearbyMarketplaces });
     } catch (error) {
