@@ -25,6 +25,6 @@ ServiceRouter
     //@ts-ignore
     .put('/servicePics/:id', middleware.HostAuthMiddleware, upload.array('files', 5), serviceController.uploadServicePics)
     //@ts-ignore
-    .post('/searchServices', middleware.HostAuthMiddleware, serviceController.searchServices)
+    .post('/searchServices', serviceController.searchServices)
 
 export default ServiceRouter
