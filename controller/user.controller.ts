@@ -783,15 +783,18 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
                     },
                 },
             },
-            select: {
-                id: true,
-                username: true,
-                image: true,
-                latitude: true,
-                longitude: true,
-                gender: true,
-                status: true,
-            },
+            // select: {
+            //     id: true,
+            //     username: true,
+            //     image: true,
+            //     latitude: true,
+            //     longitude: true,
+            //     gender: true,
+            //     status: true,
+            // },
+            include: {
+                customTrips: true,
+            }
         })
 
         return res.status(200).json({ status: 200, message: 'Ok', nearbyUsers })
@@ -1775,7 +1778,6 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const { place } = req.body;
-    console.log("::::::::::::::::::::::::::")
     try {
 
         // const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
