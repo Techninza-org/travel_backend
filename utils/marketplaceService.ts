@@ -45,7 +45,8 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
             {
                 parts: [
                     {
-                        text: `List 10 major cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                        // text: `List 10 major cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                        text: `List upto 10 tourism cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
                     }
                 ]
             }
