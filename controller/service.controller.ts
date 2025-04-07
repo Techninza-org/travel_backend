@@ -388,9 +388,34 @@ const uploadServicePics = async (req: ExtendedRequest, res: Response, next: Next
     }
 }
 
-// const searchServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-//     const {rating, name, place, price} = req.query
-// };
+const searchServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { rating, minBudget, maxBudget, category } = req.body;
+
+    if (typeof rating !== 'number' || typeof minBudget !== 'number' || typeof maxBudget !== 'number') { return res.status(400).send({ error: 'Invalid input types' });}
+    if (rating < 0 || rating > 5) { return res.status(400).send({ error: 'Rating must be between 0 and 5' });}
+    if (minBudget < 0 || maxBudget < 0) { return res.status(400).send({ error: 'Budget cannot be negative' });}
+    if (minBudget > maxBudget) { return res.status(400).send({ error: 'Minimum budget cannot be greater than maximum budget' });}
+    if (category || typeof category !== 'string') { return res.status(400).send({ error: 'Invalid category' });}
+
+    try {
+        
+        const services = await prisma.service.findMany({
+            where: {
+                AND: [
+                    { rating: { gte: rating } },
+                    { price: { gte: minBudget, lte: maxBudget } },
+                    ...( category ? [{ services: { array_contains: category } }] : [] )
+                ]
+            }
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', services: services });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ error: 'Internal server error' });
+    }
+
+};
 
 const serviceController = {
     CreateService,
@@ -402,5 +427,6 @@ const serviceController = {
     uploadServicePics,
     getFilteredServices,
     getBidsByHostId,
+    searchServices,
 }
 export default serviceController

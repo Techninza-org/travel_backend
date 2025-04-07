@@ -24,5 +24,7 @@ ServiceRouter
     .delete('/:id', middleware.HostAuthMiddleware, serviceController.deleteService)
     //@ts-ignore
     .put('/servicePics/:id', middleware.HostAuthMiddleware, upload.array('files', 5), serviceController.uploadServicePics)
+    //@ts-ignore
+    .post('/searchServices', middleware.HostAuthMiddleware, serviceController.searchServices)
 
 export default ServiceRouter
