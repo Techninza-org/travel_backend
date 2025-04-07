@@ -403,8 +403,8 @@ const searchServices = async (req: ExtendedRequest, res: Response, next: NextFun
             where: {
                 AND: [
                     { rating: { gte: rating } },
-                    { price: { gte: minBudget, lte: maxBudget } },
-                    ...( category ? [{ services: { array_contains: category } }] : [] )
+                    { price: { gte: minBudget, lte: maxBudget } }
+                    // ...( category ? [{ services: { array_contains: category } }] : [] )
                 ]
             }
         });
