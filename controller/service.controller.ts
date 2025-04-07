@@ -388,6 +388,10 @@ const uploadServicePics = async (req: ExtendedRequest, res: Response, next: Next
     }
 }
 
+// const searchServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+//     const {rating, name, place, price} = req.query
+// };
+
 const serviceController = {
     CreateService,
     GetAllServices,

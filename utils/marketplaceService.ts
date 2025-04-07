@@ -3,11 +3,11 @@ import axios from "axios";
 import { response } from "express";
 const prisma = new PrismaClient();
 
-const API_KEY = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+const API_KEY: string = "AIzaSyA67I2HSJSFUxwU4nyQRrTDfpUdWntb97Y";
+const API_URL: string = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
-const TRIP_ADVISOR_API_KEY = "B4825F3FE60D4D718AD0B6DFEEF1E58C";
-const TRIP_ADVISOR_BASE_URL = `https://api.content.tripadvisor.com/api/v1/location/search?key=${TRIP_ADVISOR_API_KEY}&searchQuery=`;
+const TRIP_ADVISOR_API_KEY: string = "B4825F3FE60D4D718AD0B6DFEEF1E58C";
+const TRIP_ADVISOR_BASE_URL: string = `https://api.content.tripadvisor.com/api/v1/location/search?key=${TRIP_ADVISOR_API_KEY}&searchQuery=`;
 
 const RADIUS_KM = 100;
 
@@ -45,7 +45,7 @@ export const getNearbyPlaces = async (latitude: number, longitude: number, start
             {
                 parts: [
                     {
-                        text: `List 10 cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
+                        text: `List 10 major cities within ${startRadiusRange} to ${endRadiusRange} km from the given latitude: ${latitude} and longitude: ${latitude}. Use the following schema: { "cities": ["city_name_1", "city_name_2", ...] }. Given coordinates: latitude: ${latitude}, longitude: ${longitude}. Return only the JSON list.`
                     }
                 ]
             }
