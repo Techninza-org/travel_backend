@@ -1751,6 +1751,17 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
             }
 
             return res.status(200).send({ status: 200, message: 'Ok', data: data });
+        } else if (type === 'hotels') {
+
+            const hotels = await marketplaceDetails(place, TripAdvisorCategory.hotels);
+
+            const data = {
+                city: place,
+                city_description: cityDescription,
+                hotels: hotels,
+            }
+
+            return res.status(200).send({ status: 200, message: 'Ok', data: data });
         } else {
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be attractions, restaurants or geos' });
         }
