@@ -395,7 +395,6 @@ const searchServices = async (req: ExtendedRequest, res: Response, next: NextFun
     if (rating < 0 || rating > 5) { return res.status(400).send({ error: 'Rating must be between 0 and 5' });}
     if (minBudget < 0 || maxBudget < 0) { return res.status(400).send({ error: 'Budget cannot be negative' });}
     if (minBudget > maxBudget) { return res.status(400).send({ error: 'Minimum budget cannot be greater than maximum budget' });}
-    // if (category || typeof category !== 'string') { return res.status(400).send({ error: 'Invalid category' });}
 
     try {
         
