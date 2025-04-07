@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
-import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, TripAdvisorCategory } from '../utils/marketplaceService'
+import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -1780,12 +1780,14 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
         // const city: string | null = await getCityByCoordinates(28.7041, 77.1025);
         // const citiesDesc: object[] = await citiesDescription(nearbyList);
         const imgUrl: string | null = await getImgByPlaceName(place);
+        const ai = await placeDetails([place]);
 
         const data = {
             // nearbyList: nearbyList,
             // city: city,
             // citiesDesc: citiesDesc,
             imgUrl: imgUrl,
+            ai: ai,
         }
 
         return res.status(200).send({ status: 200, message: 'Ok', data: data });

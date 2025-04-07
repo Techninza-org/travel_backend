@@ -20,6 +20,11 @@ interface GeminiResponse {
     }[];
 }
 
+export interface PlaceDescription {
+    place: string;
+    description: string;
+};
+
 export interface CityDescriptionType {
     city: string;
     description: string;
@@ -258,3 +263,38 @@ export const getDescriptionsByPlaceNamesClient = async (placeNames: string[]): P
         return [];
     }
 }
+
+export const placeDetails = async (placeNames: string[]): Promise<any[]> => {
+
+    const prompt = {
+        contents: [
+            {
+                parts: [
+                    {
+                        text: `List given places ${placeNames} with description of 200 words in JSON format using the following schema: places = { \"place\": \"place_name\", \"description\": \"place_description\" }. Return: list[places]`
+                    }
+                ]
+            }
+        ],
+        generationConfig: {
+            response_mime_type: "application/json",
+        }
+    }
+
+    try {
+        
+        const response = await axios.post<GeminiResponse>(API_URL, prompt, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const placesDesc: PlaceDescription[] = JSON.parse(response.data.candidates[0].content.parts[0].text);
+
+        return placesDesc;
+    } catch (error) {
+        console.error("Error fetching place names:", error);
+        return [];
+    }
+
+};
