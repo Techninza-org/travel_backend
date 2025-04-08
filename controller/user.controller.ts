@@ -1528,6 +1528,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                     status: 'START',
                     start_lat_long: helper.removeWhitespace(lat_long),
                     start_city: city ? city : 'START CITY',
+                    conver_img: img_urls[0] ? img_urls[0] : null,
                     city_details: {
                         create: {
                             city_name: city,
@@ -1553,6 +1554,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                     status: status === 'END' ? 'END' : 'MOVING',
                     end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
                     end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
+                    conver_img: itinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : itinerary.conver_img,
                     city_details: {
                         create: {
                             city_name: city,
