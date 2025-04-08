@@ -844,13 +844,10 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
             const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id) || false;
             const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id) || false;
 
-            const status = user.status;
-
             return {
                 ...user,
                 isFollower: isFollower,
-                isFollowing: isFollowing,
-                status: status,
+                isFollowing: isFollowing
             };
         }));
 
