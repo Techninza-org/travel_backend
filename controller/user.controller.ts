@@ -806,6 +806,19 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
     if (!lat || !long) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' }) }
     if (isNaN(Number(lat)) || isNaN(Number(long))) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' }) }
+    if (Number(lat) < -90 || Number(lat) > 90) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude should be between -90 and 90' }) }
+    if (Number(long) < -180 || Number(long) > 180) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Longitude should be between -180 and 180' }) }
+    
+    let intGenger: number[]
+
+    if (gender === 'MALE'){
+        intGenger = [1];
+    } else if (gender === 'FEMALE') {
+        intGenger = [0];
+    } else {
+        intGenger = [0,1]
+    }
+
 
 
     try {
@@ -828,6 +841,7 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     NOT: { id: { in: blockedUserIds } },
                     id: { not: user.id },
                     visible: true,
+                    gender: { in: intGenger },
                     latitude: {
                         gt: Number(lat) - 0.45,
                         lt: Number(lat) + 0.45,
