@@ -1527,7 +1527,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
             const activeItinerary = await prisma.itinerary.findFirst({ where: { user_id: user.id, status: { not: 'END' } }, include: { city_details: true } });
 
-            if ( status !== 'END' && activeItinerary?.city_details[activeItinerary.city_details.length - 1].city_name === city) {
+            if ( activeItinerary?.city_details[activeItinerary.city_details.length - 1].city_name === city && status !== 'END' ) {
                 return res.status(409).send({ status: 409, error: 'Bad Request', error_description: 'user already in same city', same_city: true });
             }
 
@@ -1557,6 +1557,10 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
                 return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
             } else {
+
+                if (activeItinerary.status === 'END') {
+                    return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' });
+                }
 
                 const updatedItinerary = await prisma.itinerary.update({
                     where: { id: activeItinerary.id },
