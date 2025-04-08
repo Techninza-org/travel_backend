@@ -53,6 +53,8 @@ const removeWhitespace = (str: string) : string => {
     return str.replace(/\s+/g, '').trim(); // Remove all whitespace characters
 }
 
-const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace }
+const DEFAULT_IMAGE: string = 'https://ezio.s3.eu-north-1.amazonaws.com/1744105722299.png';
+
+const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace, DEFAULT_IMAGE }
 export default helper
 

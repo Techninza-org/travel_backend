@@ -1518,7 +1518,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
         // const itinerary = await prisma.itinerary.findFirst({ where: { id: itinerary_id }});
         const itinerary: Itinerary | null = await prisma.itinerary.findUnique({ where: { id: itinerary_id ? itinerary_id : 0 } });
 
-        console.log(":::::::::::::::", itinerary);
+        console.log("itinerary :::::::::::::::", itinerary);
 
         if (itinerary && itinerary.status === 'END') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' }); }
 
@@ -1538,7 +1538,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         status: 'START',
                         start_lat_long: helper.removeWhitespace(lat_long),
                         start_city: city ? city : 'START CITY',
-                        conver_img: img_urls[0] ? img_urls[0] : null,
+                        conver_img: img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE,
                         city_details: {
                             create: {
                                 city_name: city,
@@ -1566,7 +1566,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                     where: { id: activeItinerary.id },
                     data: {
                         status: status === 'END' ? 'END' : 'MOVING',
-                        conver_img: activeItinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : activeItinerary.conver_img,
+                        conver_img: activeItinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE) : activeItinerary.conver_img,
                         end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
                         end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
                         city_details: {
@@ -1605,7 +1605,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         status: 'START',
                         start_lat_long: helper.removeWhitespace(lat_long),
                         start_city: city ? city : 'START CITY',
-                        conver_img: img_urls[0] ? img_urls[0] : null,
+                        conver_img: img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE,
                         city_details: {
                             create: {
                                 city_name: city,
@@ -1631,7 +1631,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         status: status === 'END' ? 'END' : 'MOVING',
                         end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
                         end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
-                        conver_img: itinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : itinerary.conver_img,
+                        conver_img: itinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE) : itinerary.conver_img,
                         city_details: {
                             create: {
                                 city_name: city,
