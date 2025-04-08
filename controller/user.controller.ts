@@ -783,18 +783,15 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
                     },
                 },
             },
-            // select: {
-            //     id: true,
-            //     username: true,
-            //     image: true,
-            //     latitude: true,
-            //     longitude: true,
-            //     gender: true,
-            //     status: true,
-            // },
-            include: {
-                customTrips: true,
-            }
+            select: {
+                id: true,
+                username: true,
+                image: true,
+                latitude: true,
+                longitude: true,
+                gender: true,
+                status: true,
+            },
         })
 
         return res.status(200).json({ status: 200, message: 'Ok', nearbyUsers })
@@ -1585,7 +1582,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
 const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
-    const { itinerary_id } = req.body;
+    const { itinerary_id, other_user_id } = req.body;
 
     try {
 
@@ -1604,6 +1601,22 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
             if (!itinerary) { return res.status(404).send({ status: 404, message: 'Itinerary not found | invalid itinerary id' }); }
 
             return res.status(200).send({ status: 200, message: 'Ok', itinerary: itinerary });
+        } else if (other_user_id) {
+
+            const otherUserIteneraries = await prisma.itinerary.findMany({
+                where: { user_id: other_user_id },
+                include: {
+                    city_details: {
+                        include: {
+                            imges_url: true,
+                        },
+                    },
+                },
+            });
+
+            if (!otherUserIteneraries) { return res.status(404).send({ status: 404, message: 'invalid user id || no itineraries found' }); }
+
+            return res.status(200).send({ status: 200, message: 'Ok', itineraries: otherUserIteneraries });
         } else {
 
             const itineraries = await prisma.itinerary.findMany({

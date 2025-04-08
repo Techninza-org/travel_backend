@@ -221,6 +221,7 @@ export const getServicesByHostId = async (req: ExtendedRequest, res: Response, n
         return next(err)
     }
 }
+
 export const getBidsByHostId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const host_id = req.params.id
     if (isNaN(Number(host_id))) {
@@ -343,7 +344,7 @@ const editServiceById = async (req: ExtendedRequest, res: Response, next: NextFu
 
 const uploadServicePics = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        let serviceId: string | number = req.params.id
+        let serviceId: string | number = req.params.id;
         const files = (req as any).files as Express.Multer.File[];
 
         if (!serviceId) {
