@@ -95,6 +95,8 @@ userRouter
     .get("/marketplace", userController.getMarketplaceDetails)
     //@ts-ignore
     .delete("/itenerary", userController.deleteItenerary)
+    //@ts-ignore
+    .get("/campanion", userController.searchUsers)
     
 
 export default userRouter

@@ -742,7 +742,7 @@ const updateRegistrationToken = async (req: ExtendedRequest, res: Response, next
 }
 
 const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    const user = req.user;
 
     const { latitude, longitude } = user
 
@@ -799,6 +799,66 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
         return next(err)
     }
 }
+
+const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { lat, long, gender, status } = req.query;
+    const user = req.user;
+
+    if (!lat || !long) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' }) }
+    if (isNaN(Number(lat)) || isNaN(Number(long))) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude should be a number' }) }
+
+
+    try {
+        
+        const blockedUsers = await prisma.block.findMany({ where: { user_id: user.id },select: {blocked_id: true,},})
+        const blockedUserIds = blockedUsers.map((user) => user.blocked_id)
+
+        const currentUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            include: {
+                follows: true,
+                followers: true,
+            }
+        });
+
+
+        const nearbyUsers = await prisma.user.findMany({
+            where:{
+                AND: {
+                    NOT: { id: { in: blockedUserIds } },
+                    id: { not: user.id },
+                    visible: true,
+                    latitude: {
+                        gt: Number(lat) - 0.45,
+                        lt: Number(lat) + 0.45,
+                    },
+                    longitude: {
+                        gt: Number(long) - 0.45,
+                        lt: Number(long) + 0.45,
+                    },
+                },
+            },
+        });
+
+        const usersWithAdditionalInfo = await Promise.all(nearbyUsers.map(async (user) => {
+            const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id) || false;
+            const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id) || false;
+
+            const status = user.status;
+
+            return {
+                ...user,
+                isFollower: isFollower,
+                isFollowing: isFollowing,
+                status: status,
+            };
+        }));
+
+        return res.status(200).json({ status: 200, message: 'Ok', users: usersWithAdditionalInfo });
+    } catch (error) {
+        return next(error);
+    }
+};
 
 const deleteAccount = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
@@ -1970,6 +2030,7 @@ const userController = {
     getMarketplaceDetails,
     deleteItenerary,
     test,
+    searchUsers,
 }
 
 export default userController
