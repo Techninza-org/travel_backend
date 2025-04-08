@@ -802,6 +802,10 @@ const getNearbyUsers = async (req: ExtendedRequest, res: Response, next: NextFun
 
 const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { lat, long, gender, status } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
     const user = req.user;
 
     if (!lat || !long) { return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Latitude and Longitude are required' }) }
@@ -852,6 +856,8 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
                     },
                 },
             },
+            skip: offset,
+            take: limit,
         });
 
         const usersWithAdditionalInfo = await Promise.all(nearbyUsers.map(async (user) => {
