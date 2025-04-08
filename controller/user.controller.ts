@@ -1503,13 +1503,14 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const user = req.user;
-    const { lat_long, status, itinerary_id, img_urls, city, city_title, city_description } = req.body;
+    const { lat_long, status, itinerary_id, img_urls, city, city_title, city_description, isAutomatic } = req.body;
 
     // if (!lat_long || !status || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
     if (!lat_long || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
     if (!img_urls || !Array.isArray(img_urls)) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array' }); }
     if (img_urls.length === 0) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should not be empty' }); }
     if (img_urls.some((url) => typeof url !== 'string')) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'img_urls should be an array of string' }); }
+    if (typeof isAutomatic !== 'boolean') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'isAutomatic should be a boolean' }); }
 
 
     try {
@@ -1521,60 +1522,129 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
         if (itinerary && itinerary.status === 'END') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Itinerary already ended' }); }
 
-        if (!itinerary) {
-            const newItinerary = await prisma.itinerary.create({
-                data: {
-                    user_id: user.id,
-                    status: 'START',
-                    start_lat_long: helper.removeWhitespace(lat_long),
-                    start_city: city ? city : 'START CITY',
-                    conver_img: img_urls[0] ? img_urls[0] : null,
-                    city_details: {
-                        create: {
-                            city_name: city,
-                            lat_long: helper.removeWhitespace(lat_long),
-                            title: city_title ? city_title : null,
-                            description: city_description ? city_description : null,
-                            // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
-                            imges_url: {
-                                createMany: {
-                                    data: img_urls.map((url) => ({ image_url: url })),
+
+        if (isAutomatic) {
+
+            const activeItinerary = await prisma.itinerary.findFirst({ where: { user_id: user.id, status: { not: 'END' } } });
+            
+            if (!activeItinerary) {
+                const newItinerary = await prisma.itinerary.create({
+                    data: {
+                        user_id: user.id,
+                        status: 'START',
+                        start_lat_long: helper.removeWhitespace(lat_long),
+                        start_city: city ? city : 'START CITY',
+                        conver_img: img_urls[0] ? img_urls[0] : null,
+                        city_details: {
+                            create: {
+                                city_name: city,
+                                lat_long: helper.removeWhitespace(lat_long),
+                                title: city_title ? city_title : null,
+                                description: city_description ? city_description : null,
+                                imges_url: {
+                                    createMany: {
+                                        data: img_urls.map((url) => ({ image_url: url })),
+                                    },
                                 },
                             },
-                        },
+                        }
                     }
-                }
-            });
+                });
 
-            return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
-        } else if (itinerary) {
-            const updatedItinerary = await prisma.itinerary.update({
-                where: { id: itinerary.id },
-                data: {
-                    status: status === 'END' ? 'END' : 'MOVING',
-                    end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
-                    end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
-                    conver_img: itinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : itinerary.conver_img,
-                    city_details: {
-                        create: {
-                            city_name: city,
-                            lat_long: helper.removeWhitespace(lat_long),
-                            title: city_title ? city_title : null,
-                            description: city_description ? city_description : null,
-                            // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
-                            imges_url: {
-                                createMany: {
-                                    data: img_urls.map((url) => ({ image_url: url })),
+                return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
+            } else {
+
+                const updatedItinerary = await prisma.itinerary.update({
+                    where: { id: activeItinerary.id },
+                    data: {
+                        status: status === 'END' ? 'END' : 'MOVING',
+                        conver_img: activeItinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : activeItinerary.conver_img,
+                        end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
+                        end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
+                        city_details: {
+                            create: {
+                                city_name: city,
+                                lat_long: helper.removeWhitespace(lat_long),
+                                title: city_title ? city_title : null,
+                                description: city_description ? city_description : null,
+                                imges_url: {
+                                    createMany: {
+                                        data: img_urls.map((url) => ({ image_url: url })),
+                                    },
                                 },
                             },
-                        },
+                        }
                     }
-                }
-            });
+                });
 
-            return res.status(200).send({ status: 200, message: 'updated', itinerary: updatedItinerary });
+                return res.status(200).send({ status: 200, message: 'updated', itinerary: updatedItinerary });
+            }
+
         } else {
-            return res.status(404).send({ status: 404, message: 'Itinerary not found' });
+
+            if (!itinerary) {
+
+                // const allUserItineraries = await prisma.itinerary.findMany({ where: { user_id: user.id } });
+                // if (allUserItineraries.some(itinerary => itinerary.status !== 'END')) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'User already has an active itinerary' }); }
+
+                const activeItinerary = await prisma.itinerary.findFirst({ where: { user_id: user.id, status: { not: 'END' } } });
+                if (activeItinerary) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'User already has an active itinerary, close it first' }); }
+
+
+                const newItinerary = await prisma.itinerary.create({
+                    data: {
+                        user_id: user.id,
+                        status: 'START',
+                        start_lat_long: helper.removeWhitespace(lat_long),
+                        start_city: city ? city : 'START CITY',
+                        conver_img: img_urls[0] ? img_urls[0] : null,
+                        city_details: {
+                            create: {
+                                city_name: city,
+                                lat_long: helper.removeWhitespace(lat_long),
+                                title: city_title ? city_title : null,
+                                description: city_description ? city_description : null,
+                                // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                                imges_url: {
+                                    createMany: {
+                                        data: img_urls.map((url) => ({ image_url: url })),
+                                    },
+                                },
+                            },
+                        }
+                    }
+                });
+
+                return res.status(200).send({ status: 200, message: 'created', itinerary: newItinerary });
+            } else if (itinerary) {
+                const updatedItinerary = await prisma.itinerary.update({
+                    where: { id: itinerary.id },
+                    data: {
+                        status: status === 'END' ? 'END' : 'MOVING',
+                        end_lat_long: status === 'END' ? helper.removeWhitespace(lat_long) : null,
+                        end_city: status === 'END' ? (city ? city : 'NOT PROVIDED') : null,
+                        conver_img: itinerary.conver_img === null ? (img_urls[0] ? img_urls[0] : null) : itinerary.conver_img,
+                        city_details: {
+                            create: {
+                                city_name: city,
+                                lat_long: helper.removeWhitespace(lat_long),
+                                title: city_title ? city_title : null,
+                                description: city_description ? city_description : null,
+                                // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
+                                imges_url: {
+                                    createMany: {
+                                        data: img_urls.map((url) => ({ image_url: url })),
+                                    },
+                                },
+                            },
+                        }
+                    }
+                });
+
+                return res.status(200).send({ status: 200, message: 'updated', itinerary: updatedItinerary });
+            } else {
+                return res.status(404).send({ status: 404, message: 'Itinerary not found' });
+            }
         }
 
     } catch (error) {
@@ -1738,7 +1808,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
         const cityDetails = await citiesDescription([place]);
         const cityDescription = cityDetails[0].description;
-        
+
 
         if (type === 'attractions') {
             const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
@@ -1819,8 +1889,8 @@ const companions = async (req: ExtendedRequest, res: Response, next: NextFunctio
     const { lat, long, radius } = req.body;
 
     try {
-        
-        
+
+
     } catch (error) {
         return next(error);
     }
