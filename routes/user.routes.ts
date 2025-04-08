@@ -93,6 +93,8 @@ userRouter
     .post("/marketplace", userController.marketPlace)
     //@ts-ignore
     .get("/marketplace", userController.getMarketplaceDetails)
+    //@ts-ignore
+    .delete("/itenerary", userController.deleteItenerary)
     
 
 export default userRouter

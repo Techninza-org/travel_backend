@@ -1893,6 +1893,26 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
     }
 };
 
+const deleteItenerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const {id, all} = req.body;
+
+    try {
+        
+        if (all) {
+            await prisma.itinerary.deleteMany({ where: { user_id: req.user.id } });
+            return res.status(200).send({ status: 200, message: 'All itineraries deleted' });
+        }else {
+            const itinerary = await prisma.itinerary.findFirst({ where: { id: id, user_id: req.user.id } });
+            if (!itinerary) { return res.status(404).send({ status: 404, message: 'Itinerary not found' }); }
+
+            await prisma.itinerary.delete({ where: { id: id } });
+            return res.status(200).send({ status: 200, message: 'Itinerary deleted' });
+        }
+    } catch (error) {
+        return next(error);
+    }
+};
+
 const companions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { lat, long, radius } = req.body;
 
@@ -1948,6 +1968,7 @@ const userController = {
     updateDetailsToItineraryCity,
     marketPlace,
     getMarketplaceDetails,
+    deleteItenerary,
     test,
 }
 
