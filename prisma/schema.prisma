@@ -547,7 +547,7 @@ model Itinerary {
   end_lat_long    String?
   start_city      String?
   end_city        String?
-  conver_img      String?
+  cover_img      String?
 
   status          ItineraryStatus @default(NOT_ASIGNED)
   city_details    ItineraryCity[]
