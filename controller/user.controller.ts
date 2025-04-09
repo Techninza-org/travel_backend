@@ -1954,7 +1954,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
-    const { place } = req.body;
+    const { place, phone } = req.body;
     try {
 
         // const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
@@ -1962,6 +1962,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
         // const citiesDesc: object[] = await citiesDescription(nearbyList);
         const imgUrl: string | null = await getImgByPlaceName(place);
         const ai = await placeDetails([place]);
+        const userByPhone = await prisma.user.findFirst({ where: { phone: phone } });
 
         const data = {
             // nearbyList: nearbyList,
@@ -1969,6 +1970,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             // citiesDesc: citiesDesc,
             imgUrl: imgUrl,
             ai: ai,
+            userByPhone: userByPhone,
         }
 
         return res.status(200).send({ status: 200, message: 'Ok', data: data });
