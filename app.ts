@@ -573,6 +573,7 @@ const io = new Server(httpsServer, {
         origin: '*',
         methods: ['GET', 'POST'],
     },
+    path: '/socket.io',
 })
 
 export const getReceiverSocketId = (receiverId: string) => {
