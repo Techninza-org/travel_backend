@@ -573,6 +573,7 @@ const io = new Server(httpsServer, {
         // origin: '*',
         origin: 'https://eziotravels.com:5000',
         methods: ['GET', 'POST'],
+        credentials: true,
     },
     // path: '/socket.io',
 })
