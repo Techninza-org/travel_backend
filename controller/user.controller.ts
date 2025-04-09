@@ -877,7 +877,7 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
             };
         }));
 
-        return res.status(200).json({ status: 200, message: 'Ok', users: usersWithAdditionalInfo });
+        return res.status(200).json({ status: 200, message: 'Ok', users: usersWithAdditionalInfo, test: currentUser });
     } catch (error) {
         return next(error);
     }
