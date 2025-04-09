@@ -570,7 +570,8 @@ const httpsServer = https.createServer(credentials, app)
 
 const io = new Server(httpsServer, {
     cors: {
-        origin: '*',
+        // origin: '*',
+        origin: 'https://eziotravels.com:5000',
         methods: ['GET', 'POST'],
     },
     // path: '/socket.io',
