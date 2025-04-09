@@ -568,8 +568,10 @@ const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8')
 
 const credentials = {
     key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
-    cert: fs.readFileSync('/home/ubuntu/fullchain.pem', 'utf8'),
-};
+    cert: fs.readFileSync('/home/ubuntu/cert.pem',    'utf8'),
+    ca  : fs.readFileSync('/home/ubuntu/chain.pem',   'utf8')
+        .split(/(?=-----BEGIN CERTIFICATE-----)/gm),
+  };
 
 const httpsServer = https.createServer(credentials, app)
 
