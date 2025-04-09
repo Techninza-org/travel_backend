@@ -517,6 +517,7 @@ const getUsersByUsername = async (req: ExtendedRequest, res: Response, next: Nex
                 followers: true,
                 status: true,
                 followRequest: true,
+                phone: true,
             },
         })
 
@@ -865,15 +866,15 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
         const usersWithAdditionalInfo = await Promise.all(nearbyUsers.map(async (user) => {
             const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id);
             const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id);
-            // const isRequested = currentUser?.followRequest.some((request) => request.user_id === user.id && request.status === 0);
-            const isRequestedBy = currentUser?.followerRequest.some((request) => request.user_id === user.id && request.status === 0);
+            const isRequestSendByCurrentUser = currentUser?.followerRequest.some((request) => request.user_id === user.id && request.status === 0);
+            // const isRequestedBy = currentUser?.followRequest.some((request) => request.user_id === user.id && request.status === 0);
 
             return {
                 ...user,
                 isFollower: isFollower,
                 isFollowing: isFollowing,
+                isRequested: isRequestSendByCurrentUser,
                 // isRequested: isRequested,
-                isRequested: isRequestedBy,
             };
         }));
 
