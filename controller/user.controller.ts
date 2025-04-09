@@ -867,7 +867,7 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
             const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id);
             const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id);
             const isRequestSendByCurrentUser = currentUser?.followerRequest.some((request) => request.user_id === user.id && request.status === 0);
-            const recievedRequests = currentUser?.followRequest.some((request) => request.user_id === user.id && request.status === 0);
+            const recievedRequests = currentUser?.followRequest.some((request) => request.follower_id === user.id && request.status === 0);
 
             return {
                 ...user,
