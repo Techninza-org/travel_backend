@@ -863,17 +863,17 @@ const searchUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
         });
 
         const usersWithAdditionalInfo = await Promise.all(nearbyUsers.map(async (user) => {
-            const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id) || false;
-            const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id) || false;
-            const isRequested = currentUser?.followRequest.some((request) => request.user_id === user.id && request.status === 0);
-            // const isRequestedBy = currentUser?.followerRequest.some((request) => request.follower_id === user.id && request.status === 0);
+            const isFollower = currentUser?.follows.some((follow) => follow.user_id === user.id);
+            const isFollowing = currentUser?.followers.some((follow) => follow.follower_id === user.id);
+            // const isRequested = currentUser?.followRequest.some((request) => request.user_id === user.id && request.status === 0);
+            const isRequestedBy = currentUser?.followerRequest.some((request) => request.follower_id === user.id && request.status === 0);
 
             return {
                 ...user,
                 isFollower: isFollower,
                 isFollowing: isFollowing,
-                isRequested: isRequested,
-                // isRequestedBy: isRequestedBy,
+                // isRequested: isRequested,
+                isRequested: isRequestedBy,
             };
         }));
 
