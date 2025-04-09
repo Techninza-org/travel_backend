@@ -567,15 +567,10 @@ const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8')
 // }
 
 
-// const credentials = {
-//     key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
-//     cert: fs.readFileSync('/home/ubuntu/fullchain.pem', 'utf8'),
-// };
-
 const credentials = {
-    key: fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/fullchain.pem')
-  };
+    key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
+    cert: fs.readFileSync('/home/ubuntu/fullchain.pem', 'utf8'),
+};
   
 const httpsServer = https.createServer(credentials, app)
 
