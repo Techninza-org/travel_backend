@@ -566,24 +566,17 @@ const ca = fs.readFileSync('/home/ubuntu/chain.pem', 'utf8')
 //     ca: ca,
 // }
 
-const credentials = {
-    key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
-    cert: fs.readFileSync('/home/ubuntu/cert.pem',    'utf8'),
-    ca  : fs.readFileSync('/home/ubuntu/chain.pem',   'utf8')
-        .split(/(?=-----BEGIN CERTIFICATE-----)/gm),
-  };
-
-//   const credentials = {
-//     key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
-//     cert: fs.readFileSync('/home/ubuntu/chain.pem', 'utf8'),
-//   };
-
 // const credentials = {
-//     key: fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/privkey.pem', 'utf8'),
-//     cert: fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/fullchain.pem', 'utf8'),
-//     // (optional) If you need the separate chain file:
-//     // ca: fs.readFileSync('/etc/letsencrypt/live/eziotravels.com/chain.pem', 'utf8'),
+//     key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
+//     cert: fs.readFileSync('/home/ubuntu/cert.pem',    'utf8'),
+//     ca  : fs.readFileSync('/home/ubuntu/chain.pem',   'utf8')
+//         .split(/(?=-----BEGIN CERTIFICATE-----)/gm),
 //   };
+
+  const credentials = {
+    key : fs.readFileSync('/home/ubuntu/privkey.pem', 'utf8'),
+    cert: fs.readFileSync('/home/ubuntu/chain.pem', 'utf8'),
+  };
   
 const httpsServer = https.createServer(credentials, app)
 
