@@ -61,7 +61,6 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 user_id: senderId,
                 message,
                 conversation_id: getConversation.id,
-                receiver_id: Number(receiverId), //**
             },
         })
         
@@ -70,7 +69,10 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 where: { id: getConversation.id },
                 data: {
                     messages: {
-                        connect: { id: newMessage.id },
+                        connect: { 
+                            id: newMessage.id, 
+                            receiver_id: Number(receiverId) //*
+                        },
                     },
                 },
             })
