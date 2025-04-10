@@ -218,6 +218,7 @@ const SendOtp = async (req: Request, res: Response, _next: NextFunction) => {
         }
         const { email } = req.body
         const otp = Math.floor(10000 + Math.random() * 90000)
+        console.log(`email: ${email}, otp: ${otp}`)
         // const otp = 1234
         const user = await prisma.user.findFirst({ where: { email } })
         console.log(user)
