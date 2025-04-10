@@ -15,12 +15,20 @@ const getHostedTrips = async (req: ExtendedRequest, res: Response, next: NextFun
                 .status(200)
                 .send({ status: 400, error: 'Invalid payload', error_description: 'id(host) is required in params.' })
         }
-        const trips = await prisma.trip.findMany({
+        const normalTrips = await prisma.trip.findMany({
             where: { host_id: hostId },
             include: { service: true, user: true },
             orderBy: { created_at: 'desc' },
         })
-        return res.status(200).send({ status: 200, trips: trips, count: trips.length })
+
+        const customTrips = await prisma.customTrip.findMany({
+            where: { host_id: hostId },
+            include: { service: true, user: true },
+            orderBy: { created_at: 'desc' },
+        })
+        const combinedTrips = [...normalTrips, ...customTrips]
+        
+        return res.status(200).send({ status: 200, trips: combinedTrips, count: combinedTrips.length })
     } catch (err) {
         return res.status(400).send({ error: 'Error in getting hosted trips' })
     }
