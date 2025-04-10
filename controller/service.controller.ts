@@ -318,11 +318,11 @@ const editServiceById = async (req: ExtendedRequest, res: Response, next: NextFu
 
     const body = req.body
 
-    if (!helper.isValidatePaylod(body, ['name', 'description', 'price', 'services', 'duration', 'itinerary'])) {
+    if (!helper.isValidatePaylod(body, ['name', 'description', 'price', 'offer_price', 'services', 'duration', 'itinerary'])) {
         return res.status(200).send({
             status: 200,
             error: 'Invalid payload',
-            error_description: 'name, description, price, services, duration, itinerary is required.',
+            error_description: 'name, description, price, offer_price, services, duration, itinerary is required.',
         })
     }
 
@@ -332,6 +332,7 @@ const editServiceById = async (req: ExtendedRequest, res: Response, next: NextFu
             name: body.name,
             description: body.description,
             price: Number(body.price),
+            offer_price: Number(body.offer_price),
             host_id: body.host_id,
             destination: body.destination,
             services: body.services,
