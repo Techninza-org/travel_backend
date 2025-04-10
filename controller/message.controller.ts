@@ -263,23 +263,38 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
 
         const getConversation = await prisma.conversation.findFirst({
             where: {
-                participants: {
-                    every: {
-                        userId: {
-                            in: [senderId, Number(receiverId)],
-                        },
-                    },
+              type: {
+                not: 'GROUP',
+              },
+              participants: {
+                some: {
+                  userId: senderId,
                 },
-                type: {
-                    not: 'GROUP',
-                }
+              },
+              AND: {
+                participants: {
+                  some: {
+                    userId: receiverId,
+                  },
+                },
+              },
             },
-            include: { messages: true, participants: {
+            include: {
+              messages: true,
+              participants: {
                 select: {
-                    user: { select: { username: true, image: true, id: true } },
-                }
-            } },
-        })
+                  user: {
+                    select: {
+                      username: true,
+                      image: true,
+                      id: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          
         console.log(getConversation, 'getConversation');
         
 
