@@ -16,6 +16,7 @@ export const CreateService = async (req: ExtendedRequest, res: Response, next: N
             'description',
             'destination',
             'price',
+            'offer_price',
             'host_id',
             'duration',
             'itinerary',
@@ -24,14 +25,14 @@ export const CreateService = async (req: ExtendedRequest, res: Response, next: N
         return res.status(200).send({
             status: 200,
             error: 'Invalid payload',
-            error_description: 'name, description, destination, price, host id, duration, itinerary is required.',
+            error_description: 'name, description, destination, price, offer price, host id, duration, itinerary is required.',
         })
     }
-    if (isNaN(Number(body.price)) || isNaN(Number(body.host_id)) || isNaN(Number(body.duration))) {
+    if (isNaN(Number(body.price)) || isNaN(Number(body.offer_price)) || isNaN(Number(body.host_id)) || isNaN(Number(body.duration))) {
         return res.status(200).send({
             status: 400,
             error: 'Invalid payload',
-            error_description: 'price, host id, duration should be a number.',
+            error_description: 'price, offer price, host id, duration should be a number.',
         })
     }
 
@@ -40,6 +41,7 @@ export const CreateService = async (req: ExtendedRequest, res: Response, next: N
             name: body.name,
             description: body.description,
             price: Number(body.price),
+            offer_price: Number(body.offer_price),
             host_id: Number(body.host_id),
             destination: body.destination,
             services: body.services,

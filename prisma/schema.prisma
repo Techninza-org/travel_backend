@@ -192,6 +192,7 @@ model Service {
   rating           Float        @default(0)
   rating_count     Int          @default(0)
   price            Int
+  offer_price      Int?
   trip             Trip[]
   host_id          Int
   host             Host         @relation(fields: [host_id], references: [id])
