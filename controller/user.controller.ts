@@ -1752,7 +1752,8 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
 
         if (itinerary_id) {
             const itinerary = await prisma.itinerary.findFirst({
-                where: { id: itinerary_id, user_id: user.id },
+                // where: { id: itinerary_id, user_id: user.id },
+                where: { id: itinerary_id },
                 include: {
                     city_details: {
                         include: {
