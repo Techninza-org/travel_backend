@@ -8,7 +8,11 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
     try {
         const senderId = req.user.id
         const receiverId = req.params.receiverId
+        console.log(senderId, receiverId, 'senderId, receiverId');
+        
         const rec = await prisma.user.findUnique({ where: { id: Number(receiverId) } });
+        console.log(rec, 'rec');
+        
         if (!rec) return res.status(404).send({ message: 'Receiver not found' })
         const message = req.body.message.trim()
         if (!message || !receiverId) return res.status(400).send({ message: 'Receiver and message are required' })
@@ -35,6 +39,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 },
             },
         })
+        console.log(getConversation, 'getConversation');
+        
        
         if (!getConversation) {
             getConversation = await prisma.conversation.create({
@@ -55,6 +61,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 },
             })
         }
+        console.log(getConversation, 'getConversation 2');
+        
 
         const newMessage = await prisma.message.create({
             data: {
@@ -63,6 +71,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
                 conversation_id: getConversation.id,
             },
         })
+        console.log(newMessage, 'newMessage');
+        
         
         if (newMessage) {
             await prisma.conversation.update({
@@ -87,6 +97,8 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
             },
             include: { messages: true, participants: {select: {user: {select: {username: true, image: true, id: true}}}}}
         })
+        console.log(convo, 'convo');
+        
         if(convo?.messages.length === 1){
             const sender = await prisma.user.findUnique({ where: { id: senderId } });
             const senderProfilePic = sender?.image ?? '';
