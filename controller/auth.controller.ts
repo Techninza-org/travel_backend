@@ -592,12 +592,12 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
                 .send({ status: 400, error: 'user not found.', error_description: `No user with ${phone}` })
         const otpData = await prisma.otp.findUnique({ where: { user_id: user.id } })
         if (!otpData) {
-            return res.status(200).send({ error: 'Bad Request', error_description: 'OTP is not valid.' })
+            return res.status(400).send({ error: 'Bad Request', error_description: 'OTP is not valid.', invalidOtp: true, status: 400 })
         }
         if (otpData?.otp === otp) {
             const otpExpirationTime = new Date(otpData.updated_at).setMinutes(new Date().getMinutes() + 5)
             if (otpExpirationTime < new Date().getTime()) {
-                return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'OTP is expired.' })
+                return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'OTP is expired.' })
             }
             try {
                 const updatedUser = await prisma.user.update({ where: { id: user.id }, data: { is_verified: true } })
