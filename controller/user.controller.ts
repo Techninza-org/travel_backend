@@ -1985,6 +1985,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             imgUrl: imgUrl,
             ai: ai,
             userByPhone: userByPhone,
+            getAllConversations: getAllConversations,
         }
 
         return res.status(200).send({ status: 200, message: 'Ok', data: data });
