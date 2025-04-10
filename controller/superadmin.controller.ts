@@ -9,7 +9,7 @@ import { s3 } from '../app'
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const users = await prisma.user.findMany({
-            select: { id: true, email: true, username: true, phone: true, trips: true },
+            select: { id: true, email: true, username: true, phone: true, trips: true, created_at: true },
         })
         return res.status(200).send({ status: 200, users: users, count: users.length })
     } catch (err) {
@@ -104,6 +104,7 @@ const getAllVendors = async (req: ExtendedRequest, res: Response, next: NextFunc
                 photo: true,
                 verified: true,
                 submitted: true,
+                created_at: true
             },
         })
         return res.status(200).send({ status: 200, vendors: vendors, count: vendors.length })
