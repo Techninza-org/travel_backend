@@ -274,11 +274,24 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
                     not: 'GROUP',
                 }
             },
-            include: { messages: true, participants: {
-                select: {
-                    user: { select: { username: true, image: true, id: true } },
-                }
-            } },
+            // include: { messages: true, participants: {
+            //     select: {
+            //         user: { select: { username: true, image: true, id: true } },
+            //     }
+            // } },
+            include: {
+                messages: {
+                    orderBy: {
+                        created_at: 'desc',
+                    },
+                    take: 1,
+                },
+                participants: {
+                    select: {
+                        user: { select: { username: true, image: true, id: true } },
+                    },
+                },
+            }
         })
         console.log(getConversation, 'getConversation');
         
