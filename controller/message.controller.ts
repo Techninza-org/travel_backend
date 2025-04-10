@@ -68,6 +68,7 @@ export const sendMessage = async (req: ExtendedRequest, res: Response, next: Nex
             data: {
                 user_id: senderId,
                 message,
+                receiver_id: Number(receiverId),
                 conversation_id: getConversation.id,
             },
         })
