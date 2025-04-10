@@ -516,6 +516,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
         const { phone } = req.body
         if (typeof phone !== 'string') return res.status(400).json({ msg: 'phone should be string' })
         const otp = Math.floor(1000 + Math.random() * 9000)
+
+        console.log(`phone: ${phone}, otp: ${otp}`)
         const user = await prisma.user.findFirst({ where: { phone } })
         if (!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'user not found' })
         const previousSendOtp = await prisma.otp.findUnique({ where: { user_id: user.id } })
