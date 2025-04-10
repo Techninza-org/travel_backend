@@ -218,6 +218,7 @@ const SendOtp = async (req: Request, res: Response, _next: NextFunction) => {
         }
         const { email } = req.body
         const otp = Math.floor(10000 + Math.random() * 90000)
+        console.log(`email: ${email}, otp: ${otp}`)
         // const otp = 1234
         const user = await prisma.user.findFirst({ where: { email } })
         console.log(user)
@@ -515,6 +516,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
         const { phone } = req.body
         if (typeof phone !== 'string') return res.status(400).json({ msg: 'phone should be string' })
         const otp = Math.floor(1000 + Math.random() * 9000)
+
+        console.log(`phone: ${phone}, otp: ${otp}`)
         const user = await prisma.user.findFirst({ where: { phone } })
         if (!user) return res.status(200).send({ status: 404, error: 'Not found', error_description: 'user not found' })
         const previousSendOtp = await prisma.otp.findUnique({ where: { user_id: user.id } })
@@ -534,6 +537,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
                         'cache-control': 'no-cache',
                     },
                 })
+
+                console.log(`phone service response: ${response.data}`)
             } catch (err) {
                 return _next(err)
             }
@@ -553,6 +558,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
                         'cache-control': 'no-cache',
                     },
                 })
+
+                console.log(`phone service response: ${response.data}`)
             } catch (err) {
                 return _next(err)
             }
@@ -589,12 +596,12 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
                 .send({ status: 400, error: 'user not found.', error_description: `No user with ${phone}` })
         const otpData = await prisma.otp.findUnique({ where: { user_id: user.id } })
         if (!otpData) {
-            return res.status(200).send({ error: 'Bad Request', error_description: 'OTP is not valid.' })
+            return res.status(400).send({ error: 'Bad Request', error_description: 'OTP is not valid.', invalidOtp: true, status: 400 })
         }
         if (otpData?.otp === otp) {
             const otpExpirationTime = new Date(otpData.updated_at).setMinutes(new Date().getMinutes() + 5)
             if (otpExpirationTime < new Date().getTime()) {
-                return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'OTP is expired.' })
+                return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'OTP is expired.' })
             }
             try {
                 const updatedUser = await prisma.user.update({ where: { id: user.id }, data: { is_verified: true } })
