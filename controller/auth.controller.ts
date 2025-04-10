@@ -622,7 +622,7 @@ const VerifyOtpPhone = async (req: Request, res: Response, next: NextFunction) =
 
 const getBlogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const blogs = await prisma.blog.findMany()
+        const blogs = await prisma.blog.findMany({orderBy: { created_at: 'desc' }})
         return res.status(200).send({ status: 200, message: 'Ok', blogs })
     } catch (err) {
         return next(err)

@@ -10,6 +10,7 @@ const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFuncti
     try {
         const users = await prisma.user.findMany({
             select: { id: true, email: true, username: true, phone: true, trips: true, created_at: true },
+            orderBy: { created_at: 'desc' },
         })
         return res.status(200).send({ status: 200, users: users, count: users.length })
     } catch (err) {
@@ -106,6 +107,7 @@ const getAllVendors = async (req: ExtendedRequest, res: Response, next: NextFunc
                 submitted: true,
                 created_at: true
             },
+            orderBy: { created_at: 'desc' },
         })
         return res.status(200).send({ status: 200, vendors: vendors, count: vendors.length })
     } catch (err) {
