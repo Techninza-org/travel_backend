@@ -556,6 +556,8 @@ const SendOtpPhone = async (req: Request, res: Response, _next: NextFunction) =>
                         'cache-control': 'no-cache',
                     },
                 })
+
+                console.log(`phone service response: ${response.data}`)
             } catch (err) {
                 return _next(err)
             }
