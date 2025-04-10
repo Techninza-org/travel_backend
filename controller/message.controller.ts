@@ -239,6 +239,7 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
     try {
         const senderId = req.user.id
         const receiverId = Number(req.params.receiverId)
+        console.log("receiverId::::::::::", receiverId);
         if (typeof receiverId !== 'number' || !Number.isInteger(receiverId) || receiverId <= 0) {
             return res.status(400).send({
                 status: 400,
