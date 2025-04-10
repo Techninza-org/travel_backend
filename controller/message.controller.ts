@@ -279,16 +279,22 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
                 },
               },
             },
-            // include: { messages: true, participants: {
-            //     select: {
-            //         user: { select: { username: true, image: true, id: true } },
-            //     }
-            // } },
             include: {
-                messages: true,
-                participants: true
-            }
-        })
+              messages: true,
+              participants: {
+                select: {
+                  user: {
+                    select: {
+                      username: true,
+                      image: true,
+                      id: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          
         console.log(getConversation, 'getConversation');
         
 
