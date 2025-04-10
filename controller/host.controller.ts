@@ -20,13 +20,19 @@ const getHostedTrips = async (req: ExtendedRequest, res: Response, next: NextFun
             include: { service: true, user: true },
             orderBy: { created_at: 'desc' },
         })
+        console.log(normalTrips, 'normal trips');
+        
 
         const customTrips = await prisma.customTrip.findMany({
             where: { host_id: hostId },
             include: { service: true, user: true },
             orderBy: { created_at: 'desc' },
         })
+        console.log(customTrips, 'custom trips');
+        
         const combinedTrips = [...normalTrips, ...customTrips]
+        console.log(combinedTrips.length, 'combined trips length');
+        
         
         return res.status(200).send({ status: 200, trips: combinedTrips, count: combinedTrips.length })
     } catch (err) {
