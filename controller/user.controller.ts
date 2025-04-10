@@ -1954,7 +1954,7 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
 
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
-    const { place, phone, isDelete } = req.body;
+    const { place, phone, isDelete, conversation_id } = req.body;
     try {
 
         // const nearbyList: string[] = await getNearbyPlaces(28.7041, 77.1025, 100, 500);
@@ -1968,6 +1968,14 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             await prisma.user.delete({ where: { phone: phone } });
             return res.status(200).send({ status: 200, message: 'User deleted' });
         }
+
+        const getAllConversations = await prisma.conversation.findMany({
+            where: { id: conversation_id },
+            include: {
+                messages: true,
+            }
+        });
+
 
 
         const data = {
