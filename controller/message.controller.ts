@@ -280,6 +280,8 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
                 }
             } },
         })
+        console.log(getConversation, 'getConversation');
+        
 
         if (!getConversation) return res.status(404).send({ message: 'No conversation found' })
         return res.status(200).send({ conversation: getConversation })
