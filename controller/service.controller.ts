@@ -432,26 +432,22 @@ const updateServiceStatus = async (req: ExtendedRequest, res: Response, next: Ne
             .status(200)
             .send({ status: 400, error: 'Invalid payload', error_description: 'id(service) should be a number.' })
     }
-    const body = req.body
-    if (!helper.isValidatePaylod(body, ['active'])) {
-        return res.status(200).send({
-            status: 200,
-            error: 'Invalid payload',
-            error_description: 'active field is required.',
-        })
-    }
-    if( typeof body.active !== 'boolean') {
-        return res.status(200).send({
-            status: 200,
-            error: 'Invalid payload',
-            error_description: 'active field should be a boolean.',
-        })
-    }
-    const service = await prisma.service.update({
+
+    const  service = await prisma.service.findFirst({
         where: { id: Number(serviceId) },
-        data: { active: body.active },
     })
-    return res.status(200).send({ status: 200, message: 'Updated', service })
+
+    if (!service) {
+        return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Service not found.' })
+    }
+    const updatedService = await prisma.service.update({
+        where: { id: Number(serviceId) },
+        data: {
+            active: !service.active,
+        },
+    })
+    
+    return res.status(200).send({ status: 200, message: 'Status updated', service: updatedService })
 }
 
 const serviceController = {
