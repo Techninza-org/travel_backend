@@ -419,6 +419,27 @@ const deleteBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
     }
 }
 
+export const allHostServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const services = await prisma.service.findMany({include: { host: true }, orderBy: { created_at: 'desc' }});
+        return res.status(200).send({ status: 200, message: 'Ok', services: services, count: services.length })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+export const allTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const normalTrips = await prisma.trip.findMany({include: { host: true, user: true }, orderBy: { created_at: 'desc' }});
+        const customTrips = await prisma.customTrip.findMany({include: { host: true, user: true }, orderBy: { created_at: 'desc' }});
+        const trips = [...normalTrips, ...customTrips]
+        trips.sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
+        return res.status(200).send({ status: 200, message: 'Ok', trips: trips, count: trips.length })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
     getAllUsers,
     getAllVendors,
@@ -444,5 +465,7 @@ const superAdminController = {
     getUserById,
     deleteCommentById,
     deletePostById,
+    allHostServices,
+    allTrips
 }
 export default superAdminController

@@ -54,5 +54,9 @@ SuperAdminRouter
     .delete("/user/post/:post_id", superAdminController.deletePostById)
     //@ts-ignore
     .delete("/user/comment/:comment_id", superAdminController.deleteCommentById)
+    //@ts-ignore
+    .get('/all-trips', superAdminController.allTrips)
+    //@ts-ignore
+    .get('/all-services', superAdminController.allHostServices)
 
 export default SuperAdminRouter
