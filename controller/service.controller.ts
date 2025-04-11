@@ -420,6 +420,40 @@ const searchServices = async (req: ExtendedRequest, res: Response, next: NextFun
 
 };
 
+const updateServiceStatus = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const serviceId = req.params.id
+    if (!serviceId) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Invalid payload', error_description: 'id(service) is required in params.' })
+    }
+    if (isNaN(Number(serviceId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Invalid payload', error_description: 'id(service) should be a number.' })
+    }
+    const body = req.body
+    if (!helper.isValidatePaylod(body, ['active'])) {
+        return res.status(200).send({
+            status: 200,
+            error: 'Invalid payload',
+            error_description: 'active field is required.',
+        })
+    }
+    if( typeof body.active !== 'boolean') {
+        return res.status(200).send({
+            status: 200,
+            error: 'Invalid payload',
+            error_description: 'active field should be a boolean.',
+        })
+    }
+    const service = await prisma.service.update({
+        where: { id: Number(serviceId) },
+        data: { active: body.active },
+    })
+    return res.status(200).send({ status: 200, message: 'Updated', service })
+}
+
 const serviceController = {
     CreateService,
     GetAllServices,
@@ -431,5 +465,6 @@ const serviceController = {
     getFilteredServices,
     getBidsByHostId,
     searchServices,
+    updateServiceStatus,
 }
 export default serviceController

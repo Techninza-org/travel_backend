@@ -17,6 +17,8 @@ ServiceRouter
     //@ts-ignore
     .put('/:id', middleware.HostAuthMiddleware, serviceController.editServiceById)
     //@ts-ignore
+    .put('/status/:id', middleware.HostAuthMiddleware, serviceController.updateServiceStatus)
+    //@ts-ignore
     .get('/host/:id', middleware.HostAuthMiddleware, serviceController.getServicesByHostId)
     //@ts-ignore
     .get('/host/bids/:id', middleware.HostAuthMiddleware, serviceController.getBidsByHostId)

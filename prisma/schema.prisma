@@ -193,6 +193,7 @@ model Service {
   rating_count     Int          @default(0)
   price            Int
   offer_price      Int?
+  active           Boolean      @default(true)
   trip             Trip[]
   host_id          Int
   host             Host         @relation(fields: [host_id], references: [id])
