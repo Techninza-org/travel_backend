@@ -187,6 +187,7 @@ model Service {
   destination      String?
   duration         Int
   services         Json?
+  terms_and_conditions String?
   itinerary        Json?
   images           Json?
   rating           Float        @default(0)
