@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import * as admin from 'firebase-admin'
 
 const isValidatePaylod = (body: any, fields: string[]): boolean => {
     if (!body) {
@@ -55,6 +56,48 @@ const removeWhitespace = (str: string) : string => {
 
 const DEFAULT_IMAGE: string = 'https://ezio.s3.eu-north-1.amazonaws.com/1744105722299.png';
 
-const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace, DEFAULT_IMAGE }
+const sendNotification = async (title: string, body: string, token: string) => {
+    const message = {
+        notification: {
+            title: title,
+            body: body,
+        },
+        token: token,
+    }
+
+    try {
+        await admin.messaging().send(message)
+        console.log('Notification sent successfully')
+    } catch (error) {
+        console.error('Error sending notification:', error)
+    }
+};
+
+const sendNotifications = async (title: string, body: string, tokens: string[]) => {
+    const message = {
+        notification: {
+            title: title,
+            body: body,
+        },
+        tokens: tokens,
+    }
+
+    try {
+        const response = await admin.messaging().sendMulticast(message)
+        console.log(`Notification sent successfully to ${response.successCount} devices, failed to send to ${response.failureCount} devices`)
+
+        if (response.failureCount > 0) {
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    console.error(`Failed to send notification to token ${tokens[idx]}: ${resp.error}`)
+                }
+            })
+        }
+    } catch (error) {
+        console.error('Error sending notification:', error)
+    }
+};
+
+const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace, sendNotifications, sendNotification, DEFAULT_IMAGE }
 export default helper
 

@@ -29,6 +29,7 @@ import * as admin from 'firebase-admin'
 // import TemplateRouter from './routes/template.routes'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import crypto from 'node:crypto'
+import helper from './utils/helpers'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -551,6 +552,35 @@ cron.schedule('0 0 * * *', async () => {
         if(notification.created_at < new Date(Date.now() - 7*24*60*60*1000)){
             await prisma.notification.delete({where: {id: notification.id}})
         }
+    }
+});
+
+//every hour
+// cron.schedule('0 * * * *', async () => {
+cron.schedule('* * * * *', async () => { //every minute
+    console.log('sending every hour notifications');
+
+    //geting all users with registration token
+    const usersWithToken = await prisma.user.findMany({
+        where: { registrationToken: { not: null }, status: true },
+        select: { id: true, registrationToken: true },
+    });
+
+    if (usersWithToken.length > 0) {
+        // const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken);
+        const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken!);
+
+        console.log('arrayOfTokens::::::::::::', arrayOfTokens);
+
+        // multiple notifications at once
+        // await helper.sendNotifications('Ezio', 'Hello from Ezio', arrayOfTokens);
+
+        // single notification
+        for (const token of arrayOfTokens) {
+            await helper.sendNotification('Ezio', 'Hello from Ezio', token);
+        }
+    } else {
+        console.log('No users with registration token found');
     }
 });
 
