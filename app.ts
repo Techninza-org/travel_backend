@@ -567,8 +567,9 @@ cron.schedule('* * * * *', async () => { //every minute
     });
 
     if (usersWithToken.length > 0) {
-        // const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken);
-        const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken!);
+        // const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken!);
+        const arrayOfTokens: string[] = ["fjQHw76dTJ6y0rfGddO9J6:APA91bFven5aXonyGER6CR5IbDopb5T73H4ulsmwN15LFyRlzxM5h-xZd48sqJJ_sza2AhXUSWKMk9eaqdmVeYdWpq1C76gw7w7EXnjU3BBf62wW3SnQM1w"];
+
 
         console.log('arrayOfTokens::::::::::::', arrayOfTokens);
 
