@@ -98,6 +98,6 @@ const sendNotifications = async (title: string, body: string, tokens: string[]) 
     }
 };
 
-const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace, sendNotifications, DEFAULT_IMAGE }
+const helper = { isValidatePaylod, isValidDateFormat, sendMail, imageUrlGen, removeWhitespace, sendNotifications, sendNotification, DEFAULT_IMAGE }
 export default helper
 
