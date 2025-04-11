@@ -556,8 +556,8 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 //every hour
-// cron.schedule('0 * * * *', async () => {
-cron.schedule('* * * * *', async () => { //every minute
+cron.schedule('0 * * * *', async () => {
+// cron.schedule('* * * * *', async () => { //every minute
     console.log('sending every hour notifications');
 
     //geting all users with registration token
@@ -574,7 +574,7 @@ cron.schedule('* * * * *', async () => { //every minute
         console.log('arrayOfTokens::::::::::::', arrayOfTokens);
 
         // multiple notifications at once
-        // await helper.sendNotifications('Ezio', 'Hello from Ezio bulk', arrayOfTokens);
+        // await helper.sendNotifications('Ezio', 'Hello from Ezio multiple', arrayOfTokens);
 
         // single notification
         for (const token of arrayOfTokens) {
