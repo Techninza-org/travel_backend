@@ -132,9 +132,10 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
             Number(limit)
         )
         filteredServices = [...defaultServices, ...groupServices]
+        const activeServices = filteredServices.filter((service) => service.active === true)
         return res
             .status(200)
-            .send({ status: 200, message: 'Ok', services: filteredServices, count: filteredServices.length })
+            .send({ status: 200, message: 'Ok', services: activeServices, count: activeServices.length })
     } catch (err) {
         return next(err)
     }
@@ -406,6 +407,7 @@ const searchServices = async (req: ExtendedRequest, res: Response, next: NextFun
             where: {
                 AND: [
                     { rating: { gte: rating } },
+                    { active: true },
                     { price: { gte: minBudget, lte: maxBudget } },
                     ...( category ? [{ services: { array_contains: category } }] : [] )
                 ]
