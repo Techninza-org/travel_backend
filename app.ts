@@ -574,12 +574,13 @@ cron.schedule('* * * * *', async () => { //every minute
         console.log('arrayOfTokens::::::::::::', arrayOfTokens);
 
         // multiple notifications at once
-        // await helper.sendNotifications('Ezio', 'Hello from Ezio', arrayOfTokens);
+        await helper.sendNotifications('Ezio', 'Hello from Ezio bulk', arrayOfTokens);
 
         // single notification
-        for (const token of arrayOfTokens) {
-            await helper.sendNotification('Ezio', 'Hello from Ezio', token);
-        }
+        // for (const token of arrayOfTokens) {
+        //     await helper.sendNotification('Ezio', 'Hello from Ezio', token);
+        // }
+
     } else {
         console.log('No users with registration token found');
     }
