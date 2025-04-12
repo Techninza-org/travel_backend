@@ -42,6 +42,7 @@ export const CreateService = async (req: ExtendedRequest, res: Response, next: N
             name: body.name,
             description: body.description,
             price: Number(body.price),
+            images: body.images,
             offer_price: Number(body.offer_price),
             terms_and_conditions: body.terms_and_conditions,
             host_id: Number(body.host_id),
