@@ -440,6 +440,79 @@ export const allTrips = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+export const getTripDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        let tripId: string | number = req.params.id
+        if (!tripId) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(trip) is required in params.' })
+        }
+        tripId = Number(tripId)
+        if (Number.isNaN(tripId)) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(trip) should be a number.' })
+        }
+
+        let tripDetails = {};
+
+        const trip = await prisma.trip.findFirst({
+            where: { id: tripId },
+            include: { service: true, user: true, host: true },
+        })
+
+        const customTrip = await prisma.customTrip.findFirst({
+            where: { id: tripId },
+            include: { service: true, user: true, host: true },
+        })
+        if(trip){
+            tripDetails = trip;
+        }else if(customTrip){
+            tripDetails = customTrip;
+        }else {
+            return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Trip not found.' })
+        }
+        return res.status(200).send({ status: 200, message: 'Ok', trip: tripDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+export const getServiceDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    let serviceId: string | number = req.params.id
+    if (!serviceId) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Invalid payload', error_description: 'id(service) is required in params.' })
+    }
+    serviceId = Number(serviceId)
+    if (Number.isNaN(serviceId)) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Invalid payload', error_description: 'id(service) should be a number.' })
+    }
+
+    const service = await prisma.service.findFirst({
+        where: { id: serviceId },
+        include: {
+            host: {
+                select: {
+                    name: true,
+                    email: true,
+                    description: true,
+                    google_rating: true,
+                    photo: true,
+                },
+            },
+        },
+    })
+    if (!service) {
+        return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Service not found.' })
+    }
+    return res.status(200).send({ status: 200, message: 'Ok', service })
+}
+
 const superAdminController = {
     getAllUsers,
     getAllVendors,
@@ -466,6 +539,8 @@ const superAdminController = {
     deleteCommentById,
     deletePostById,
     allHostServices,
-    allTrips
+    allTrips,
+    getTripDetails,
+    getServiceDetails,
 }
 export default superAdminController
