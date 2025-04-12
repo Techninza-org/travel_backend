@@ -59,8 +59,8 @@ SuperAdminRouter
     //@ts-ignore
     .get('/all-services', superAdminController.allHostServices)
     //@ts-ignore
-    .get('/trip/:tripId', superAdminController.getTripDetails)
+    .get('/trip/:id', superAdminController.getTripDetails)
     //@ts-ignore
-    .get('/service/:serviceId', superAdminController.getServiceDetails)
+    .get('/service/:id', superAdminController.getServiceDetails)
 
 export default SuperAdminRouter
