@@ -114,6 +114,7 @@ export const CreateTrip = async (req: ExtendedRequest, res: Response, next: Next
                     number_of_people: body.number_of_people,
                     service_id: Number(body.service_id),
                     user_id: user.id,
+                    tripMembers: body.tripMembers,
                     cost: body.cost,
                     host_id: service.host_id,
                     order_id: order.id,

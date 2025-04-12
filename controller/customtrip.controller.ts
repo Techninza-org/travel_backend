@@ -47,6 +47,7 @@ export const InitialiseCustomTrip = async (req: ExtendedRequest, res: Response, 
                 start_date: start_date,
                 end_date: end_date,
                 duration: itinerary.length,
+                tripMembers: body.tripMembers,
             },
         })
         return res.status(200).send({ status: 200, message: 'Ok', custom_trip: customTrip })

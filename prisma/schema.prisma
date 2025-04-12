@@ -254,6 +254,7 @@ model CustomTrip {
   service_id           Int?
   cost                 Int?
   host_id              Int?
+  tripMembers           Json?
   is_payment_confirmed Boolean   @default(false)
   cancelled            Boolean   @default(false)
   status               String    @default("upcoming")
