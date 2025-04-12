@@ -557,34 +557,33 @@ cron.schedule('0 0 * * *', async () => {
 
 //every hour
 // cron.schedule('0 * * * *', async () => {
-cron.schedule('* * * * *', async () => { //every minute
-    console.log('sending every hour notifications');
+//     console.log('sending every hour notifications');
 
-    //geting all users with registration token
-    const usersWithToken = await prisma.user.findMany({
-        where: { registrationToken: { not: null }, status: true },
-        select: { id: true, registrationToken: true },
-    });
+//     //geting all users with registration token
+//     const usersWithToken = await prisma.user.findMany({
+//         where: { registrationToken: { not: null }, status: true },
+//         select: { id: true, registrationToken: true },
+//     });
 
-    if (usersWithToken.length > 0) {
-        // const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken!);
-        const arrayOfTokens: string[] = ["fjQHw76dTJ6y0rfGddO9J6:APA91bFven5aXonyGER6CR5IbDopb5T73H4ulsmwN15LFyRlzxM5h-xZd48sqJJ_sza2AhXUSWKMk9eaqdmVeYdWpq1C76gw7w7EXnjU3BBf62wW3SnQM1w"];
+//     if (usersWithToken.length > 0) {
+//         // const arrayOfTokens: string[] = usersWithToken.map((user) => user.registrationToken!);
+//         const arrayOfTokens: string[] = ["fjQHw76dTJ6y0rfGddO9J6:APA91bFven5aXonyGER6CR5IbDopb5T73H4ulsmwN15LFyRlzxM5h-xZd48sqJJ_sza2AhXUSWKMk9eaqdmVeYdWpq1C76gw7w7EXnjU3BBf62wW3SnQM1w"];
 
 
-        console.log('arrayOfTokens::::::::::::', arrayOfTokens);
+//         console.log('arrayOfTokens::::::::::::', arrayOfTokens);
 
-        // multiple notifications at once
-        // await helper.sendNotifications('Ezio', 'Hello from Ezio multiple', arrayOfTokens);
+//         // multiple notifications at once
+//         // await helper.sendNotifications('Ezio', 'Hello from Ezio multiple', arrayOfTokens);
 
-        // single notification
-        for (const token of arrayOfTokens) {
-            await helper.sendNotification('Ezio', 'Hello from Ezio', token);
-        }
+//         // single notification
+//         for (const token of arrayOfTokens) {
+//             await helper.sendNotification('Ezio', 'Hello from Ezio', token);
+//         }
 
-    } else {
-        console.log('No users with registration token found');
-    }
-});
+//     } else {
+//         console.log('No users with registration token found');
+//     }
+// });
 
 app.use(middleware.ErrorHandler)
 
