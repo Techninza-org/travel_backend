@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import authController from '../controller/auth.controller'
+import { upload } from '../index'
 
 const authRouter = Router()
 
@@ -18,5 +19,6 @@ authRouter.get('/blogs', authController.getBlogs)
 authRouter.get('/blog/:slug', authController.getBlogById)
 authRouter.get('/blogs/recent', authController.getRecentBlogs)
 // authRouter.post('/otp', authController.sendOTPPhone)
+authRouter.post('/upload', upload.single('file'), authController.uploadImage)
 
 export default authRouter

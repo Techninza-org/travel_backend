@@ -6,6 +6,8 @@ import jwt from 'jsonwebtoken'
 import { ExtendedRequest } from '../utils/middleware'
 import axios from 'axios'
 const prisma = new PrismaClient()
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { s3 } from '../app'
 
 const SALT_ROUND = process.env.SALT_ROUND!
 const ITERATION = 100
@@ -686,6 +688,33 @@ const sendOTPPhone = async (req: Request, res: Response, next: NextFunction) => 
     }
 }
 
+const uploadImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.file) {
+            return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'No image provided' })
+        }
+       
+        const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+        const imageName = randomImageName()
+
+        const params = {
+            Bucket: process.env.BUCKET_NAME!,
+            Key: imageName,
+            Body: req.file?.buffer,
+            ContentType: req.file?.mimetype,
+        }
+        const command = new PutObjectCommand(params)
+        await s3.send(command)
+        
+      
+        const url =  `https://ezio.s3.eu-north-1.amazonaws.com/${imageName}`;
+         
+        return res.status(200).send({ status: 200, url })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const authController = {
     Login,
     ForgotPassword,
@@ -701,5 +730,6 @@ const authController = {
     getBlogById,
     getRecentBlogs,
     sendOTPPhone,
+    uploadImage
 }
 export default authController
