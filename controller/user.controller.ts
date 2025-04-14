@@ -1519,6 +1519,8 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
                 error_description: 'Highlight Id should be a number.',
             })
         }
+
+
         const post = await prisma.post.findFirst({ where: { id: post_id, user_id: req.user.id } })
         if (!post) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Post not found.' })
@@ -1528,11 +1530,13 @@ const addPostToHighlight = async (req: ExtendedRequest, res: Response, next: Nex
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found.' })
         }
+
         const postIds = highlight.postIds || '';
         const postIdsArray = String(postIds).split(',')
         if (postIdsArray.includes(String(post_id))) {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Post already added to highlight.' })
         }
+
         postIdsArray.push(String(post_id))
         const postIdsNew = postIdsArray.join(',')
         const updatedHighlight = await prisma.highlight.update({
@@ -1565,6 +1569,8 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
     try {
         const user = req.user
         const { id } = req.params
+        
+        
         if (!id) {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Id is required' })
         }
@@ -1575,8 +1581,29 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
         }
+
+
         const highlightWithPosts = { ...highlight, posts: await prisma.post.findMany({ where: { id: { in: String(highlight.postIds).split(',').map(Number) } } }) }
-        return res.status(200).send({ status: 200, message: 'Ok', highlight: highlightWithPosts })
+
+        //get all post of user with 10 km radius of highlight location
+        const customPost = await prisma.post.findMany({
+            where: {
+                user_id: user.id,
+                latitude: {
+                    gte: String(Number(highlight.latitude) - 0.1),
+                    lte: String(Number(highlight.latitude) + 0.1),
+                },
+                longitude: {
+                    gte: String(Number(highlight.longitude) - 0.1),
+                    lte: String(Number(highlight.longitude) + 0.1),
+                },
+            }
+        })
+
+        const customHighlightWithPosts = { ...highlight, posts: customPost }
+        
+        // return res.status(200).send({ status: 200, message: 'Ok', highlight: highlightWithPosts })
+        return res.status(200).send({ status: 200, message: 'Ok', highlight: customHighlightWithPosts })
     } catch (err) {
         return next(err)
     }
