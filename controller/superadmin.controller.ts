@@ -430,8 +430,8 @@ export const allHostServices = async (req: ExtendedRequest, res: Response, next:
 
 export const allTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const normalTrips = await prisma.trip.findMany({include: { host: true, user: true }, orderBy: { created_at: 'desc' }});
-        const customTrips = await prisma.customTrip.findMany({include: { host: true, user: true }, orderBy: { created_at: 'desc' }});
+        const normalTrips = await prisma.trip.findMany({include: { host: true, user: true, service: true }, orderBy: { created_at: 'desc' }});
+        const customTrips = await prisma.customTrip.findMany({include: { host: true, user: true, service: true }, orderBy: { created_at: 'desc' }});
         const trips = [...normalTrips, ...customTrips]
         trips.sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
         return res.status(200).send({ status: 200, message: 'Ok', trips: trips, count: trips.length })
