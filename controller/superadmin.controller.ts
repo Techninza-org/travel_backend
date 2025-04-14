@@ -5,6 +5,10 @@ const prisma = new PrismaClient()
 import crypto from 'crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
+const SALT_ROUND = process.env.SALT_ROUND!
+const ITERATION = 100
+const KEYLENGTH = 10
+const DIGEST_ALGO = 'sha512'
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -27,7 +31,10 @@ const getUserById = async (req: ExtendedRequest, res: Response, next: NextFuncti
             .send({ status: 400, error: 'Bad Request', error_description: 'Invalid user id Parameters' })
     }
     try {
-        const user = await prisma.user.findUnique({ where: { id: Number(user_id) }, include:{post: {include:{comment: true, Likes: true}}} })
+        const user = await prisma.user.findUnique({
+            where: { id: Number(user_id) },
+            include: { post: { include: { comment: true, Likes: true } } },
+        })
         return res.status(200).send({ status: 200, user: user })
     } catch (err) {
         return next(err)
@@ -44,11 +51,11 @@ const deleteCommentById = async (req: ExtendedRequest, res: Response, next: Next
     }
     try {
         const commentExists = await prisma.comment.findUnique({ where: { id: Number(comment_id) } })
-        if(!commentExists){
+        if (!commentExists) {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Comment not found' })
         }
         const comment = await prisma.comment.delete({ where: { id: Number(comment_id) } })
-        
+
         return res.status(200).send({ status: 200, comment: comment })
     } catch (err) {
         return next(err)
@@ -65,11 +72,11 @@ const deletePostById = async (req: ExtendedRequest, res: Response, next: NextFun
     }
     try {
         const postExists = await prisma.post.findUnique({ where: { id: Number(post_id) } })
-        if(!postExists){
+        if (!postExists) {
             return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Post not found' })
         }
         const post = await prisma.post.delete({ where: { id: Number(post_id) } })
-       
+
         return res.status(200).send({ status: 200, post: post })
     } catch (err) {
         return next(err)
@@ -105,7 +112,7 @@ const getAllVendors = async (req: ExtendedRequest, res: Response, next: NextFunc
                 photo: true,
                 verified: true,
                 submitted: true,
-                created_at: true
+                created_at: true,
             },
             orderBy: { created_at: 'desc' },
         })
@@ -353,10 +360,17 @@ const getTransactionsByUserId = async (req: ExtendedRequest, res: Response, next
 
 const getAllTransactions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const transactions = await prisma.transactions.findMany({ orderBy: { created_at: 'desc' }, include: { user: {select: {
-            username: true,
-            phone: true,
-        }} } })
+        const transactions = await prisma.transactions.findMany({
+            orderBy: { created_at: 'desc' },
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        phone: true,
+                    },
+                },
+            },
+        })
         return res.status(200).send({ transactions: transactions })
     } catch (err) {
         return next(err)
@@ -381,7 +395,7 @@ const createBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
         }
         const command = new PutObjectCommand(params)
         await s3.send(command)
-        
+
         const currentDate = new Date().toISOString().slice(0, 10)
         const blogSlug = `${currentDate}-${title.toLowerCase().replace(/ /g, '-')}`
 
@@ -409,7 +423,7 @@ const deleteBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
             return res.status(400).send({ message: 'Blog id is required' })
         }
         const blogExists = await prisma.blog.findUnique({ where: { id: Number(id) } })
-        if(!blogExists) {
+        if (!blogExists) {
             return res.status(400).send({ message: 'Blog does not exist' })
         }
         await prisma.blog.delete({ where: { id: Number(id) } })
@@ -421,7 +435,7 @@ const deleteBlog = async (req: ExtendedRequest, res: Response, next: NextFunctio
 
 export const allHostServices = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const services = await prisma.service.findMany({include: { host: true }, orderBy: { created_at: 'desc' }});
+        const services = await prisma.service.findMany({ include: { host: true }, orderBy: { created_at: 'desc' } })
         return res.status(200).send({ status: 200, message: 'Ok', services: services, count: services.length })
     } catch (err) {
         return next(err)
@@ -430,8 +444,14 @@ export const allHostServices = async (req: ExtendedRequest, res: Response, next:
 
 export const allTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const normalTrips = await prisma.trip.findMany({include: { host: true, user: true, service: true }, orderBy: { created_at: 'desc' }});
-        const customTrips = await prisma.customTrip.findMany({include: { host: true, user: true, service: true }, orderBy: { created_at: 'desc' }});
+        const normalTrips = await prisma.trip.findMany({
+            include: { host: true, user: true, service: true },
+            orderBy: { created_at: 'desc' },
+        })
+        const customTrips = await prisma.customTrip.findMany({
+            include: { host: true, user: true, service: true },
+            orderBy: { created_at: 'desc' },
+        })
         const trips = [...normalTrips, ...customTrips]
         trips.sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
         return res.status(200).send({ status: 200, message: 'Ok', trips: trips, count: trips.length })
@@ -455,7 +475,7 @@ export const getTripDetails = async (req: ExtendedRequest, res: Response, next: 
                 .send({ status: 400, error: 'Invalid payload', error_description: 'id(trip) should be a number.' })
         }
 
-        let tripDetails = {};
+        let tripDetails = {}
 
         const trip = await prisma.trip.findFirst({
             where: { id: tripId },
@@ -466,11 +486,11 @@ export const getTripDetails = async (req: ExtendedRequest, res: Response, next: 
             where: { id: tripId },
             include: { service: true, user: true, host: true },
         })
-        if(trip){
-            tripDetails = trip;
-        }else if(customTrip){
-            tripDetails = customTrip;
-        }else {
+        if (trip) {
+            tripDetails = trip
+        } else if (customTrip) {
+            tripDetails = customTrip
+        } else {
             return res.status(200).send({ status: 404, error: 'Not found', error_description: 'Trip not found.' })
         }
         return res.status(200).send({ status: 200, message: 'Ok', trip: tripDetails })
@@ -522,8 +542,28 @@ export const getQueries = async (req: ExtendedRequest, res: Response, next: Next
     }
 }
 
+const updateUserPassword = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { user_id, password } = req.body
+        if (!user_id) return res.status(400).send({ error: 'User id is required' })
+        if (isNaN(Number(user_id))) return res.status(400).send({ error: 'Invalid user id' })
+        if (typeof password !== 'string') return res.status(400).send({ error: 'password must be a string' })
+        let hash_password: string | Buffer = crypto.pbkdf2Sync(password, SALT_ROUND, ITERATION, KEYLENGTH, DIGEST_ALGO)
+        hash_password = hash_password.toString('hex')
+
+        const user = await prisma.user.update({
+            where: { id: user_id },
+            data: { password },
+        })
+        return res.status(200).send({ message: 'Password Updated' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
     getQueries,
+    updateUserPassword,
     getAllUsers,
     getAllVendors,
     createVendor,

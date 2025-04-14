@@ -64,5 +64,7 @@ SuperAdminRouter
     .get('/service/:id', superAdminController.getServiceDetails)
     //@ts-ignore
     .get('/queries', superAdminController.getQueries)
+    //@ts-ignore
+    .post('/update-password', superAdminController.updateUserPassword)
 
 export default SuperAdminRouter
