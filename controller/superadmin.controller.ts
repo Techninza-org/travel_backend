@@ -553,7 +553,7 @@ const updateUserPassword = async (req: ExtendedRequest, res: Response, next: Nex
 
         const user = await prisma.user.update({
             where: { id: user_id },
-            data: { password },
+            data: { password: hash_password },
         })
         return res.status(200).send({ message: 'Password Updated' })
     } catch (err) {
