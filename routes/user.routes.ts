@@ -97,6 +97,8 @@ userRouter
     .delete("/itenerary", userController.deleteItenerary)
     //@ts-ignore
     .get("/campanion", userController.searchUsers)
+    //@ts-ignore
+    .post("/query", userController.submitQuery)
     
 
 export default userRouter

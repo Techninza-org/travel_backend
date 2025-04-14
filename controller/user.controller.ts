@@ -2026,7 +2026,28 @@ const companions = async (req: ExtendedRequest, res: Response, next: NextFunctio
     }
 };
 
+const submitQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {name, email, phone, message} = req.body;
+        if(!phone || !message){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'phone and message are required'});
+        }
+        const query = await prisma.query.create({
+            data: {
+                name: name,
+                email: email,
+                phone: phone,
+                message: message
+            }
+        })
+        return res.status(200).send({status: 200, message: 'Ok', query: query});
+    }catch(error){
+        return next(error);
+    }
+}
+
 const userController = {
+    submitQuery,
     getSuggestion,
     get_all_users,
     get_user_feed,

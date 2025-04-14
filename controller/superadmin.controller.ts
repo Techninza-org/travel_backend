@@ -513,7 +513,17 @@ export const getServiceDetails = async (req: ExtendedRequest, res: Response, nex
     return res.status(200).send({ status: 200, message: 'Ok', service })
 }
 
+export const getQueries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const queries = await prisma.query.findMany({ orderBy: { created_at: 'desc' } })
+        return res.status(200).send({ status: 200, message: 'Ok', queries: queries, count: queries.length })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
+    getQueries,
     getAllUsers,
     getAllVendors,
     createVendor,

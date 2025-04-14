@@ -606,3 +606,13 @@ enum ItineraryStatus {
   END
   NOT_ASIGNED
 }
+
+model Query{
+  id          Int      @id @default(autoincrement())
+  name       String?
+  email      String?
+  phone     String
+  message    String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
