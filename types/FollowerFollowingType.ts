@@ -1,5 +1,0 @@
-interface FollowerFollowingType {
-    user: {
-        
-    }
-}
