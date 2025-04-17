@@ -2013,8 +2013,6 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             }
         });
 
-
-
         const data = {
             // nearbyList: nearbyList,
             // city: city,
