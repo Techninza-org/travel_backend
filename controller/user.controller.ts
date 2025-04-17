@@ -2089,9 +2089,6 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
                                 highlights: true,
                             }
                         },
-                    },
-                    select: {
-                        user: true
                     }
                 },
                 follows: {
@@ -2102,9 +2099,6 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
                             }
                         },
                     },
-                    select: {
-                        user: true
-                    }
                 }
             }
         });
