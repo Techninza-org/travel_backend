@@ -2021,6 +2021,7 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             ai: ai,
             userByPhone: userByPhone,
             getAllConversations: getAllConversations,
+            expense: expenseById
         }
 
         return res.status(200).send({ status: 200, message: 'Ok', data: data });
