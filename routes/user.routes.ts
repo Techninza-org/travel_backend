@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment@ts-nocheck
 import { Router } from 'express'
-import userController from '../controller/user.controller'
+import userController, { followerFollowingHilights } from '../controller/user.controller'
 import { upload } from '../index'
 const userRouter = Router()
 
@@ -99,6 +99,8 @@ userRouter
     .get("/campanion", userController.searchUsers)
     //@ts-ignore
     .post("/query", userController.submitQuery)
+    //@ts-ignore
+    .get("/highlights_with_users", followerFollowingHilights)
     
 
 export default userRouter

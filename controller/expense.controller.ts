@@ -69,45 +69,6 @@ export const CreateExpense = async (req: ExtendedRequest, res: Response, next: N
 //     }
 // }
 
-export const followerFollowingHilights = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user;
-
-    try {
-        
-        const currentUser = await prisma.user.findFirst({ 
-            where: { id: user.id },  
-            include: { 
-                highlights: true,
-                followers: {
-                    include: {
-                        user: {
-                            include: {
-                                highlights: true,
-                            }
-                        },
-                    }
-                },
-                follows: {
-                    include: {
-                        user: {
-                            include: {
-                                highlights: true,
-                            }
-                        },
-                    }
-                }
-            }
-        });
-
-
-
-        return res.status(200).send({ status: 200, message: 'User highlights and followers', user: currentUser })
-    } catch (error) {
-        console.log(error)
-        return next(error)
-    }
-};
-
 export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         let tripId: string | number = req.params.id
