@@ -41,33 +41,33 @@ export const CreateExpense = async (req: ExtendedRequest, res: Response, next: N
     }
 }
 
-export const addUserToExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const {user_id, expense_id} = req.body;
+// export const addUserToExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+//     const {user_id, expense_id} = req.body;
 
-    try {
+//     try {
         
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
-        if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+//         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+//         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
 
-        const user = await prisma.user.findFirst({ where: { id: user_id } })
-        if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
+//         const user = await prisma.user.findFirst({ where: { id: user_id } })
+//         if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
 
-        // add user to addedUsers array in expense
-        const updatedExpense = await prisma.expense.update({
-            where: { id: expense_id },
-            data: {
-                addedUsers: {
-                    connect: { id: user.id }
-                }
-            }
-        });
+//         // add user to addedUsers array in expense
+//         const updatedExpense = await prisma.expense.update({
+//             where: { id: expense_id },
+//             data: {
+//                 addedUsers: {
+//                     connect: { id: user.id }
+//                 }
+//             }
+//         });
 
-        return res.status(200).send({ status: 200, message: 'User added to expense', expense: updatedExpense })
-    } catch (error) {
-        console.log(error)
-        return next(error)
-    }
-}
+//         return res.status(200).send({ status: 200, message: 'User added to expense', expense: updatedExpense })
+//     } catch (error) {
+//         console.log(error)
+//         return next(error)
+//     }
+// }
 
 export const followerFollowingHilights = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
