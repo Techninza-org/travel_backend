@@ -57,7 +57,7 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
             where: { id: expense_id },
             data: {
                 addedUsers: {
-                    connect: { id: user_id }
+                    connect: { id: user.id }
                 }
             }
         });
@@ -99,7 +99,7 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
             }
         });
 
-        
+
 
         return res.status(200).send({ status: 200, message: 'User highlights and followers', user: currentUser })
     } catch (error) {
