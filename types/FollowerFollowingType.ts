@@ -1,0 +1,5 @@
+interface FollowerFollowingType {
+    user: {
+        
+    }
+}
