@@ -2004,6 +2004,15 @@ const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => 
             }
         });
 
+        const expenseById = await prisma.expense.findFirst({
+            where: {
+                id: 220
+            },
+            include: {
+                addedUsers: true
+            }
+        });
+
 
 
         const data = {
