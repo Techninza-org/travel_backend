@@ -1,6 +1,6 @@
 import e, { NextFunction, Request, Response } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
-import { Itinerary, PrismaClient } from '@prisma/client'
+import { Itinerary, PrismaClient, User } from '@prisma/client'
 import helper from '../utils/helpers'
 const prisma = new PrismaClient()
 import crypto from 'node:crypto'
@@ -2086,15 +2086,16 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
 
     try {
         
-        const currentUser = await prisma.user.findFirst({ 
+        let currentUser = await prisma.user.findFirst({ 
             where: { id: user.id },  
-            include: { 
+            include: {
                 highlights: true,
                 followers: {
                     include: {
                         user: {
                             include: {
                                 highlights: true,
+                                itineraries: true
                             }
                         },
                     }
@@ -2104,12 +2105,46 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
                         user: {
                             include: {
                                 highlights: true,
+                                itineraries: true
                             }
                         },
                     },
                 }
             }
         });
+
+        if (!currentUser) {
+            return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' })
+        }
+
+        const userFollower = currentUser?.followers.map((follower) => {
+            const itenerary = follower.user.itineraries.length > 0 ? follower.user.itineraries[follower.user.itineraries.length - 1] : null;
+
+            return {
+                ...follower,
+                user: {
+                    ...follower.user,
+                    itineraries: undefined,
+                    latest_itenerary: itenerary,
+                }
+            }
+        });
+
+        const userFollowing = currentUser?.follows.map((following) => {
+            const itenerary = following.user.itineraries.length > 0 ? following.user.itineraries[following.user.itineraries.length - 1] : null;
+
+            return {
+                ...following,
+                user: {
+                    ...following.user,
+                    itineraries: undefined,
+                    latest_itenerary: itenerary,
+                }
+            }
+        });
+
+        currentUser.followers = userFollower as any;
+        currentUser.follows = userFollowing as any;
 
         return res.status(200).send({ status: 200, message: 'User highlights and followers', user: currentUser })
     } catch (error) {
