@@ -2113,6 +2113,13 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
             }
         });
 
+        const currentUserItenerary = await prisma.itinerary.findFirst({
+            where: { user_id: user.id },
+            orderBy: {
+                created_at: 'desc'
+            }
+        })
+
         if (!currentUser) {
             return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' })
         }
@@ -2145,8 +2152,13 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
 
         currentUser.followers = userFollower as any;
         currentUser.follows = userFollowing as any;
+        
+        const data = {
+            ...currentUser,
+            latest_itenerary: currentUserItenerary ? currentUserItenerary : null,
+        }
 
-        return res.status(200).send({ status: 200, message: 'User highlights and followers', user: currentUser })
+        return res.status(200).send({ status: 200, message: 'User highlights and followers', user: data })
     } catch (error) {
         console.log(error)
         return next(error)
