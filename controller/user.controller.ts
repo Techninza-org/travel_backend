@@ -1630,6 +1630,20 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+const getHighlightsByUserId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { user_id } = req.params
+    if (isNaN(Number(user_id))) {
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'User Id should be a number' })
+    }
+
+    try {
+        const highlights = await prisma.highlight.findMany({ where: { user_id: parseInt(user_id) }, include: { media: true }, orderBy: { created_at: 'desc' } })
+        return res.status(200).send({ status: 200, message: 'Ok', highlights: highlights });
+    } catch (err) {
+        return next(err)
+    }
+}
+
 //====== Itinerary ======//
 
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
