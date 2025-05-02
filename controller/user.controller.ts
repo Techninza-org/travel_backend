@@ -1597,7 +1597,7 @@ const getHighlightById = async (req: ExtendedRequest, res: Response, next: NextF
             return res.status(400).json({ status: 400, error: 'Bad Request', error_description: 'Id should be a number' })
         }
         // const highlight = await prisma.highlight.findFirst({ where: { id: Number(id), user_id: user.id } })
-        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id) } })
+        const highlight = await prisma.highlight.findFirst({ where: { id: Number(id) }, include: { media: true } })
         if (!highlight) {
             return res.status(200).send({ status: 404, error: 'Not Found', error_description: 'Highlight not found' })
         }
