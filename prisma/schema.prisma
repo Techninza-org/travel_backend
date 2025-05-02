@@ -541,7 +541,16 @@ model Highlight {
   latitude Float?
   longitude Float?
   postIds  Json?
-  media    String?
+  media    HighlightImg[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model HighlightImg {
+  id         Int      @id @default(autoincrement())
+  highlight_id Int
+  highlight  Highlight @relation(fields: [highlight_id], references: [id], onDelete: Cascade)
+  image      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
