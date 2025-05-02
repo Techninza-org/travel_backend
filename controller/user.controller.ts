@@ -2248,6 +2248,7 @@ const userController = {
     deleteItenerary,
     test,
     searchUsers,
+    getHighlightsByUserId
 }
 
 export default userController

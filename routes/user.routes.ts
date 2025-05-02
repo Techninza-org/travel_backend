@@ -82,6 +82,8 @@ userRouter
     //@ts-ignore
     .get("/highlights/:id", userController.getHighlightById)
     //@ts-ignore
+    .get("/user_highlights/:user_id", userController.getHighlightsByUserId)
+    //@ts-ignore
     .post("/add_itinerary", userController.createItinerary)
     //@ts-ignore
     .post("/get_itinerary", userController.getItineraries)
