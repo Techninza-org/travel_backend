@@ -1638,7 +1638,10 @@ const getHighlightsByUserId = async (req: ExtendedRequest, res: Response, next: 
 
     try {
         const highlights = await prisma.highlight.findMany({ where: { user_id: parseInt(user_id) }, include: { media: true }, orderBy: { created_at: 'desc' } })
-        return res.status(200).send({ status: 200, message: 'Ok', highlights: highlights });
+
+        //live itenerary of user
+        const itinerary = await prisma.itinerary.findFirst({ where: { user_id: parseInt(user_id), status: 'MOVING' }, include: { city_details: true } })
+        return res.status(200).send({ status: 200, message: 'Ok', highlights: highlights, itinerary: itinerary });
     } catch (err) {
         return next(err)
     }
