@@ -149,6 +149,7 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
                         return {
                             date: date.toISOString().split('T')[0], 
                             title,
+                            active: date <= new Date() ? true : false,
                         };
                     }) : [];
 
