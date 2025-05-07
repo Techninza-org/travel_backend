@@ -136,6 +136,8 @@ export const getFilteredServices = async (req: ExtendedRequest, res: Response, n
         )
         filteredServices = [...defaultServices, ...groupServices]
         const activeServices = filteredServices.filter((service) => service.active === true)
+        console.log(activeServices, 'services');
+        
         return res
             .status(200)
             .send({ status: 200, message: 'Ok', services: activeServices, count: activeServices.length })
