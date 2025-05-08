@@ -15,7 +15,9 @@ messageRouter.post('/group', messageController.createGroup)
 messageRouter.post('/group/:conversationId', messageController.sendGroupMessage)
 //@ts-ignore
 messageRouter.post('/group/add/:conversationId', messageController.addParticipantsToGroup)
-
-
+//@ts-ignore
+messageRouter.post('/group/remove/:conversationId', messageController.removeParticipantFromGroup)
+//@ts-ignore
+messageRouter.post('/group/rename/:conversationId', messageController.editGroupName)
 
 export default messageRouter

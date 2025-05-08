@@ -182,12 +182,23 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         for(const participant of participants){
             const participantExists = await prisma.user.findUnique({ where: { id: Number(participant) } });
             if(!participantExists) return res.status(404).send({ message: 'Participant not found' })
-            await prisma.participant.create({
-                data: {
-                    userId: Number(participant),
-                    conversationId: conversation.id,
+                if(participant === senderId) {
+                    await prisma.participant.create({
+                        data: {
+                            userId: Number(participant),
+                            conversationId: conversation.id,
+                            isAdmin: true
+                        }
+                    })
+                }else{
+                    await prisma.participant.create({
+                        data: {
+                            userId: Number(participant),
+                            conversationId: conversation.id,
+                        }
+                    })
                 }
-            })
+            
             if(Number(participant) !== senderId){
                 await sendMessageNotif(senderId, participant, profile_pic, 'New Group', `${req.user.username} added you in a group`, String(conversation.id));
                 const receiverToken = await getUserToken(participant);
@@ -203,6 +214,77 @@ export const createGroup = async (req: ExtendedRequest, res: Response, next: Nex
         return res.status(200).send({ message: 'Group created', conversationId: conversation.id})
     }catch(err){
         return res.status(500).send({ message: 'Error creating group' })
+    }
+}
+
+export const editGroupName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const senderId = req.user.id
+        const groupName = req.body.groupName
+        const conversationId = req.params.conversationId
+        if(!groupName) return res.status(400).send({ message: 'Group name is required' })
+        const participantIsAdmin = await prisma.participant.findFirst({
+            where: {
+                userId: senderId,
+                conversationId: Number(conversationId),
+                isAdmin: true
+            }})
+            
+        if(!participantIsAdmin) return res.status(403).send({ message: 'You are not admin of this group' })
+        const group = await prisma.conversation.findFirst({
+            where: {
+                id: Number(conversationId),
+                participants: {
+                    some: {
+                        userId: senderId
+                    }
+                },
+            }
+        })
+        if(!group) return res.status(404).send({ message: 'Group not found' })
+        await prisma.conversation.update({
+            where: { id: Number(conversationId) },
+            data: { name: groupName }
+        })
+        return res.status(200).send({ message: 'Group name updated' })
+    }catch(err){
+        return res.status(500).send({ message: 'Error updating group name' })
+    }
+}
+
+export const removeParticipantFromGroup = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const senderId = req.user.id
+        const participantId = Number(req.body.participantId)
+        const conversationId = req.params.conversationId
+        if(!participantId) return res.status(400).send({ message: 'Participant id is required' })
+        const group = await prisma.conversation.findFirst({
+            where: {
+                id: Number(conversationId),
+                participants: {
+                    some: {
+                        userId: senderId
+                    }
+                },
+            }
+        })
+        if(!group) return res.status(404).send({ message: 'Group not found' })
+        const participant = await prisma.participant.findFirst({
+    where: {
+        userId: participantId,
+        conversationId: Number(conversationId)
+    }})
+    if(!participant){
+        return res.status(404).send({ message: 'Participant not found in group' })
+    }
+        await prisma.participant.delete({
+            where: {
+                id: participant.id
+            }
+        })
+        return res.status(200).send({ message: 'Participant removed from group' })
+    }catch(err){
+        return res.status(500).send({ message: 'Error removing participant from group' })
     }
 }
 
@@ -339,5 +421,5 @@ export const getAllConversations = async (req: ExtendedRequest, res: Response, n
     }
 }
 
-const messageController = { sendMessage, getConversation, getAllConversations, createGroup, sendGroupMessage, addParticipantsToGroup }
+const messageController = { sendMessage, getConversation, getAllConversations, removeParticipantFromGroup, editGroupName, createGroup, sendGroupMessage, addParticipantsToGroup }
 export default messageController
