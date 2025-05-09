@@ -14,11 +14,11 @@ datasource db {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  username          String?   @unique
-  phone             String?   @unique
+  id                Int         @id @default(autoincrement())
+  username          String?     @unique
+  phone             String?     @unique
   password          String
-  email             String?   @unique
+  email             String?     @unique
   image             String?
   highlights        Highlight[]
   background_image  String?
@@ -29,17 +29,17 @@ model User {
   emergency_phone   String?
   latitude          Float?
   longitude         Float?
-  is_verified       Boolean   @default(false)
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  is_verified       Boolean     @default(false)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
   otp               Otp?
   trips             Trip[]
   expense           Expense[]
   userReferralCode  String?
   referredByCode    String?
-  status            Boolean   @default(false)
-  typeOfTraveller   Int?      @default(1) // 0 = solo, 1 = group
-  visible           Boolean   @default(true)
+  status            Boolean     @default(false)
+  typeOfTraveller   Int?        @default(1) // 0 = solo, 1 = group
+  visible           Boolean     @default(true)
   registrationToken String?
 
   post              Post[]
@@ -63,8 +63,8 @@ model User {
   pushNotifications Boolean          @default(true)
   transactions      Transactions[]
 
-  itineraries       Itinerary[]
-  liabilityExpense  Expense[] @relation("ExpenseAddedUser") //*
+  itineraries      Itinerary[]
+  liabilityExpense Expense[]   @relation("ExpenseAddedUser") //*
 }
 
 model Transactions {
@@ -182,37 +182,37 @@ model Follows {
 }
 
 model Service {
-  id               Int          @id @default(autoincrement())
-  name             String
-  description      String       @db.Text
-  destination      String?
-  duration         Int
-  services         Json?
+  id                   Int          @id @default(autoincrement())
+  name                 String
+  description          String       @db.Text
+  destination          String?
+  duration             Int
+  services             Json?
   terms_and_conditions String?
-  itinerary        Json?
-  images           Json?
-  rating           Float        @default(0)
-  rating_count     Int          @default(0)
-  price            Int
-  offer_price      Int?
-  active           Boolean      @default(true)
-  trip             Trip[]
-  host_id          Int
-  host             Host         @relation(fields: [host_id], references: [id])
-  isBookmarked     Boolean      @default(false)
+  itinerary            Json?
+  images               Json?
+  rating               Float        @default(0)
+  rating_count         Int          @default(0)
+  price                Int
+  offer_price          Int?
+  active               Boolean      @default(true)
+  trip                 Trip[]
+  host_id              Int
+  host                 Host         @relation(fields: [host_id], references: [id])
+  isBookmarked         Boolean      @default(false)
   //group
-  type             Int          @default(0) //0 default, 1 group, 2 custom
-  start_date       String?
-  end_date         String?
-  pickups          Json?
-  total_seats      Int?
-  available_seats  Int?
+  type                 Int          @default(0) //0 default, 1 group, 2 custom
+  start_date           String?
+  end_date             String?
+  pickups              Json?
+  total_seats          Int?
+  available_seats      Int?
   //custom
-  customTrips      CustomTrip[]
-  number_of_people Int?
-  custom_trip_id   Int?
-  user_id          Int?
-  status           Int          @default(0) // 0 = pending, 1 = accepted, 2 = rejected
+  customTrips          CustomTrip[]
+  number_of_people     Int?
+  custom_trip_id       Int?
+  user_id              Int?
+  status               Int          @default(0) // 0 = pending, 1 = accepted, 2 = rejected
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -236,7 +236,7 @@ model Trip {
   host                 Host      @relation(fields: [host_id], references: [id])
   order_id             String?
   ezi_order_id         String?
-  tripMembers           Json?
+  tripMembers          Json?
 
   service    Service? @relation(fields: [service_id], references: [id], onDelete: SetNull)
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -255,7 +255,7 @@ model CustomTrip {
   service_id           Int?
   cost                 Int?
   host_id              Int?
-  tripMembers           Json?
+  tripMembers          Json?
   is_payment_confirmed Boolean   @default(false)
   cancelled            Boolean   @default(false)
   status               String    @default("upcoming")
@@ -279,8 +279,10 @@ model Expense {
   trip_id      Int
   customTripId Int?
 
-  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  splitWithUserIds Json?
+
   addedUsers User[]      @relation("ExpenseAddedUser") //*
   trip       Trip        @relation(fields: [trip_id], references: [id])
   customTrip CustomTrip? @relation(fields: [customTripId], references: [id])
@@ -326,7 +328,7 @@ model Host {
 
 model VendorNotification {
   id         Int      @id @default(autoincrement())
-  host_id    Int      
+  host_id    Int
   title      String
   isRead     Boolean  @default(false)
   created_at DateTime @default(now())
@@ -535,80 +537,80 @@ model Blog {
 }
 
 model Highlight {
-  id       Int      @id @default(autoincrement())
-  title    String
-  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
-  latitude Float?
-  longitude Float?
-  postIds  Json?
-  media    HighlightImg[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id         Int            @id @default(autoincrement())
+  title      String
+  user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    Int
+  latitude   Float?
+  longitude  Float?
+  postIds    Json?
+  media      HighlightImg[]
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
 }
 
 model HighlightImg {
-  id         Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   highlight_id Int
-  highlight  Highlight @relation(fields: [highlight_id], references: [id], onDelete: Cascade)
-  image      String
+  highlight    Highlight @relation(fields: [highlight_id], references: [id], onDelete: Cascade)
+  image        String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+}
+
+model Itinerary {
+  id Int @id @default(autoincrement())
+
+  user_id Int?
+  user    User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  start_lat_long String?
+  end_lat_long   String?
+  start_city     String?
+  end_city       String?
+  cover_img      String?
+
+  status       ItineraryStatus @default(NOT_ASIGNED)
+  city_details ItineraryCity[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-model Itinerary {
-  id              Int      @id @default(autoincrement())
-
-  user_id         Int?
-  user            User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  
-  start_lat_long  String?
-  end_lat_long    String?
-  start_city      String?
-  end_city        String?
-  cover_img      String?
-
-  status          ItineraryStatus @default(NOT_ASIGNED)
-  city_details    ItineraryCity[]
-  
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-}
-
 model ItineraryCity {
-  id              Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  itinerary_id    Int?
-  itinerary       Itinerary? @relation(fields: [itinerary_id], references: [id], onDelete: SetNull)
+  itinerary_id Int?
+  itinerary    Itinerary? @relation(fields: [itinerary_id], references: [id], onDelete: SetNull)
 
-  imges_url       CityImg[]
-  
-  city_name       String
-  lat_long        String
-  title           String?
-  description     String?
+  imges_url CityImg[]
 
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  city_name   String
+  lat_long    String
+  title       String?
+  description String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model CityImg {
-  id              Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   iterary_city_id Int?
   itineraryCity   ItineraryCity? @relation(fields: [iterary_city_id], references: [id], onDelete: SetNull)
 
-  image_url       String
+  image_url String
 
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model CityDescription {
-  id             Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  name          String    @unique
-  description   String    @db.Text
+  name        String @unique
+  description String @db.Text
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -621,12 +623,12 @@ enum ItineraryStatus {
   NOT_ASIGNED
 }
 
-model Query{
-  id          Int      @id @default(autoincrement())
+model Query {
+  id         Int      @id @default(autoincrement())
   name       String?
   email      String?
-  phone     String
+  phone      String
   message    String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

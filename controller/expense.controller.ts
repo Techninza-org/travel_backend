@@ -52,16 +52,15 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
         const user = await prisma.user.findFirst({ where: { id: user_id } })
         if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
 
-        // add user to addedUsers array in expense
+        const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
+        if (expenseUsers.includes(user_id)) {
+            return res.status(200).send({ status: 200, message: 'User already added to expense' });
+        }
+        expenseUsers.push(user_id)
         const updatedExpense = await prisma.expense.update({
             where: { id: expense_id },
-            data: {
-                addedUsers: {
-                    connect: { id: user.id }
-                }
-            }
+            data: { splitWithUserIds: expenseUsers },
         });
-
         return res.status(200).send({ status: 200, message: 'User added to expense', expense: updatedExpense })
     } catch (error) {
         console.log(error)
