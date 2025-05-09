@@ -14,6 +14,8 @@ ExpenseRouter
     .post('/addUser', addUserToExpense)
     //@ts-ignore
     .post('/split', expenseController.splitExpense)
+    //@ts-ignore
+    .get('/split/bills', expenseController.getMySplitBills)
     
 
 export default ExpenseRouter

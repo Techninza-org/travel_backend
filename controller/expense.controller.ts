@@ -73,7 +73,7 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
     try {
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
-
+        if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
         const user_id = req.user.id
         const amount = expense.amount;
@@ -97,6 +97,24 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
     } catch (error) {
         console.log(error)
         return next(error)
+    }
+}
+
+export const getMySplitBills = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user
+    if (!user) {
+        return res.status(401).send({ status: 401, error: 'Unauthorized', error_description: 'User not found' })
+    }
+    const userId = user.id
+    try {
+        const expenses = await prisma.$queryRaw`
+        SELECT * FROM "Expense"
+        WHERE "isSplitDone" = true
+          AND ${parseInt(userId)} = ANY("splitWithUserIds")
+      `;
+        return res.status(200).send({ status: 200, expenses: expenses })
+    } catch (err) {
+        return next(err)
     }
 }
 
@@ -178,6 +196,6 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense }
+const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills }
 
 export default expenseController
