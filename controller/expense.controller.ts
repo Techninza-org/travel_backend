@@ -107,11 +107,13 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
     }
     const userId = user.id
     try {
-        const expenses = await prisma.$queryRaw`
-        SELECT * FROM "Expense"
-        WHERE "isSplitDone" = true
-          AND ${parseInt(userId)} = ANY("splitWithUserIds")
-      `;
+        const parsedUserId = parseInt(userId, 10);
+
+const expenses = await prisma.$queryRaw`
+  SELECT * FROM Expense
+  WHERE isSplitDone = true
+    AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${parsedUserId}))
+`;
         return res.status(200).send({ status: 200, expenses: expenses })
     } catch (err) {
         return next(err)
