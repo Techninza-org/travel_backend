@@ -282,6 +282,7 @@ model Expense {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   splitWithUserIds Json?
+  usersData     Json?
 
   addedUsers User[]      @relation("ExpenseAddedUser") //*
   trip       Trip        @relation(fields: [trip_id], references: [id])

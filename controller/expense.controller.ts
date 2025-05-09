@@ -68,6 +68,38 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+export const splitExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const {expense_id} = req.body;
+    try {
+        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+
+        const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
+        const user_id = req.user.id
+        const amount = expense.amount;
+        const splitAmount = amount / expenseUsers.length + 1;
+        const usersData = [];
+        for (let i = 0; i < expenseUsers.length; i++) {
+            if (expenseUsers[i] !== null) {
+                const user = await prisma.user.findFirst({ where: { id: expenseUsers[i] as number } })
+                if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
+                usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: true, paid: false })
+            }
+        }
+        const user = await prisma.user.findFirst({ where: { id: user_id } })
+        if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
+        usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: false, paid: true })
+        const updatedExpense = await prisma.expense.update({
+            where: { id: expense_id },
+            data: { usersData: usersData },
+        });
+        return res.status(200).send({ status: 200, message: 'Expense split successfully', expense: updatedExpense })
+    } catch (error) {
+        console.log(error)
+        return next(error)
+    }
+}
+
 export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         let tripId: string | number = req.params.id
