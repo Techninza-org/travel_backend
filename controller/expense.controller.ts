@@ -77,7 +77,7 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
         const user_id = req.user.id
         const amount = expense.amount;
-        const splitAmount = amount / expenseUsers.length + 1;
+        const splitAmount = Math.floor(amount / (expenseUsers.length + 1));
         const usersData = [];
         for (let i = 0; i < expenseUsers.length; i++) {
             if (expenseUsers[i] !== null) {
