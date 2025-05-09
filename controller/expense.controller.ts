@@ -178,6 +178,6 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses }
+const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense }
 
 export default expenseController
