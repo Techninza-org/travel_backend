@@ -91,7 +91,7 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
         usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: false, paid: true })
         const updatedExpense = await prisma.expense.update({
             where: { id: expense_id },
-            data: { usersData: usersData },
+            data: { usersData: usersData, isSplitDone: true },
         });
         return res.status(200).send({ status: 200, message: 'Expense split successfully', expense: updatedExpense })
     } catch (error) {
