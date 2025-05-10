@@ -48,7 +48,8 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
         
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
-
+        
+        if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
         const user = await prisma.user.findFirst({ where: { id: user_id } })
         if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
 
