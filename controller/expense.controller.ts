@@ -49,26 +49,64 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         
-        if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
         const user = await prisma.user.findFirst({ where: { id: user_id } })
         if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
-
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
-        if (expenseUsers.includes(user_id)) {
-            expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
-            const updatedExpense = await prisma.expense.update({
-                where: { id: expense_id },
-                data: { splitWithUserIds: expenseUsers },
-            });
-            return res.status(200).send({ status: 200, message: 'User removed from expense', expense: updatedExpense });
-        }else {
-            expenseUsers.push(user_id)
-            const updatedExpense = await prisma.expense.update({
-                where: { id: expense_id },
-                data: { splitWithUserIds: expenseUsers },
-            });
-            return res.status(200).send({ status: 200, message: 'User added to expense successfully', expense: updatedExpense })
-        }
+
+        if(expense.isSplitDone === true) { 
+            if (expenseUsers.includes(user_id)) {
+                expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
+                const updatedExpense = await prisma.expense.update({
+                    where: { id: expense_id },
+                    data: { splitWithUserIds: expenseUsers },
+                });
+                return res.status(200).send({ status: 200, message: 'User removed from expense', expense: updatedExpense });
+            }else {
+                expenseUsers.push(user_id)
+                const ex = await prisma.expense.update({
+                    where: { id: expense_id },
+                    data: { splitWithUserIds: expenseUsers },
+                });
+                const expenseNew = await prisma.expense.findFirst({ where: { id: expense_id } })
+                if(!expenseNew) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+                const expenseUsersUpdated = Array.isArray(expenseNew.splitWithUserIds) ? expenseNew.splitWithUserIds : [];
+                const amount = expenseNew.amount;
+                const splitAmount = Math.floor(amount / (expenseUsersUpdated.length + 1));
+                const usersData = [];
+                for (let i = 0; i < expenseUsersUpdated.length; i++) {
+                    if (expenseUsersUpdated[i] !== null) {
+                        const user = await prisma.user.findFirst({ where: { id: expenseUsersUpdated[i] as number } })
+                        if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
+                        usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: true, paid: false })
+                    }
+                }
+                const user = await prisma.user.findFirst({ where: { id: user_id } })
+                if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
+                usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: false, paid: true })
+                const updatedExpense = await prisma.expense.update({
+                    where: { id: expense_id },
+                    data: { usersData: usersData, isSplitDone: true },
+                });
+
+                return res.status(200).send({ status: 200, message: 'User added to expense successfully', expense: updatedExpense })
+            }
+        } else {
+            if (expenseUsers.includes(user_id)) {
+                expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
+                const updatedExpense = await prisma.expense.update({
+                    where: { id: expense_id },
+                    data: { splitWithUserIds: expenseUsers },
+                });
+                return res.status(200).send({ status: 200, message: 'User removed from expense', expense: updatedExpense });
+            }else {
+                expenseUsers.push(user_id)
+                const updatedExpense = await prisma.expense.update({
+                    where: { id: expense_id },
+                    data: { splitWithUserIds: expenseUsers },
+                });
+                return res.status(200).send({ status: 200, message: 'User added to expense successfully', expense: updatedExpense })
+            }
+        } 
     } catch (error) {
         console.log(error)
         return next(error)
