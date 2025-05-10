@@ -197,7 +197,7 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
     try {
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
-        if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
+        // if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
         const user_id = req.user.id
         const amount = expense.amount;
