@@ -54,14 +54,20 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
 
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
         if (expenseUsers.includes(user_id)) {
-            return res.status(200).send({ status: 200, message: 'User already added to expense' });
+            expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
+            const updatedExpense = await prisma.expense.update({
+                where: { id: expense_id },
+                data: { splitWithUserIds: expenseUsers },
+            });
+            return res.status(200).send({ status: 200, message: 'User removed from expense', expense: updatedExpense });
+        }else {
+            expenseUsers.push(user_id)
+            const updatedExpense = await prisma.expense.update({
+                where: { id: expense_id },
+                data: { splitWithUserIds: expenseUsers },
+            });
+            return res.status(200).send({ status: 200, message: 'User added to expense successfully', expense: updatedExpense })
         }
-        expenseUsers.push(user_id)
-        const updatedExpense = await prisma.expense.update({
-            where: { id: expense_id },
-            data: { splitWithUserIds: expenseUsers },
-        });
-        return res.status(200).send({ status: 200, message: 'User added to expense', expense: updatedExpense })
     } catch (error) {
         console.log(error)
         return next(error)
