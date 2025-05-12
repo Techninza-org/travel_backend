@@ -292,7 +292,7 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
         let toGet = 0;
 
         for (const expense of expenses) {
-            const userData = expense.usersData?.find((u: any) => u.user_id === userId);
+            const userData = expense.usersData
             if (userData?.owes && !userData?.paid) {
                 toPay += userData.amount;
             }
