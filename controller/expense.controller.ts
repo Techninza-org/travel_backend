@@ -293,6 +293,8 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
 
             if (Array.isArray(usersData)) {
                 usersData.forEach((userData) => {
+                    console.log(userData, 'data');
+                    
                     if (userData.owes && !userData.paid && userData.user_id !== userId) {
                         toGet += userData.amount;
                     } 
