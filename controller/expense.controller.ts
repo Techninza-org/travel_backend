@@ -248,6 +248,10 @@ export const settleBillWithAUser = async (req: ExtendedRequest, res: Response, n
     try {
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+        const userExistsInSplit = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds.includes(user_id) : false;
+        if (!userExistsInSplit) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'User not found in split' })
+        }
         const usersData = Array.isArray(expense.usersData) ? expense.usersData?.map((user:any) => {
             if(user.user_id === user_id) {
                 return { ...user, owes: false, paid: true }
