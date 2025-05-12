@@ -243,6 +243,29 @@ export const settleExpense = async (req: ExtendedRequest, res: Response, next: N
     }
 }
 
+export const settleBillWithAUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { expense_id, user_id } = req.body
+    try {
+        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+        const usersData = Array.isArray(expense.usersData) ? expense.usersData?.map((user:any) => {
+            if(user.user_id === user_id) {
+                return { ...user, owes: false, paid: true }
+            }
+            return user
+        }) : [];
+        const splitWithUserIds = expense.splitWithUserIds || [];
+        const updatedExpense = await prisma.expense.update({
+            where: { id: expense_id },
+            data: { usersData: usersData, splitWithUserIds: (splitWithUserIds as string[]).filter((id:any) => id !== user_id) },
+        });
+        return res.status(200).send({ status: 200, message: 'Expense settled successfully', expense: updatedExpense })
+    } catch (error) {
+        console.log(error)
+        return next(error)
+    }
+}
+
 export const getMySplitBills = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     if (!user) {
@@ -252,12 +275,29 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
     try {
         const parsedUserId = parseInt(userId, 10);
 
-const expenses = await prisma.$queryRaw`
-  SELECT * FROM Expense
-  WHERE isSplitDone = true
-    AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${parsedUserId}))
-`;
-        return res.status(200).send({ status: 200, expenses: expenses })
+        const expenses: Array<any> = await prisma.$queryRaw`
+            SELECT * FROM Expense
+            WHERE isSplitDone = true
+                AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${parsedUserId}))
+        `;
+
+        const totalAmountIOwe = expenses.reduce((acc: number, expense: any) => {
+            const userData = expense.usersData.find((user: any) => user.user_id === userId);
+            if (userData && userData.owes) {
+                return acc + expense.amount;
+            }
+            return acc;
+        }, 0);
+
+        const totalAmountIGet = expenses.reduce((acc: number, expense: any) => {
+            const userData = expense.usersData.find((user: any) => user.user_id === userId);
+            if (userData && !userData.owes) {
+                return acc + expense.amount;
+            }
+            return acc;
+        }, 0);
+
+        return res.status(200).send({ status: 200, expenses: expenses, toPay: totalAmountIOwe, toGet: totalAmountIGet })
     } catch (err) {
         return next(err)
     }
@@ -341,6 +381,6 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills, settleExpense }
+const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
 export default expenseController

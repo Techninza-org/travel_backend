@@ -17,6 +17,8 @@ ExpenseRouter
     //@ts-ignore
     .post('/settle', expenseController.settleExpense)
     //@ts-ignore
+    .post('/settle/member', expenseController.settleBillWithAUser)
+    //@ts-ignore
     .get('/split/bills', expenseController.getMySplitBills)
     
 
