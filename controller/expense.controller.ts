@@ -271,48 +271,49 @@ export const settleBillWithAUser = async (req: ExtendedRequest, res: Response, n
 }
 
 export const getMySplitBills = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const user = req.user
+    const user = req.user;
     if (!user) {
-        return res.status(401).send({ status: 401, error: 'Unauthorized', error_description: 'User not found' })
+        return res.status(401).send({ status: 401, error: 'Unauthorized', error_description: 'User not found' });
     }
-    const userId = user.id
-    try {
-        const parsedUserId = parseInt(userId, 10);
 
-        const expenses: Array<any> = await prisma.$queryRaw`
+    const userId = parseInt(user.id, 10);
+
+    try {
+        const sharedExpenses: any[] = await prisma.$queryRaw`
             SELECT * FROM Expense
             WHERE isSplitDone = true
-                AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${parsedUserId}))
+              AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${userId}))
         `;
 
-        const allExpenses = await prisma.expense.findMany({
+        const createdExpenses = await prisma.expense.findMany({
             where: {
                 user_id: userId,
                 isSplitDone: true,
             }
-        })
-        
-        const totalAmountIOwe = allExpenses.reduce((acc: number, expense: any) => {
-            const userData = expense.usersData.find((user: any) => user.user_id === userId);
-            if (userData && userData.owes) {
-                return acc + expense.amount;
-            }
-            return acc;
-        }, 0);
+        });
 
-        const totalAmountIGet = allExpenses.reduce((acc: number, expense: any) => {
-            const userData = expense.usersData.find((user: any) => user.user_id === userId);
-            if (userData && !userData.owes) {
-                return acc + expense.amount;
-            }
-            return acc;
-        }, 0);
+        const allExpenses = [...sharedExpenses, ...createdExpenses];
 
-        return res.status(200).send({ status: 200, expenses: expenses, toPay: totalAmountIOwe, toGet: totalAmountIGet })
+        let toPay = 0;
+        let toGet = 0;
+
+        for (const expense of allExpenses) {
+            const userData = expense.usersData?.find((u: any) => u.user_id === userId);
+            if (!userData) continue;
+
+            if (userData.owes) {
+                toPay += userData.amount;
+            } else if (userData.paid) {
+                toGet += userData.amount;
+            }
+        }
+
+        return res.status(200).send({ status: 200, expenses: sharedExpenses, allExpenses: allExpenses, toPay, toGet });
     } catch (err) {
-        return next(err)
+        return next(err);
     }
-}
+};
+
 
 export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
