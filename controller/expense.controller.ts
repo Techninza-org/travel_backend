@@ -224,6 +224,25 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
     }
 }
 
+export const settleExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { expense_id } = req.body
+    try {
+        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+        const usersData = Array.isArray(expense.usersData) ? expense.usersData?.map((user:any) => {
+            return { ...user, owes: false, paid: true }
+        }) : [];
+        const updatedExpense = await prisma.expense.update({
+            where: { id: expense_id },
+            data: { usersData: usersData, isSettled: true, splitWithUserIds: [] },
+        });
+        return res.status(200).send({ status: 200, message: 'Expense settled successfully', expense: updatedExpense })
+    } catch (error) {
+        console.log(error)
+        return next(error)
+    }
+}
+
 export const getMySplitBills = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     if (!user) {
@@ -322,6 +341,6 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills }
+const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills, settleExpense }
 
 export default expenseController

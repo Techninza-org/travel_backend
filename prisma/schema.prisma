@@ -284,6 +284,7 @@ model Expense {
   splitWithUserIds Json?
   usersData     Json?
   isSplitDone   Boolean? @default(false)
+  isSettled     Boolean? @default(false)
 
   addedUsers User[]      @relation("ExpenseAddedUser") //*
   trip       Trip        @relation(fields: [trip_id], references: [id])
