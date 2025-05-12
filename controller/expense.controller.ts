@@ -292,18 +292,14 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
             const usersData = expense.usersData as any[];
 
             if (Array.isArray(usersData)) {
-                const entry = usersData.find(u => u.user_id === userId);
-                if (entry && entry.owes && !entry.paid) {
-                    toPay += entry.amount;
-                }
-
-                if (expense.user_id === userId) {
-                    for (const u of usersData) {
-                        if (u.user_id !== userId && u.owes && !u.paid) {
-                            toGet += u.amount;
-                        }
+                usersData.forEach((userData) => {
+                    if (userData.owes && !userData.paid && userData.user_id !== userId) {
+                        toGet += userData.amount;
+                    } 
+                    if (!userData.owes && !userData.paid && userData.user_id === userId) {
+                        toPay += userData.amount;
                     }
-                }
+                })
             }
         }
 
