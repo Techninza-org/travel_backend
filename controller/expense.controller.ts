@@ -282,7 +282,10 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
         const expenses: any[] = await prisma.$queryRaw`
             SELECT * FROM Expense
             WHERE isSplitDone = true
-              AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${userId}))
+              AND (
+                user_id = ${userId}
+                OR JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${userId}))
+              )
         `;
 
         let toPay = 0;
