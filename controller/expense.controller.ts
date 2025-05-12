@@ -280,43 +280,28 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
 
     try {
         // Get expenses where the user is involved (either creator or split participant)
-        const sharedExpenses: any[] = await prisma.$queryRaw`
+        const expenses: any[] = await prisma.$queryRaw`
             SELECT * FROM Expense
             WHERE isSplitDone = true
               AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${userId}))
         `;
-
-        const createdExpenses = await prisma.expense.findMany({
-            where: {
-                user_id: userId,
-                isSplitDone: true,
-            }
-        });
-
-        const allExpenses = [...sharedExpenses, ...createdExpenses];
 
         // Total amount this user owes to others
         let toPay = 0;
         // Total amount others owe to this user
         let toGet = 0;
 
-        for (const expense of allExpenses) {
+        for (const expense of expenses) {
             const userData = expense.usersData?.find((u: any) => u.user_id === userId);
             if (userData?.owes && !userData?.paid) {
                 toPay += userData.amount;
             }
-        }
-
-        // Go through expenses created by this user to find how much others owe them
-        for (const expense of createdExpenses) {
-            for (const u of expense.usersData as any[] || []) {
-                if (u.owes && !u.paid) {
-                    toGet += u.amount;
-                }
+            if (!userData?.owes && userData?.paid) {
+                toGet += userData.amount;
             }
         }
 
-        return res.status(200).send({ status: 200, expenses: allExpenses, toPay, toGet });
+        return res.status(200).send({ status: 200, expenses, toPay, toGet });
     } catch (err) {
         return next(err);
     }
