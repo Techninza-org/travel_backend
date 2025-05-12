@@ -285,7 +285,14 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
                 AND JSON_CONTAINS(splitWithUserIds, JSON_ARRAY(${parsedUserId}))
         `;
 
-        const totalAmountIOwe = expenses.reduce((acc: number, expense: any) => {
+        const allExpenses = await prisma.expense.findMany({
+            where: {
+                user_id: userId,
+                isSplitDone: true,
+            }
+        })
+        
+        const totalAmountIOwe = allExpenses.reduce((acc: number, expense: any) => {
             const userData = expense.usersData.find((user: any) => user.user_id === userId);
             if (userData && userData.owes) {
                 return acc + expense.amount;
@@ -293,7 +300,7 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
             return acc;
         }, 0);
 
-        const totalAmountIGet = expenses.reduce((acc: number, expense: any) => {
+        const totalAmountIGet = allExpenses.reduce((acc: number, expense: any) => {
             const userData = expense.usersData.find((user: any) => user.user_id === userId);
             if (userData && !userData.owes) {
                 return acc + expense.amount;
