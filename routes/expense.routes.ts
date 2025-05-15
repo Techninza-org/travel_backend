@@ -20,6 +20,8 @@ ExpenseRouter
     .post('/settle/member', expenseController.settleBillWithAUser)
     //@ts-ignore
     .get('/split/bills', expenseController.getMySplitBills)
+    //@ts-ignore
+    .post('/name', expenseController.editExpenseName)
     
 
 export default ExpenseRouter

@@ -394,6 +394,24 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
+export const editExpenseName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const { expense_id, name } = req.body
+        if (!expense_id || !name) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id and name are required' })
+        }
+        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
+        const updatedExpense = await prisma.expense.update({
+            where: { id: expense_id, user_id: req.user.id },
+            data: { category: name },
+        })
+        return res.status(200).send({ status: 200, message: 'Expense updated successfully', expense: updatedExpense })
+    }catch(err){
+        return next(err)
+    }
+}
+
+const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
 export default expenseController
