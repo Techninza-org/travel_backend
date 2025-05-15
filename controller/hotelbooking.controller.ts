@@ -1,0 +1,78 @@
+import type { Response, NextFunction } from 'express'
+import { ExtendedRequest } from '../utils/middleware'
+import moment from 'moment';
+import axios from 'axios'
+
+const searchUrl = 'https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist';
+
+const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const { page, city, cityName, country, checkInDate, checkOutDate, roomCount, adultCount, childCount, currency, nights } = req.body;
+        if (!page || !city || !cityName || !country || !checkInDate || !checkOutDate || !roomCount || !adultCount || !childCount || !currency || !nights) {
+            return res.status(400).json({
+                message: 'Please provide all required fields'
+            });
+        }
+        const dateFormat = 'YYYY-MM-DD';
+        const areDatesValid = moment(checkInDate, dateFormat, true).isValid() && moment(checkOutDate, dateFormat, true).isValid();
+
+        if (!areDatesValid) {
+            return res.status(400).json({
+                message: 'Invalid date format, please use YYYY-MM-DD'
+            });
+        }
+
+        const requestBody = {
+            PageNo: page,
+            City: city,
+            CityName: cityName,
+            CheckInDate: checkInDate,
+            CheckOutDate: checkOutDate,
+            country: country,
+            rooms: {
+                Count: roomCount,
+                room: [{
+                        NumberOfAdults: adultCount,   
+                        Child: {
+                            NumberOfChild: childCount,
+                        }                     
+                    }]
+            },
+            currency: currency,
+            Nights: nights,
+            Engine: 15,
+            EMTAuthentication: {
+                UserName: process.env.HOTEL_USERNAME,
+                Password: process.env.HOTEL_PASSWORD,
+                AgentCode: 1,
+                IPAddress: process.env.IP
+            }
+        }
+
+        const requestBodyString = JSON.stringify(requestBody);
+
+        const response = await axios.post(searchUrl, requestBodyString, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        })
+        const data = response.data;
+        return res.status(200).json({
+            message: 'Hotels fetched successfully',
+            data: data
+        })
+        
+    }catch(err){
+        console.error(err);
+        return res.status(500).json({
+            message: 'Internal server error'
+        });
+    }
+}
+
+const hotelBookingController = {
+    searchHotels
+}
+
+export default hotelBookingController

@@ -30,6 +30,7 @@ import * as admin from 'firebase-admin'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import crypto from 'node:crypto'
 import helper from './utils/helpers'
+import hotelBookingRouter from './routes/hotelBooking.routes'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -115,6 +116,9 @@ app.use('/message', middleware.AuthMiddleware, messageRouter)
 // @ts-ignore
 app.use('/superAdmin', SuperAdminRouter)
 // app.use('/template', TemplateRouter)
+
+//@ts-ignore
+app.use('/hotel', middleware.AuthMiddleware, hotelBookingRouter)
 
 
 export const sendVendordNotif = async (
