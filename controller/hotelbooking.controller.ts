@@ -5,8 +5,6 @@ import axios from 'axios'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const searchUrl = 'https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist';
-
 const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const { page, city, cityName, country, checkInDate, checkOutDate, roomCount, adultCount, childCount, currency, nights } = req.body;
@@ -47,10 +45,10 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             Nights: nights,
             Engine: 15,
             EMTAuthentication: {
-                UserName: process.env.HOTEL_USERNAME,
-                Password: process.env.HOTEL_PASSWORD,
+                UserName: 'HotelAPIUserTest',
+                Password: 'BDvRwrEwX5waYF6NKHbRNN4pSD9G2H',
                 AgentCode: 1,
-                IPAddress: process.env.IP
+                IPAddress: '110.235.232.3'
             }
         }
 
@@ -58,7 +56,7 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
         console.log(`Request Body: ${requestBodyString}`);
         
 
-        const response = await axios.post(searchUrl, requestBodyString, {
+        const response = await axios.post('https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist', requestBodyString, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
