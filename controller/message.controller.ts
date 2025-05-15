@@ -330,11 +330,87 @@ export const addParticipantsToGroup = async (req: ExtendedRequest, res: Response
     }
 }
 
+export const getConversationByConvoId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const senderId = req.user.id
+        const conversationId = Number(req.params.conversationId)
+        if (typeof conversationId !== 'number' || !Number.isInteger(conversationId) || conversationId <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Conversation id should be a positive integer value',
+            });
+        }
+
+        const getConversation = await prisma.conversation.findFirst({
+            where: {
+                id: conversationId,
+                participants: {
+                    some: {
+                        userId: senderId,
+                    },
+                },
+            },
+            include: {
+                messages: true,
+                participants: {
+                    select: {
+                        user: {
+                            select: {
+                                username: true,
+                                image: true,
+                                id: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        if (!getConversation) return res.status(404).send({ message: 'No conversation found' })
+        return res.status(200).send({ conversation: getConversation })
+    } catch (err) {
+        return res.status(500).send({ message: 'Error getting conversation' })
+    }
+}
+
+export const deleteMessageFromConversation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const senderId = req.user.id
+        const messageId = Number(req.params.messageId)
+        if (typeof messageId !== 'number' || !Number.isInteger(messageId) || messageId <= 0) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Message id should be a positive integer value',
+            });
+        }
+
+        const message = await prisma.message.findFirst({
+            where: {
+                id: messageId,
+                user_id: senderId,
+            },
+        })
+
+        if (!message) return res.status(404).send({ valid: false, message: 'No message found or you did not send this message' })
+        
+        await prisma.message.delete({
+            where: {
+                id: messageId,
+            },
+        })
+
+        return res.status(200).send({ message: 'Message deleted' })
+    }catch(err){
+        return next(err)
+    }
+}
+
 export const getConversation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const senderId = req.user.id
         const receiverId = Number(req.params.receiverId)
-        console.log("receiverId::::::::::", receiverId);
         if (typeof receiverId !== 'number' || !Number.isInteger(receiverId) || receiverId <= 0) {
             return res.status(400).send({
                 status: 400,
@@ -421,5 +497,5 @@ export const getAllConversations = async (req: ExtendedRequest, res: Response, n
     }
 }
 
-const messageController = { sendMessage, getConversation, getAllConversations, removeParticipantFromGroup, editGroupName, createGroup, sendGroupMessage, addParticipantsToGroup }
+const messageController = { sendMessage, getConversation, deleteMessageFromConversation, getConversationByConvoId, getAllConversations, removeParticipantFromGroup, editGroupName, createGroup, sendGroupMessage, addParticipantsToGroup }
 export default messageController

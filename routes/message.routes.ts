@@ -19,5 +19,9 @@ messageRouter.post('/group/add/:conversationId', messageController.addParticipan
 messageRouter.post('/group/remove/:conversationId', messageController.removeParticipantFromGroup)
 //@ts-ignore
 messageRouter.post('/group/rename/:conversationId', messageController.editGroupName)
+//@ts-ignore
+messageRouter.get('/conversation/any/:conversationId', messageController.getConversationByConvoId)
+//@ts-ignore
+messageRouter.delete('/delete/:messageId', messageController.deleteMessageFromConversation)
 
 export default messageRouter
