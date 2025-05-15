@@ -355,6 +355,7 @@ export const getConversationByConvoId = async (req: ExtendedRequest, res: Respon
                 messages: true,
                 participants: {
                     select: {
+                        isAdmin: true,
                         user: {
                             select: {
                                 username: true,
@@ -441,6 +442,7 @@ export const getConversation = async (req: ExtendedRequest, res: Response, next:
               messages: true,
               participants: {
                 select: {
+                    isAdmin: true,
                   user: {
                     select: {
                       username: true,
@@ -468,7 +470,7 @@ export const getAllConversations = async (req: ExtendedRequest, res: Response, n
         const senderId = req.user.id
         let conversations = await prisma.conversation.findMany({
             where: { participants: { some: { user: { id: senderId } } } },
-            include: { messages: true, participants: {select: {user: {select: {username: true, image: true, id: true}}}}},
+            include: { messages: true, participants: {select: {isAdmin: true, user: {select: {username: true, image: true, id: true}}}}},
         })
         let conversationIds = conversations.map((conversation) => conversation.id);
         let participants = await prisma.participant.findMany({
