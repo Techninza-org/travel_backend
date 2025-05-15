@@ -2,6 +2,8 @@ import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import moment from 'moment';
 import axios from 'axios'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const searchUrl = 'https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist';
 
@@ -29,8 +31,8 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             PageNo: page,
             City: city,
             CityName: cityName,
-            CheckInDate: Number(checkInDate),
-            CheckOutDate: Number(checkOutDate),
+            CheckInDate: checkInDate,
+            CheckOutDate: checkOutDate,
             country: country,
             rooms: {
                 Count: roomCount,
