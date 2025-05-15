@@ -22,12 +22,15 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             });
         }
 
+        console.log(`CheckInDate: ${checkInDate}, CheckOutDate: ${checkOutDate}`);
+        
+
         const requestBody = {
             PageNo: page,
             City: city,
             CityName: cityName,
-            CheckInDate: checkInDate,
-            CheckOutDate: checkOutDate,
+            CheckInDate: Number(checkInDate),
+            CheckOutDate: Number(checkOutDate),
             country: country,
             rooms: {
                 Count: roomCount,
@@ -50,6 +53,8 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
         }
 
         const requestBodyString = JSON.stringify(requestBody);
+        console.log(`Request Body: ${requestBodyString}`);
+        
 
         const response = await axios.post(searchUrl, requestBodyString, {
             headers: {
