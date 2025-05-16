@@ -56,7 +56,7 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
         console.log(`Request Body: ${requestBodyString}`);
         
 
-        const response = await axios.post('https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist', requestBodyString, {
+        const response = await axios.post('https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist', requestBody, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
