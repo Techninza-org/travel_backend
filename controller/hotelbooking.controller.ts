@@ -5,6 +5,12 @@ import axios from 'axios'
 import dotenv from 'dotenv'
 dotenv.config()
 
+function formatDateInput(dateStr: string) {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) throw new Error("Invalid date format");
+    return date.toISOString().split("T")[0];
+}
+
 const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const { page, city, cityName, country, checkInDate, checkOutDate, roomCount, adultCount, childCount, currency, nights } = req.body;
@@ -29,8 +35,8 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             PageNo: page,
             City: city,
             CityName: cityName,
-            CheckInDate: checkInDate,
-            CheckOutDate: checkOutDate,
+            CheckInDate: formatDateInput(checkInDate),
+            CheckOutDate: formatDateInput(checkOutDate),
             country: country,
             rooms: {
                 Count: roomCount,
