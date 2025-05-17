@@ -73,11 +73,7 @@ const getSearchList = async (req: ExtendedRequest, res: Response, next: NextFunc
 const bindSeat = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const {id, seater, sleeper, engineId, key, JourneyDate, searchReq, routeid, bpId, dpId, isBpdpLayout, consessionId, singleLeady, stStatus, bustype} = req.body;
-        if (!id || !seater || !sleeper || !engineId || !key || !JourneyDate || !searchReq || !routeid || !bpId || !dpId || !isBpdpLayout || !consessionId || !singleLeady || !stStatus || !bustype) {
-            return res.status(400).json({
-                message: 'Please provide all required fields',
-            })
-        }
+        
         const requestBody = {
             id: id,
             seater: seater,
