@@ -5,7 +5,7 @@ const busRouter = Router()
 
 busRouter
     //@ts-ignore
-    .post('/source/:sourceKey/:key', busController.getSourceCity)
+    .get('/source/:sourceKey/:key', busController.getSourceCity)
     //@ts-ignore
     .post('/search', busController.getSearchList)
     //@ts-ignore
