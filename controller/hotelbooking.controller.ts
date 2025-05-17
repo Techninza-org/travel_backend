@@ -5,6 +5,11 @@ import axios from 'axios'
 import dotenv from 'dotenv'
 dotenv.config()
 
+const USERNAME = "HotelAPIUserTest";
+const PASSWORD = "BDvRwrEwX5waYF6NKHbRNN4pSD9G2H";
+const IPADDRESS = "110.235.232.3"
+const AGENTCODE = 1
+
 function formatDateInput(dateStr: string) {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) throw new Error("Invalid date format");
@@ -40,7 +45,7 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             country: country,
             rooms: {
                 Count: roomCount,
-                room: [{
+                Room: [{
                         NumberOfAdults: adultCount,   
                         Child: {
                             NumberOfChild: childCount,
@@ -51,17 +56,12 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             Nights: nights,
             Engine: 15,
             EMTAuthentication: {
-                UserName: 'HotelAPIUserTest',
-                Password: 'BDvRwrEwX5waYF6NKHbRNN4pSD9G2H',
-                AgentCode: 1,
-                IPAddress: '110.235.232.3'
+                UserName: USERNAME,
+                Password: PASSWORD,
+                AgentCode: AGENTCODE,
+                IPAddress: IPADDRESS,
             }
         }
-
-        const requestBodyString = JSON.stringify(requestBody);
-        console.log(`Request Body: ${requestBodyString}`);
-        
-
         const response = await axios.post('https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist', requestBody, {
             headers: {
                 'Content-Type': 'application/json',
@@ -82,8 +82,37 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
     }
 }
 
+const getHotelDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {hotelID, engineID, emtCommonID} = req.body;
+        if (!hotelID || !engineID || !emtCommonID) {
+            return res.status(400).json({
+                message: 'Please provide hotelID, emtCommonID and engineID'
+            });
+        }
+        const url = `http://hotelapita.easemytrip.com/MiHotel.svc/HotelInfo/${hotelID}/${engineID}/${emtCommonID}/${USERNAME}/${PASSWORD}/${AGENTCODE}`
+        const response = await axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        })
+        const data = response.data;
+        return res.status(200).json({
+            message: 'Hotel details fetched successfully',
+            data: data
+        })
+    }catch(err){
+        console.error(err);
+        return res.status(500).json({
+            message: 'Internal server error'
+        });
+    }
+}
+
 const hotelBookingController = {
-    searchHotels
+    searchHotels,
+    getHotelDetails
 }
 
 export default hotelBookingController
