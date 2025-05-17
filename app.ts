@@ -31,6 +31,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import crypto from 'node:crypto'
 import helper from './utils/helpers'
 import hotelBookingRouter from './routes/hotelBooking.routes'
+import busRouter from './routes/bus.routes'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -119,7 +120,8 @@ app.use('/superAdmin', SuperAdminRouter)
 
 //@ts-ignore
 app.use('/hotel', middleware.AuthMiddleware, hotelBookingRouter)
-
+//@ts-ignore
+app.use('/bus', middleware.AuthMiddleware, busRouter)
 
 export const sendVendordNotif = async (
     hostId: number,
