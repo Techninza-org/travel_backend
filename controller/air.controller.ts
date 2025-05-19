@@ -9,11 +9,7 @@ const IPADDRESS = "110.235.232.209"
 const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const {adults, child, cabin, beginDate, origin, destination, infants, traceId, tripType} = req.body
-        if (!adults || !child || !cabin || !beginDate || !origin || !destination || !infants || !traceId || !tripType) {
-            return res.status(400).json({
-                message: 'Please provide adults, child, cabin, beginDate, origin, destination, infants, traceId and tripType',
-            })
-        }
+        
         const requestBody = {
             Adults: adults,
             Authentication: {
