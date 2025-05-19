@@ -21,7 +21,7 @@ ExpenseRouter
     //@ts-ignore
     .get('/split/bills', expenseController.getMySplitBills)
     //@ts-ignore
-    .post('/name', expenseController.editExpenseName)
+    .post('/edit/name', expenseController.editExpenseName)
     
 
 export default ExpenseRouter
