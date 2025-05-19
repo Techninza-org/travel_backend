@@ -401,13 +401,19 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id and name are required' })
         }
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        console.log(expense, 'exp');
+        
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         const updatedExpense = await prisma.expense.update({
-            where: { id: expense_id, user_id: req.user.id },
+            where: { id: expense_id },
             data: { category: name },
         })
+        console.log(updatedExpense, 'updated exp');
+        
         return res.status(200).send({ status: 200, message: 'Expense updated successfully', expense: updatedExpense })
     }catch(err){
+        console.log(err);
+        
         return next(err)
     }
 }
