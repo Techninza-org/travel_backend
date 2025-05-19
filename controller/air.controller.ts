@@ -19,11 +19,11 @@ const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunct
             },
             Cabin: cabin,
             Childs: child,
-            FlightSearchDetails: {
+            FlightSearchDetails: [{
                 BeginDate: beginDate,
                 Origin: origin,
                 Destination: destination, 
-            },
+            }],
             Infants: infants,
             TraceId: traceId,
             TripType: tripType,
