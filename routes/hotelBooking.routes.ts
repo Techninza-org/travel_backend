@@ -14,5 +14,7 @@ hotelBookingRouter
     .post('/bookingDetails', hotelBookingController.getBookingDetails)
     //@ts-ignore
     .post('/checkAvailability', hotelBookingController.checkHotelAvailability)
+    //@ts-ignore
+    .post('/cancelBooking', hotelBookingController.cancelHotelBooking)
 
 export default hotelBookingRouter
