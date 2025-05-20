@@ -110,9 +110,68 @@ const getHotelDetails = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+const bookHotel = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        return res.status(200).json({
+            data: response.data,
+        })
+
+    }catch(err){
+        console.log(err);
+        return next(err);
+    }
+}
+
+const getBookingDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+
+        const response = await axios.post('https://hotelapita.easemytrip.com/BookingDetail.svc/BookingDetailsV2', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        return res.status(200).json({
+            data: response.data,
+        })
+    }catch(err){
+        return next(err);
+    }
+}
+
+const checkHotelAvailability = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+
+        const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/ProductDetails', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        return res.status(200).json({
+            data: response.data,
+        })
+    }catch(err){
+        return next(err);
+    }
+}
+
 const hotelBookingController = {
     searchHotels,
-    getHotelDetails
+    getHotelDetails,
+    bookHotel,
+    getBookingDetails,
+    checkHotelAvailability
 }
 
 export default hotelBookingController

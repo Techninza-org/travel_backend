@@ -8,6 +8,11 @@ hotelBookingRouter
     .post('/search', hotelBookingController.searchHotels)
     //@ts-ignore
     .post('/hotelDetails', hotelBookingController.getHotelDetails)
-
+    //@ts-ignore
+    .post('/book', hotelBookingController.bookHotel)
+    //@ts-ignore
+    .post('/bookingDetails', hotelBookingController.getBookingDetails)
+    //@ts-ignore
+    .post('/checkAvailability', hotelBookingController.checkHotelAvailability)
 
 export default hotelBookingRouter
