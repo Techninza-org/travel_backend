@@ -111,15 +111,17 @@ const bindSeat = async (req: ExtendedRequest, res: Response, next: NextFunction)
 
 const seatHold = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
-        const {data} = req.body;
-        if (!data) {
-            return res.status(400).json({
-                message: 'Please provide data',
-            })
-        }
+        const body = req.body;
+
+        const response = await axios.post('http://busapi.easemytrip.com/api/detail/GetTentitiveId/', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
         return res.status(200).json({
             message: 'Seat hold fetched successfully',
-            data: data,
+            data: response.data,
         })
     }catch(err){
         console.error(err)
