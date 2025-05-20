@@ -8,28 +8,9 @@ const IPADDRESS = "110.235.232.209"
 
 const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
-        const {adults, child, cabin, beginDate, origin, destination, infants, traceId, tripType} = req.body
-        
-        const requestBody = {
-            Adults: adults,
-            Authentication: {
-                Password: PASSWORD,
-                UserName: USERNAME,
-                IpAddress: IPADDRESS,
-            },
-            Cabin: cabin,
-            Childs: child,
-            FlightSearchDetails: [{
-                BeginDate: beginDate,
-                Origin: origin,
-                Destination: destination, 
-            }],
-            Infants: infants,
-            TraceId: traceId,
-            TripType: tripType,
-        }
+        const body = req.body
 
-        const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/FlightSearch', requestBody, {
+        const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/FlightSearch', body, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -48,8 +29,104 @@ const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunct
     }
 }
 
+const getPrice = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/AirRePriceRQ', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        const data = response.data
+        return res.status(200).json({
+            message: 'Flight price fetched successfully',
+            data: data,
+        })
+    }catch(err){
+        console.error(err)
+        return res.status(500).json({
+            message: 'Internal server error',
+        })
+    }
+}
+
+const seatMap = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/AirBookRQ', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        const data = response.data
+        return res.status(200).json({
+            message: 'Seat map fetched successfully',
+            data: data,
+        })
+    }catch(err){
+        console.error(err)
+        return res.status(500).json({
+            message: 'Internal server error',
+        })
+    }
+}
+
+const bookFlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/AirBookRQ', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        const data = response.data
+        return res.status(200).json({
+            message: 'Flight booked successfully',
+            data: data,
+        })
+    }catch(err){
+        console.error(err)
+        return res.status(500).json({
+            message: 'Internal server error',
+        })
+    }
+}
+
+const getBookingDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('https://stagingapi.easemytrip.com/cancellationjson/api/flightbookingdetail', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        const data = response.data
+        return res.status(200).json({
+            message: 'Booking details fetched successfully',
+            data: data,
+        })
+    }catch(err){
+        console.error(err)
+        return res.status(500).json({
+            message: 'Internal server error',
+        })
+    }
+}
+
 const airController = {
     searchFlight,
+    getPrice,
+    seatMap,
+    bookFlight,
+    getBookingDetails
 }
 
 export default airController
