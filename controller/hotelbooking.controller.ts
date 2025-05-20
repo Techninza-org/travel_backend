@@ -166,12 +166,31 @@ const checkHotelAvailability = async (req: ExtendedRequest, res: Response, next:
     }
 }
 
+const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+
+        const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelCancellation', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        return res.status(200).json({
+            data: response.data,
+        })
+    }catch(err){
+        return next(err);
+    }
+}
+
 const hotelBookingController = {
     searchHotels,
     getHotelDetails,
     bookHotel,
     getBookingDetails,
-    checkHotelAvailability
+    checkHotelAvailability,
+    cancelHotelBooking
 }
 
 export default hotelBookingController
