@@ -18,8 +18,7 @@ const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunct
 
         const data = response.data
         return res.status(200).json({
-            message: 'Flight search results fetched successfully',
-            data: data,
+            data
         })
     }catch(err){
         console.error(err)
@@ -41,8 +40,7 @@ const getPrice = async (req: ExtendedRequest, res: Response, next: NextFunction)
 
         const data = response.data
         return res.status(200).json({
-            message: 'Flight price fetched successfully',
-            data: data,
+            data
         })
     }catch(err){
         console.error(err)
@@ -64,8 +62,7 @@ const seatMap = async (req: ExtendedRequest, res: Response, next: NextFunction) 
 
         const data = response.data
         return res.status(200).json({
-            message: 'Seat map fetched successfully',
-            data: data,
+            data
         })
     }catch(err){
         console.error(err)
@@ -87,8 +84,7 @@ const bookFlight = async (req: ExtendedRequest, res: Response, next: NextFunctio
 
         const data = response.data
         return res.status(200).json({
-            message: 'Flight booked successfully',
-            data: data,
+            data
         })
     }catch(err){
         console.error(err)
@@ -110,8 +106,7 @@ const getBookingDetails = async (req: ExtendedRequest, res: Response, next: Next
 
         const data = response.data
         return res.status(200).json({
-            message: 'Booking details fetched successfully',
-            data: data,
+            data
         })
     }catch(err){
         console.error(err)
