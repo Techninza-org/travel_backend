@@ -717,14 +717,75 @@ const uploadImage = async (req: Request, res: Response, next: NextFunction) => {
 
 const facebookCallback = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const body = req.body
-        console.log(`Facebook callback body: ${JSON.stringify(body)}`);
-        return res.status(200).send({
-            status: 200,
-            message: 'Facebook login successful',
-            // user: body.user, 
-            // token: body.token,
-        })
+        const { code } = req.query;
+
+        const tokenRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
+          params: {
+            client_id: process.env.APP_ID!,
+            client_secret: process.env.APP_SECRET!,
+            redirect_uri: 'https://eziotravels.com/api/auth/facebook/callback',
+            code,
+          },
+        });
+      
+        const accessToken = tokenRes.data.access_token;
+      
+        const userRes = await axios.get('https://graph.facebook.com/me', {
+          params: {
+            fields: 'id,name,email',
+            access_token: accessToken,
+          },
+        });
+      
+        const fbUser = userRes.data;
+        console.log(fbUser, 'user');
+        if (!fbUser.email) {
+            return res.status(400).json({ error: 'Email is required for authentication' });
+        }
+        const existingUser = await prisma.user.findUnique({ where: { email: fbUser.email } });
+        if (!existingUser) {
+            const isUsernameExists = await prisma.user.findFirst({ where: { username: fbUser.name } })
+            if (isUsernameExists) {
+                return res
+                    .status(200)
+                    .send({ status: 400, error: 'BAD REQUEST', error_description: 'username already exists.' })
+            }
+           
+            const isEmailExists = await prisma.user.findFirst({ where: { email: fbUser.email } })
+            if (isEmailExists) {
+                return res
+                    .status(200)
+                    .send({ status: 400, error: 'BAD REQUEST', error_description: 'email already exists.' })
+            }
+            const referralCode = `EZI${Math.floor(1000 + Math.random() * 9000)}${fbUser.name.slice(0, 3).toUpperCase()}`;
+            const newUser = await prisma.user.create({
+                data: {
+                    email: fbUser.email,
+                    username: fbUser.name,
+                    userReferralCode: referralCode,
+                    isSocialLogin: true,
+                    password: fbUser.email + '@ezio' + fbUser.id,
+                    fb_access_token: accessToken
+                },
+            });
+            delete (newUser as any).password;
+            const token = jwt.sign({ email: fbUser.email }, process.env.JWT_SECRET!, {
+                expiresIn: '7d',
+            });
+            return res.json({ message: 'User created successfully', user: newUser, token });
+        }else{
+            delete (existingUser as any).password;
+            
+                await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: { fb_access_token: accessToken }
+                });
+            
+            const token = jwt.sign({ email: existingUser.email }, process.env.JWT_SECRET!, {
+                expiresIn: '7d',
+            });
+            return res.status(200).json({ message: 'User logged in successfully', user: existingUser, token });
+        }
     } catch (err) {
         return next(err)
     }

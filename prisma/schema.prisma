@@ -41,6 +41,7 @@ model User {
   typeOfTraveller   Int?        @default(1) // 0 = solo, 1 = group
   visible           Boolean     @default(true)
   registrationToken String?
+  fb_access_token   String?
 
   post              Post[]
   Comment           Comment[]
