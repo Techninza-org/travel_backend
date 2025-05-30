@@ -6,7 +6,29 @@ const prisma = new PrismaClient()
 import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
+import OpenAI from "openai";
+const client = new OpenAI();
 import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
+
+const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {prompt} = req.body
+        if (!prompt || typeof prompt !== 'string') {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Prompt is required and should be a string.' })
+        }
+        
+        const response = await client.responses.create({
+            model: "gpt-4.1",
+            input: prompt,
+        });
+
+        console.log(response.output_text);
+        return res.status(200).send({ status: 200, message: 'Ok', result: response.output_text });
+    }catch(err){
+        console.error('Error in GPT:', err)
+        return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' })
+    }
+}
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
@@ -2203,6 +2225,8 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
     }
 };
 
+
+
 const userController = {
     submitQuery,
     getSuggestion,
@@ -2251,7 +2275,8 @@ const userController = {
     deleteItenerary,
     test,
     searchUsers,
-    getHighlightsByUserId
+    getHighlightsByUserId,
+    gpt
 }
 
 export default userController

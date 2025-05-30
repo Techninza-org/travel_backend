@@ -103,6 +103,8 @@ userRouter
     .post("/query", userController.submitQuery)
     //@ts-ignore
     .get("/highlights_with_users", followerFollowingHilights)
+    //@ts-ignore
+    .post('/gpt', userController.gpt)
     
 
 export default userRouter
