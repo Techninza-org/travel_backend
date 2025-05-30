@@ -7,7 +7,9 @@ import crypto from 'node:crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
 import OpenAI from "openai";
-const client = new OpenAI();
+const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY!,
+});
 import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
 
 const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
