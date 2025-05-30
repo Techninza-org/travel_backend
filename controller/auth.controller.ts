@@ -715,7 +715,23 @@ const uploadImage = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
+const facebookCallback = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const body = req.body
+        console.log(`Facebook callback body: ${JSON.stringify(body)}`);
+        return res.status(200).send({
+            status: 200,
+            message: 'Facebook login successful',
+            // user: body.user, 
+            // token: body.token,
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const authController = {
+    facebookCallback,
     Login,
     ForgotPassword,
     Signup,

@@ -21,4 +21,6 @@ authRouter.get('/blogs/recent', authController.getRecentBlogs)
 // authRouter.post('/otp', authController.sendOTPPhone)
 authRouter.post('/upload', upload.single('file'), authController.uploadImage)
 
+authRouter.post('/facebook/callback', authController.facebookCallback)
+
 export default authRouter
