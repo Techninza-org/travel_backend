@@ -20,7 +20,7 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
         }
         
         const response = await client.responses.create({
-            model: "gpt-4.1",
+            model: "gpt-3.5-turbo",
             input: prompt,
         });
 
