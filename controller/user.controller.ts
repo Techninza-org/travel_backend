@@ -2231,10 +2231,7 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
     try {
         const user_id = req.user.id;
         const { destination_id, gender, date, date_type, traveler_type, budget_type, description } = req.body;
-        const requiredFields = ['destination_id', 'gender', 'date', 'date_type', 'traveler_type', 'budget_type', 'description'];
-        if(!helper.isValidatePaylod(req.body, requiredFields)) {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'All fields are required.' });
-        }
+        
         if(gender != 0 || gender != 1 || gender != 2) {
             return res.send({status: 400, error_description: 'gender must be 0 for any, 1 for male or 2 for female.'})
         }
