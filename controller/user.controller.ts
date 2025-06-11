@@ -2227,7 +2227,154 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
     }
 };
 
+export const createTravelRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user_id = req.user.id;
+        const { destination_id, gender, date, date_type, traveler_type, budget_type, description } = req.body;
+        const requiredFields = ['destination_id', 'gender', 'date', 'date_type', 'traveler_type', 'budget_type', 'description'];
+        for (const field of requiredFields) {
+            if (!req.body[field]) {
+                return res.send({ status: 400, error: 'Bad Request', error_description: `${field} is required` });
+            }
+        }
+        if(gender != 0 || gender != 1 || gender != 2) {
+            return res.send({status: 400, error_description: 'gender must be 0 for any, 1 for male or 2 for female.'})
+        }
+        if(date_type != 0 || date_type != 1) {
+            return res.send({status: 400, error_description: 'date_type must be 0 for flexible or 1 for fixed date.'})
+        }
+        if(traveler_type != 0 || traveler_type != 1) {
+            return res.send({status: 400, error_description: 'traveler_type must be 0 for solo or 1 for group.'})
+        }
+        if(budget_type != 0 || budget_type != 1) {
+            return res.send({status: 400, error_description: 'budget_type must be 0 for backpacking or 1 for premium.'})
+        }
+        if(typeof destination_id !== 'number' || !Number.isInteger(destination_id) || destination_id <= 0) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Destination Id should be a positive integer.' });
+        }
+        if(date && isNaN(Date.parse(date))) {
+            return res.status(400).send({
+                status: 400,
+                error: 'Bad Request',
+                error_description: 'Date should be a valid date string.',
+            });
+        }
+        
+        const destinationExists = await prisma.destination.findUnique({
+            where: { id: destination_id },
+        })
+        
+        if(!destinationExists) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Destination not found.' });
+        }
 
+        const travelRequest = await prisma.requestTraveller.create({
+            data: {
+                user_id,
+                destination_id,
+                gender,
+                date,
+                date_type,
+                traveler_type,
+                budget_type,
+                description,
+            }
+        })
+
+        if(!travelRequest){
+            return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'Failed to create travel request.' });
+        }
+
+        return res.status(200).send({ status: 200, message: 'Travel request created', travelRequest: travelRequest });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const getMyTravelRequests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user_id = req.user.id;
+
+        const travelRequests = await prisma.requestTraveller.findMany({
+            where: { user_id },
+            include: {
+                destination: true,
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const deleteTravelRequestById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user_id = req.user.id;
+        const { request_id } = req.params;
+
+        if (!request_id || isNaN(Number(request_id))) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Request ID is required and should be a number.' });
+        }
+
+        const travelRequest = await prisma.requestTraveller.findFirst({
+            where: { id: Number(request_id), user_id },
+        });
+
+        if (!travelRequest) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Travel request not found.' });
+        }
+
+        await prisma.requestTraveller.delete({ where: { id: Number(request_id) } });
+
+        return res.status(200).send({ status: 200, message: 'Travel request deleted successfully.' });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const blockedUsers = await prisma.block.findMany({
+            where: { user_id: req.user.id },
+            select: {
+                blocked_id: true,
+            },
+        })
+        const blockedUserIds = blockedUsers.map((user) => user.blocked_id)
+        const travelRequests = await prisma.requestTraveller.findMany({
+            where: {
+                user_id: { not: req.user.id },
+                user: {
+                    id: { notIn: blockedUserIds }
+                }
+            },
+            include: {
+                destination: true,
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        });
+       
+        return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
+    } catch (error) {
+        return next(error);
+    }
+}
 
 const userController = {
     submitQuery,
@@ -2278,7 +2425,11 @@ const userController = {
     test,
     searchUsers,
     getHighlightsByUserId,
-    gpt
+    gpt,
+    createTravelRequest,
+    getMyTravelRequests,
+    deleteTravelRequestById,
+    getAllTravelRequests,
 }
 
 export default userController

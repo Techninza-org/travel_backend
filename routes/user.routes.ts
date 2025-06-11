@@ -105,6 +105,14 @@ userRouter
     .get("/highlights_with_users", followerFollowingHilights)
     //@ts-ignore
     .post('/gpt', userController.gpt)
+    //@ts-ignore
+    .post('/travel_request', userController.createTravelRequest)
+    //@ts-ignore
+    .get('/travel_request/my', userController.getMyTravelRequests)
+    //@ts-ignore
+    .get('/travel_request', userController.getAllTravelRequests)
+    //@ts-ignore
+    .delete('/travel_request/:request_id', userController.deleteTravelRequestById)
     
 
 export default userRouter

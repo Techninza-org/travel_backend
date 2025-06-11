@@ -43,29 +43,46 @@ model User {
   registrationToken String?
   fb_access_token   String?
 
-  post              Post[]
-  Comment           Comment[]
-  follows           Follows[]        @relation(name: "FollowerUser")
-  followers         Follows[]        @relation(name: "UserFollows")
-  customTrips       CustomTrip[]
-  forumQuestions    ForumQuestion[]
-  answers           ForumAnswer[]    @relation("UsersAnswer")
-  blocked           Block[]          @relation(name: "BlockedUser")
-  blockedBy         Block[]          @relation(name: "UserBlock")
-  followRequest     FollowRequest[]  @relation(name: "FollowRequestUser")
-  followerRequest   FollowRequest[]  @relation(name: "FollowRequestFollower")
-  sender            Message[]        @relation("sender")
-  receiver          Message[]        @relation("receiver")
-  participated      Participant[]
-  pinnedLocations   PinnedLocation[]
-  kyc               KYC?
-  kycStatus         Int?             @default(-1) // -1 = not submitted, 0 = submitted, 1 = accepted
-  isSocialLogin     Boolean          @default(false)
-  pushNotifications Boolean          @default(true)
-  transactions      Transactions[]
+  post               Post[]
+  Comment            Comment[]
+  follows            Follows[]          @relation(name: "FollowerUser")
+  followers          Follows[]          @relation(name: "UserFollows")
+  customTrips        CustomTrip[]
+  forumQuestions     ForumQuestion[]
+  answers            ForumAnswer[]      @relation("UsersAnswer")
+  blocked            Block[]            @relation(name: "BlockedUser")
+  blockedBy          Block[]            @relation(name: "UserBlock")
+  followRequest      FollowRequest[]    @relation(name: "FollowRequestUser")
+  followerRequest    FollowRequest[]    @relation(name: "FollowRequestFollower")
+  sender             Message[]          @relation("sender")
+  receiver           Message[]          @relation("receiver")
+  participated       Participant[]
+  pinnedLocations    PinnedLocation[]
+  kyc                KYC?
+  kycStatus          Int?               @default(-1) // -1 = not submitted, 0 = submitted, 1 = accepted
+  isSocialLogin      Boolean            @default(false)
+  pushNotifications  Boolean            @default(true)
+  transactions       Transactions[]
+  requestsTravellers RequestTraveller[]
 
   itineraries      Itinerary[]
   liabilityExpense Expense[]   @relation("ExpenseAddedUser") //*
+}
+
+model RequestTraveller {
+  id             Int         @id @default(autoincrement())
+  user_id        Int
+  destination_id Int
+  gender         Int //0 any, 1 male, 2 female
+  date           DateTime
+  date_type      Int //0 flexible, 1 fixed
+  traveler_type  Int //0 solo, 1 group
+  budget_type    Int //0 backpacking, 1 premium
+  description    String
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  destination    Destination @relation(fields: [destination_id], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Transactions {
@@ -283,9 +300,9 @@ model Expense {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   splitWithUserIds Json?
-  usersData     Json?
-  isSplitDone   Boolean? @default(false)
-  isSettled     Boolean? @default(false)
+  usersData        Json?
+  isSplitDone      Boolean? @default(false)
+  isSettled        Boolean? @default(false)
 
   addedUsers User[]      @relation("ExpenseAddedUser") //*
   trip       Trip        @relation(fields: [trip_id], references: [id])
@@ -295,7 +312,7 @@ model Expense {
 }
 
 model Destination {
-  id                Int      @id @default(autoincrement())
+  id                Int                @id @default(autoincrement())
   destination       String
   pincode           String
   description       String?
@@ -304,8 +321,9 @@ model Destination {
   customise_options Json?
   latitude          Float?
   longitude         Float?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  requestTravellers RequestTraveller[]
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
 }
 
 model Host {
