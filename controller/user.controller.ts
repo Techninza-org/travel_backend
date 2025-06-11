@@ -2232,16 +2232,16 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
         const user_id = req.user.id;
         const { destination_id, gender, date, date_type, traveler_type, budget_type, description } = req.body;
         
-        if(gender != 0 || gender != 1 || gender != 2) {
+        if(gender !== 0 || gender !== 1 || gender !== 2) {
             return res.send({status: 400, error_description: 'gender must be 0 for any, 1 for male or 2 for female.'})
         }
-        if(date_type != 0 || date_type != 1) {
+        if(date_type !== 0 || date_type !== 1) {
             return res.send({status: 400, error_description: 'date_type must be 0 for flexible or 1 for fixed date.'})
         }
-        if(traveler_type != 0 || traveler_type != 1) {
+        if(traveler_type !== 0 || traveler_type !== 1) {
             return res.send({status: 400, error_description: 'traveler_type must be 0 for solo or 1 for group.'})
         }
-        if(budget_type != 0 || budget_type != 1) {
+        if(budget_type !== 0 || budget_type !== 1) {
             return res.send({status: 400, error_description: 'budget_type must be 0 for backpacking or 1 for premium.'})
         }
         if(typeof destination_id !== 'number' || !Number.isInteger(destination_id) || destination_id <= 0) {
