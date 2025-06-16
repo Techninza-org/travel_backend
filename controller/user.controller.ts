@@ -1874,7 +1874,12 @@ const getItineraries = async (req: ExtendedRequest, res: Response, next: NextFun
         } else {
 
             const itineraries = await prisma.itinerary.findMany({
-                where: { user_id: user.id },
+                where: {
+                    OR: [
+                        { user_id: user.id },
+                        { members: { some: { id: user.id } } }
+                    ]
+                },
                 include: {
                     city_details: {
                         include: {
@@ -1926,6 +1931,45 @@ const updateDetailsToItineraryCity = async (req: ExtendedRequest, res: Response,
         return next(error);
     }
 };
+
+const addUserToItineraryMembers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const { itinerary_id, member_id } = req.body;
+
+        if (!itinerary_id || !member_id) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'user_id and member_id are required' });
+        }
+
+        const itinerary = await prisma.itinerary.findUnique({
+            where: { id: itinerary_id },
+        });
+
+        if (!itinerary) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Itinerary not found' });
+        }
+
+        const memberExists = await prisma.user.findUnique({
+            where: { id: member_id },
+        });
+
+        if (!memberExists) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'User not found' });
+        }
+
+        await prisma.itinerary.update({
+            where: { id: itinerary_id },
+            data: {
+                members: {
+                    connect: { id: member_id },
+                },
+            },
+        });
+
+        return res.status(200).send({ status: 200, message: 'User added to itinerary members successfully' });
+    }catch(err){
+        return next(err)
+    }
+}
 
 const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { lat, long } = req.body;
@@ -2425,6 +2469,7 @@ const userController = {
     getMyTravelRequests,
     deleteTravelRequestById,
     getAllTravelRequests,
+    addUserToItineraryMembers
 }
 
 export default userController

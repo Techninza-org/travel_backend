@@ -64,6 +64,7 @@ model User {
   pushNotifications  Boolean            @default(true)
   transactions       Transactions[]
   requestsTravellers RequestTraveller[]
+  itineraryMembers Itinerary[] @relation("ItineraryMembers")
 
   itineraries      Itinerary[]
   liabilityExpense Expense[]   @relation("ExpenseAddedUser") //*
@@ -585,7 +586,7 @@ model Itinerary {
 
   user_id Int?
   user    User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
-
+  members   User[] @relation("ItineraryMembers")
   start_lat_long String?
   end_lat_long   String?
   start_city     String?

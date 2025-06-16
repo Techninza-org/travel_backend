@@ -88,6 +88,8 @@ userRouter
     //@ts-ignore
     .post("/get_itinerary", userController.getItineraries)
     //@ts-ignore
+    .post('/add_member_to_itinerary', userController.addUserToItineraryMembers)
+    //@ts-ignore
     .post("/update_details_to_itinerary_city", userController.updateDetailsToItineraryCity)
     //@ts-ignore
     .post("/test", userController.test)
