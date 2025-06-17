@@ -36,6 +36,8 @@ userRouter
     //@ts-ignore
     .get('/following', userController.GET_following)
     //@ts-ignore
+    .get('/followers-following', userController.getFollowersAndFollowing)
+    //@ts-ignore
     .put('/location', userController.updateLatLong)
     //@ts-ignore
     .put('/registrationToken', userController.updateRegistrationToken)

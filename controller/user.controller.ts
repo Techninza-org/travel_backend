@@ -384,6 +384,54 @@ const GET_following = async (req: ExtendedRequest, res: Response, next: NextFunc
         return next(err)
     }
 }
+
+const getFollowersAndFollowing = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user
+    const userId = user.id
+
+    try {
+        const followers = await prisma.follows.findMany({
+            where: { user_id: userId },
+            select: {
+                follower: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true,
+                        is_verified: true,
+                    },
+                },
+            },
+        })
+
+        const following = await prisma.follows.findMany({
+            where: { follower_id: userId },
+            select: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true,
+                        is_verified: true,
+                    },
+                },
+            },
+        })
+
+        return res.status(200).send({
+            status: 200,
+            message: 'Ok',
+            followersCount: followers.length,
+            followingCount: following.length,
+            followers,
+            following,
+        })
+    } catch (err) {
+        return next(err)
+    }
+} 
+
+
 const getSuggestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
     const { page = 1, limit = 10 } = query
@@ -2469,7 +2517,8 @@ const userController = {
     getMyTravelRequests,
     deleteTravelRequestById,
     getAllTravelRequests,
-    addUserToItineraryMembers
+    addUserToItineraryMembers,
+    getFollowersAndFollowing
 }
 
 export default userController
