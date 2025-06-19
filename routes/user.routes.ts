@@ -112,7 +112,7 @@ userRouter
     //@ts-ignore
     .post('/travel_request', userController.createTravelRequest)
     //@ts-ignore
-    .get('/travel_request/my', userController.getMyTravelRequests)
+    .get('/travel_request/get/my', userController.getMyTravelRequests)
     //@ts-ignore
     .get('/travel_request', userController.getAllTravelRequests)
     //@ts-ignore
