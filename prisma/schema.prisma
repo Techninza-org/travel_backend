@@ -567,6 +567,8 @@ model Highlight {
   latitude   Float?
   longitude  Float?
   postIds    Json?
+  location   String?
+  image      String?
   media      HighlightImg[]
   created_at DateTime       @default(now())
   updated_at DateTime       @updatedAt

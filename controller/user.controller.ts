@@ -1540,27 +1540,11 @@ const getTransactions = async (req: ExtendedRequest, res: Response, next: NextFu
 
 const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
-    const { title, latitude, longitude, image_urls } = req.body
+    const { title, latitude, longitude, location, image } = req.body
 
-    if (!helper.isValidatePaylod(req.body, ['title', 'latitude', 'longitude'])) {return res.status(200).send({status: 400,error: 'Invalid payload',error_description: 'title, latitude, longitude is required.',})}
-    if (image_urls && !Array.isArray(image_urls)) {return res.status(200).send({status: 400,error: 'Invalid payload',error_description: 'image_urls should be an array.',})}
-
-    //should be array of string
-    if (image_urls && !image_urls.every((url: any) => typeof url === 'string')) {
-        return res.status(200).send({status: 400,error: 'Invalid payload',error_description: 'image_urls should be an array of string.',})
-    }
+    if (!helper.isValidatePaylod(req.body, ['title', 'latitude', 'longitude'])) {return res.status(200).send({status: 400,error: 'Invalid payload', error_description: 'title, latitude, longitude is required.'})}
 
     try {
-
-        // const highlight = await prisma.highlight.create({
-        //     data: {
-        //         title,
-        //         latitude,
-        //         longitude,
-        //         user_id: user.id,
-        //         postIds: [],
-        //     },
-        // })
 
         const highlight = await prisma.highlight.create({
             data: {
@@ -1569,15 +1553,9 @@ const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFu
               longitude,
               user_id: user.id,
               postIds: [],
-              media: {
-                create: image_urls?.map((url: string) => ({
-                  image: url,
-                })),
-              },
-            },
-            include: {
-              media: true,
-            },
+              location: location || '',
+              image: image || '',
+            }
           });
 
         return res.status(200).send({ status: 200, message: 'Ok', highlight })
