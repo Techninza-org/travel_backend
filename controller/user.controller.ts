@@ -2456,6 +2456,8 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
             },
             orderBy: { created_at: 'desc' }
         });
+        console.log(travelRequests, 'travel requests all');
+        
        
         return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
     } catch (error) {
