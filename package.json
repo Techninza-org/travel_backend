@@ -29,7 +29,8 @@
         "nodemailer": "^6.9.13",
         "openai": "^5.0.1",
         "razorpay": "^2.9.4",
-        "socket.io": "^4.7.5"
+        "socket.io": "^4.7.5",
+        "xlsx": "^0.18.5"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",

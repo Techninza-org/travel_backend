@@ -2406,6 +2406,31 @@ const deleteTravelRequestById = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const { airport_code } = req.params;
+
+        if (!airport_code || typeof airport_code !== 'string') {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Airport code is required and should be a string.' });
+        }
+
+        const airportDetails = await prisma.airport.findFirst({
+            where: {
+                airportCode: airport_code
+            }
+        })
+
+        if (!airportDetails) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Airport not found.' });
+        }
+
+        return res.status(200).send({ status: 200, message: 'Ok', airportDetails });
+    }
+    catch(err){
+    return next(err)
+    }
+}
+
 const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const blockedUsers = await prisma.block.findMany({
@@ -2442,6 +2467,9 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
         return next(error);
     }
 }
+
+
+
 
 const userController = {
     submitQuery,
@@ -2498,7 +2526,8 @@ const userController = {
     deleteTravelRequestById,
     getAllTravelRequests,
     addUserToItineraryMembers,
-    getFollowersAndFollowing
+    getFollowersAndFollowing,
+    getAirportDetailsByAirportCode
 }
 
 export default userController

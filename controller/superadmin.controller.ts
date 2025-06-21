@@ -9,6 +9,7 @@ const SALT_ROUND = process.env.SALT_ROUND!
 const ITERATION = 100
 const KEYLENGTH = 10
 const DIGEST_ALGO = 'sha512'
+import * as xlsx from 'xlsx';
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -561,6 +562,56 @@ const updateUserPassword = async (req: ExtendedRequest, res: Response, next: Nex
     }
 }
 
+type AirportRow = {
+    AirportCode: string;
+    AirportName: string;
+    cityName: string;
+    CityCode: string;
+    Country: string;
+    ContinentCode: string;
+    CountryCode: string;
+  };
+
+  const importAirportDataFromExcel = async (
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+  
+      const workbook = xlsx.readFile(file.path);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = xlsx.utils.sheet_to_json<AirportRow>(sheet, { defval: null });
+  
+      for (const row of jsonData) {
+        if (!row.AirportCode || !row.AirportName) continue; 
+  
+        await prisma.airport.create({
+          data: {
+            airportCode: row.AirportCode,
+            airportName: row.AirportName,
+            cityName: row.cityName,
+            cityCode: row.CityCode,
+            country: row.Country,
+            continentCode: row.ContinentCode,
+            countryCode: row.CountryCode,
+          },
+        });
+      }
+  
+      console.log('✅ Import completed');
+      return res.status(200).json({ message: 'Airport data imported successfully' });
+  
+    } catch (err) {
+      console.error('❌ Import error:', err);
+      return next(err);
+    }
+  };
+
 const superAdminController = {
     getQueries,
     updateUserPassword,
@@ -592,5 +643,6 @@ const superAdminController = {
     allTrips,
     getTripDetails,
     getServiceDetails,
+    importAirportDataFromExcel,
 }
 export default superAdminController

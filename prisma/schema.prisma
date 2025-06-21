@@ -64,26 +64,41 @@ model User {
   pushNotifications  Boolean            @default(true)
   transactions       Transactions[]
   requestsTravellers RequestTraveller[]
-  itineraryMembers Itinerary[] @relation("ItineraryMembers")
+  itineraryMembers   Itinerary[]        @relation("ItineraryMembers")
 
-  itineraries      Itinerary[]
-  liabilityExpense Expense[]   @relation("ExpenseAddedUser") //*
+  itineraries                  Itinerary[]
+  liabilityExpense             Expense[]             @relation("ExpenseAddedUser") //*
+  friendTravelRequestsSent     friendTravelRequest[] @relation("FriendRequestSender")
+  friendTravelRequestsReceived friendTravelRequest[] @relation("FriendRequestReceiver")
 }
 
 model RequestTraveller {
-  id             Int         @id @default(autoincrement())
-  user_id        Int
-  destination_id Int
-  gender         Int //0 any, 1 male, 2 female
-  date           DateTime
-  date_type      Int //0 flexible, 1 fixed
-  traveler_type  Int //0 solo, 1 group
-  budget_type    Int //0 backpacking, 1 premium
-  description    String
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  destination    Destination @relation(fields: [destination_id], references: [id], onDelete: Cascade)
-  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id                  Int                   @id @default(autoincrement())
+  user_id             Int
+  destination_id      Int
+  gender              Int //0 any, 1 male, 2 female
+  date                DateTime
+  date_type           Int //0 flexible, 1 fixed
+  traveler_type       Int //0 solo, 1 group
+  budget_type         Int //0 backpacking, 1 premium
+  description         String
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @updatedAt
+  destination         Destination           @relation(fields: [destination_id], references: [id], onDelete: Cascade)
+  user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  friendTravelRequest friendTravelRequest[]
+}
+
+model friendTravelRequest {
+  id              Int              @id @default(autoincrement())
+  senderId        Int
+  receiverId      Int
+  travelRequestId Int
+  status          Int              @default(0) //0 pending, 1 accepted, 2 rejected
+  sender          User             @relation("FriendRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver        User             @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  travelRequest   RequestTraveller @relation(fields: [travelRequestId], references: [id])
+  created_at      DateTime         @default(now())
 }
 
 model Transactions {
@@ -586,9 +601,9 @@ model HighlightImg {
 model Itinerary {
   id Int @id @default(autoincrement())
 
-  user_id Int?
-  user    User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  members   User[] @relation("ItineraryMembers")
+  user_id        Int?
+  user           User?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  members        User[]  @relation("ItineraryMembers")
   start_lat_long String?
   end_lat_long   String?
   start_city     String?
@@ -656,4 +671,17 @@ model Query {
   message    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Airport {
+  id            Int      @id @default(autoincrement())
+  airportCode   String
+  airportName   String
+  cityName      String
+  cityCode      String
+  country       String
+  continentCode String
+  countryCode   String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
