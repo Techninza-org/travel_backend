@@ -675,7 +675,7 @@ model Query {
 
 model Airport {
   id            Int      @id @default(autoincrement())
-  airportCode   String @unique
+  airportCode   String 
   airportName   String
   cityName      String
   cityCode      String
