@@ -680,8 +680,8 @@ model Airport {
   cityName      String
   cityCode      String
   country       String
-  continentCode String
-  countryCode   String
+  continentCode String?
+  countryCode   String?
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 }
