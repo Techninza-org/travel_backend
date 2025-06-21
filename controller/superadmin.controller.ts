@@ -583,7 +583,7 @@ type AirportRow = {
         return res.status(400).json({ error: 'No file uploaded' });
       }
   
-      const workbook = xlsx.readFile(file.path);
+      const workbook = xlsx.read(file.buffer, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = xlsx.utils.sheet_to_json<AirportRow>(sheet, { defval: null });
   
