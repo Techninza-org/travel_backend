@@ -119,6 +119,8 @@ userRouter
     .delete('/travel_request/:request_id', userController.deleteTravelRequestById)
     //@ts-ignore
     .get('/airport/:airport_code', userController.getAirportDetailsByAirportCode)
+    //@ts-ignore
+    .get('/airport', userController.getAllAirports)
     
 
 export default userRouter

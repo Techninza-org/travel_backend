@@ -2406,6 +2406,27 @@ const deleteTravelRequestById = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+const getAllAirports = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const airports = await prisma.airport.findMany({
+            select: {
+                airportCode: true,
+                airportName: true,
+                cityName: true,
+                cityCode: true,
+                countryCode: true,
+                country: true,
+                continentCode: true,
+            },
+            orderBy: { airportName: 'asc' }
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', airports });
+    } catch (error) {
+        return next(error);
+    }
+}
+
 const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const { airport_code } = req.params;
@@ -2527,7 +2548,8 @@ const userController = {
     getAllTravelRequests,
     addUserToItineraryMembers,
     getFollowersAndFollowing,
-    getAirportDetailsByAirportCode
+    getAirportDetailsByAirportCode,
+    getAllAirports
 }
 
 export default userController
