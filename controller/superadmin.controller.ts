@@ -586,22 +586,23 @@ type AirportRow = {
       const workbook = xlsx.read(file.buffer, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = xlsx.utils.sheet_to_json<AirportRow>(sheet, { defval: null });
-  
-      for (const row of jsonData) {
-        if (!row.AirportCode || !row.AirportName) continue; 
-  
-        await prisma.airport.create({
-          data: {
-            airportCode: row.AirportCode,
-            airportName: row.AirportName,
-            cityName: row.cityName,
-            cityCode: row.CityCode,
-            country: row.Country,
-            continentCode: row.ContinentCode,
-            countryCode: row.CountryCode,
-          },
-        });
-      }
+      
+      const rows = jsonData
+      .filter(row => row.AirportCode && row.AirportName) // basic validation
+      .map(row => ({
+        airportCode: row.AirportCode,
+        airportName: row.AirportName,
+        cityName: row.cityName,
+        cityCode: row.CityCode,
+        country: row.Country,
+        continentCode: row.ContinentCode,
+        countryCode: row.CountryCode,
+      }));
+    
+    await prisma.airport.createMany({
+      data: rows,
+      skipDuplicates: true,
+    });
   
       console.log('✅ Import completed');
       return res.status(200).json({ message: 'Airport data imported successfully' });
