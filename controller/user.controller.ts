@@ -2026,7 +2026,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
             return {
                 city: cityName,
-                city_description: citiesWithDescriptions[index].description,
+                city_description: citiesWithDescriptions[index]?.description,
                 // attractions: attractions,
                 // restaurants: restaurants,
                 // geos: geos,
@@ -2035,7 +2035,7 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
         const marketplace = {
             city: place,
-            city_description: citiesWithDescriptions[citiesWithDescriptions.length - 1].description,
+            city_description: citiesWithDescriptions[citiesWithDescriptions.length - 1]?.description,
             // attractions: attractions,
             // restaurants: restaurants,
             // geos: geos
