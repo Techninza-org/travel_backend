@@ -19,11 +19,11 @@ function formatDateInput(dateStr: string) {
 const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const { page, city, cityName, country, checkInDate, checkOutDate, roomCount, adultCount, childCount, currency, nights } = req.body;
-        if (!page || !city || !cityName || !country || !checkInDate || !checkOutDate || !roomCount || !adultCount || !childCount || !currency || !nights) {
-            return res.status(400).json({
-                message: 'Please provide all required fields'
-            });
-        }
+        // if (!page || !city || !cityName || !country || !checkInDate || !checkOutDate || !roomCount || !adultCount || !childCount || !currency || !nights) {
+        //     return res.status(400).json({
+        //         message: 'Please provide all required fields'
+        //     });
+        // }
         const dateFormat = 'YYYY-MM-DD';
         const areDatesValid = moment(checkInDate, dateFormat, true).isValid() && moment(checkOutDate, dateFormat, true).isValid();
 
@@ -85,11 +85,11 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
 const getHotelDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const {hotelID, engineID, emtCommonID} = req.body;
-        if (!hotelID || !engineID || !emtCommonID) {
-            return res.status(400).json({
-                message: 'Please provide hotelID, emtCommonID and engineID'
-            });
-        }
+        // if (!hotelID || !engineID || !emtCommonID) {
+        //     return res.status(400).json({
+        //         message: 'Please provide hotelID, emtCommonID and engineID'
+        //     });
+        // }
         const url = `http://hotelapita.easemytrip.com/MiHotel.svc/HotelInfo/${hotelID}/${engineID}/${emtCommonID}/${USERNAME}/${PASSWORD}/${AGENTCODE}`
         const response = await axios.get(url, {
             headers: {
