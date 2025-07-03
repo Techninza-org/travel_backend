@@ -33,6 +33,7 @@ import helper from './utils/helpers'
 import hotelBookingRouter from './routes/hotelBooking.routes'
 import busRouter from './routes/bus.routes'
 import flightRouter from './routes/air.routes'
+import activitiesRouter from './routes/activities.routes'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -125,6 +126,8 @@ app.use('/hotel', middleware.AuthMiddleware, hotelBookingRouter)
 app.use('/bus', middleware.AuthMiddleware, busRouter)
 //@ts-ignore
 app.use('/flight', middleware.AuthMiddleware, flightRouter)
+//@ts-ignore
+app.use('/activity', middleware.AuthMiddleware, activitiesRouter)
 
 export const sendVendordNotif = async (
     hostId: number,
