@@ -2489,6 +2489,61 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
     }
 }
 
+const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { destination_id } = req.params;
+
+        if (!destination_id || isNaN(Number(destination_id))) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Destination ID is required and should be a number.' });
+        }
+
+        const destinationExists = await prisma.destination.findUnique({
+            where: { id: Number(destination_id) },
+        });
+
+        if (!destinationExists) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Destination not found.' });
+        }
+
+        const travelRequestsDest = await prisma.requestTraveller.findMany({
+            where: { destination_id: Number(destination_id) },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        });
+
+        const otherRequests = await prisma.requestTraveller.findMany({
+            where: {
+                destination_id: { not: Number(destination_id) },
+                user: {
+                    id: { not: req.user.id }
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        })
+        
+        return res.status(200).send({ status: 200, message: 'Ok', destination: travelRequestsDest, other: otherRequests });
+    } catch (error) {
+        return next(error);
+    }
+}
+
 
 
 
@@ -2549,7 +2604,8 @@ const userController = {
     addUserToItineraryMembers,
     getFollowersAndFollowing,
     getAirportDetailsByAirportCode,
-    getAllAirports
+    getAllAirports,
+    getTravelRequestsByDestinationId,
 }
 
 export default userController

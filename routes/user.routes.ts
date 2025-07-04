@@ -116,6 +116,8 @@ userRouter
     //@ts-ignore
     .get('/travel_request', userController.getAllTravelRequests)
     //@ts-ignore
+    .get('/travel_request/destination/:destination_id', userController.getTravelRequestsByDestinationId)
+    //@ts-ignore
     .delete('/travel_request/:request_id', userController.deleteTravelRequestById)
     //@ts-ignore
     .get('/airport/:airport_code', userController.getAirportDetailsByAirportCode)
