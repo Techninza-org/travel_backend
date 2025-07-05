@@ -2536,6 +2536,7 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
         const travelRequestsDest = await prisma.requestTraveller.findMany({
             where: { destination_id: Number(destination_id) },
             include: {
+                destination: true,
                 user: {
                     select: {
                         id: true,
@@ -2584,6 +2585,7 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
                 }
             },
             include: {
+                destination: true,
                 user: {
                     select: {
                         id: true,
