@@ -2461,7 +2461,7 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
             },
         })
         const blockedUserIds = blockedUsers.map((user) => user.blocked_id)
-        const travelRequests = await prisma.requestTraveller.findMany({
+        const travelRequestsall = await prisma.requestTraveller.findMany({
             where: {
                 user_id: { not: req.user.id },
                 user: {
@@ -2480,7 +2480,35 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
             },
             orderBy: { created_at: 'desc' }
         });
-        console.log(travelRequests, 'travel requests all');
+
+        const travelRequests = travelRequestsall.map(async request => {
+            let status = 0;
+            const isFollowing = await prisma.follows.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                },
+            });
+
+            const isRequested = await prisma.followRequest.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                    status: 0,
+                },
+            });
+
+            if(isRequested){
+                status = 1; // requested
+            }else if(isFollowing){
+                status = 2; // following
+            }
+
+            return {
+                ...request,
+                isFollowing: status,
+            };
+        });
         
        
         return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
@@ -2519,6 +2547,35 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
             orderBy: { created_at: 'desc' }
         });
 
+        const travelRequestWithFollowingStatus = await Promise.all(travelRequestsDest.map(async (request) => {
+            let status = 0;
+            const isFollowing = await prisma.follows.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                },
+            });
+
+            const isRequested = await prisma.followRequest.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                    status: 0,
+                },
+            });
+
+            if (isRequested) {
+                status = 1; // requested
+            } else if (isFollowing) {
+                status = 2; // following
+            }
+
+            return {
+                ...request,
+                isFollowing: status,
+            };
+        }))
+
         const otherRequests = await prisma.requestTraveller.findMany({
             where: {
                 destination_id: { not: Number(destination_id) },
@@ -2537,8 +2594,37 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
             },
             orderBy: { created_at: 'desc' }
         })
+
+        const otherRequestsWithFollowingStatus = await Promise.all(otherRequests.map(async (request) => {
+            let status = 0;
+            const isFollowing = await prisma.follows.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                },
+            });
+
+            const isRequested = await prisma.followRequest.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                    status: 0,
+                },
+            });
+
+            if (isRequested) {
+                status = 1; // requested
+            } else if (isFollowing) {
+                status = 2; // following
+            }
+
+            return {
+                ...request,
+                isFollowing: status,
+            };
+        }))
         
-        return res.status(200).send({ status: 200, message: 'Ok', destination: travelRequestsDest, other: otherRequests });
+        return res.status(200).send({ status: 200, message: 'Ok', destination: travelRequestWithFollowingStatus, other: otherRequestsWithFollowingStatus });
     } catch (error) {
         return next(error);
     }
