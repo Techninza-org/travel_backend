@@ -2481,7 +2481,7 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
             orderBy: { created_at: 'desc' }
         });
 
-        const travelRequests = travelRequestsall.map(async request => {
+        const travelRequests = await Promise.all(travelRequestsall.map(async (request) => {
             let status = 0;
             const isFollowing = await prisma.follows.findFirst({
                 where: {
@@ -2498,9 +2498,9 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
                 },
             });
 
-            if(isRequested){
+            if (isRequested) {
                 status = 1; // requested
-            }else if(isFollowing){
+            } else if (isFollowing) {
                 status = 2; // following
             }
 
@@ -2508,7 +2508,7 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
                 ...request,
                 isFollowing: status,
             };
-        });
+        }))
         
        
         return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
