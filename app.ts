@@ -34,6 +34,7 @@ import hotelBookingRouter from './routes/hotelBooking.routes'
 import busRouter from './routes/bus.routes'
 import flightRouter from './routes/air.routes'
 import activitiesRouter from './routes/activities.routes'
+import CustomExpenseRouter from './routes/customexpense.routes'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -108,6 +109,8 @@ app.use('/host', middleware.HostAuthMiddleware, HostRouter)
 app.use('/destination', DestinationRouter)
 // @ts-ignore
 app.use('/expense', middleware.AuthMiddleware, ExpenseRouter)
+// @ts-ignore
+app.use('/custom-expense', middleware.AuthMiddleware, CustomExpenseRouter)
 //@ts-ignore
 app.use('/custom', customtriprouter)
 //@ts-ignore
