@@ -4,6 +4,38 @@ import helper from '../utils/helpers'
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
+export const createCustomExpenseTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const user = req.user
+        const name = req.body.name
+        if (!name) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Name is required' }) }
+        const trip = await prisma.customExpenseTrip.create({
+            data: {
+                name: name,
+                user_id: user.id,
+            },
+        })
+        return res.status(201).send({ status: 201, message: 'Created', customExpenseTrip: trip })
+    }catch(err){
+        return next(err)
+    }
+}
+
+export const getCustomExpenseTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const trips = await prisma.customExpenseTrip.findMany({
+            where: { user_id: user.id },
+            include: {
+                customExpenses: true,
+            }
+        })
+        return res.status(200).send({ status: 200, customExpenseTrips: trips })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 export const CreateExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user
     const body = req.body
@@ -21,15 +53,15 @@ export const CreateExpense = async (req: ExtendedRequest, res: Response, next: N
 
     try {
 
-        const trip = await prisma.trip.findFirst({ where: { id: body.trip_id } })
+        const trip = await prisma.customExpenseTrip.findFirst({ where: { id: body.trip_id } })
         if (!trip) { return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' }) }
 
-        const expense = await prisma.expense.create({
+        const expense = await prisma.customExpense.create({
             data: {
                 amount: body.amount,
                 category: body.category,
                 note: body.note,
-                trip_id: body.trip_id,
+                custom_expense_trip_id: body.trip_id,
                 user_id: user.id,
             },
         });
@@ -45,7 +77,7 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
 
     try {
         
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         
         const user = await prisma.user.findFirst({ where: { id: user_id } })
@@ -55,11 +87,11 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
         if(expense.isSplitDone === true) { 
             if (expenseUsers.includes(user_id)) {
                 expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
-                const updatedExpense = await prisma.expense.update({
+                const updatedExpense = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: { splitWithUserIds: expenseUsers },
                 });
-                const expenseNew = await prisma.expense.findFirst({ where: { id: expense_id } });
+                const expenseNew = await prisma.customExpense.findFirst({ where: { id: expense_id } });
                 if (!expenseNew) {
                     return res.status(404).send({
                         status: 404,
@@ -94,7 +126,7 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
                     usersData[0].owes = false;
                     usersData[0].paid = true;
                 }
-                const updatedExpenseNew = await prisma.expense.update({
+                const updatedExpenseNew = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: {
                         usersData: usersData,
@@ -106,12 +138,12 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
             } else {
                 expenseUsers.push(user_id);
             
-                const ex = await prisma.expense.update({
+                const ex = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: { splitWithUserIds: expenseUsers },
                 });
             
-                const expenseNew = await prisma.expense.findFirst({ where: { id: expense_id } });
+                const expenseNew = await prisma.customExpense.findFirst({ where: { id: expense_id } });
                 if (!expenseNew) {
                     return res.status(404).send({
                         status: 404,
@@ -153,7 +185,7 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
                     usersData[0].paid = true;
                 }
             
-                const updatedExpense = await prisma.expense.update({
+                const updatedExpense = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: {
                         usersData: usersData,
@@ -171,14 +203,14 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
         } else {
             if (expenseUsers.includes(user_id)) {
                 expenseUsers.splice(expenseUsers.indexOf(user_id), 1)
-                const updatedExpense = await prisma.expense.update({
+                const updatedExpense = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: { splitWithUserIds: expenseUsers },
                 });
                 return res.status(200).send({ status: 200, message: 'User removed from expense', expense: updatedExpense });
             }else {
                 expenseUsers.push(user_id)
-                const updatedExpense = await prisma.expense.update({
+                const updatedExpense = await prisma.customExpense.update({
                     where: { id: expense_id },
                     data: { splitWithUserIds: expenseUsers },
                 });
@@ -194,7 +226,7 @@ export const addUserToExpense = async (req: ExtendedRequest, res: Response, next
 export const splitExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const {expense_id} = req.body;
     try {
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         // if(expense.isSplitDone === true) { return res.status(200).send({ status: 200, message: 'Expense already split' }) }
         const expenseUsers = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds : [];
@@ -212,7 +244,7 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
         const user = await prisma.user.findFirst({ where: { id: user_id } })
         if (!user) { return res.status(404).send({ status: 404, error: 'User not found', error_description: 'User not found for the given id.' }) }
         usersData.push({ user_id: user.id, amount: splitAmount, username: user.username, owes: false, paid: true })
-        const updatedExpense = await prisma.expense.update({
+        const updatedExpense = await prisma.customExpense.update({
             where: { id: expense_id },
             data: { usersData: usersData, isSplitDone: true },
         });
@@ -226,12 +258,12 @@ export const splitExpense = async (req: ExtendedRequest, res: Response, next: Ne
 export const settleExpense = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { expense_id } = req.body
     try {
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         const usersData = Array.isArray(expense.usersData) ? expense.usersData?.map((user:any) => {
             return { ...user, owes: false, paid: true }
         }) : [];
-        const updatedExpense = await prisma.expense.update({
+        const updatedExpense = await prisma.customExpense.update({
             where: { id: expense_id },
             data: { usersData: usersData, isSettled: true, splitWithUserIds: [] },
         });
@@ -245,7 +277,7 @@ export const settleExpense = async (req: ExtendedRequest, res: Response, next: N
 export const settleBillWithAUser = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { expense_id, user_id } = req.body
     try {
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         const userExistsInSplit = Array.isArray(expense.splitWithUserIds) ? expense.splitWithUserIds.includes(user_id) : false;
         if (!userExistsInSplit) {
@@ -258,7 +290,7 @@ export const settleBillWithAUser = async (req: ExtendedRequest, res: Response, n
             return user
         }) : [];
         const splitWithUserIds = expense.splitWithUserIds || [];
-        const updatedExpense = await prisma.expense.update({
+        const updatedExpense = await prisma.customExpense.update({
             where: { id: expense_id },
             data: { usersData: usersData, splitWithUserIds: (splitWithUserIds as string[]).filter((id:any) => id !== user_id) },
         });
@@ -279,7 +311,7 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
 
     try {
         const expenses: any[] = await prisma.$queryRaw`
-            SELECT * FROM Expense
+            SELECT * FROM CustomExpense
             WHERE isSplitDone = true
               AND (
                 user_id = ${userId}
@@ -295,7 +327,6 @@ export const getMySplitBills = async (req: ExtendedRequest, res: Response, next:
 
             if (Array.isArray(usersData)) {
                 usersData.forEach((userData) => {
-                    console.log(userData, 'data');
                     
                     if (userData.owes && !userData.paid && userData.user_id !== userId) {
                         toGet += userData.amount;
@@ -332,8 +363,8 @@ export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next:
                 error_description: 'Trip id should be a positive integer value',
             });
         }
-        const expenses = await prisma.expense.findMany({
-            where: { user_id: user.id, trip_id: tripId },
+        const expenses = await prisma.customExpense.findMany({
+            where: { user_id: user.id, custom_expense_trip_id: tripId },
         })
         let total = 0
         expenses.forEach((expense) => {
@@ -349,29 +380,12 @@ export const GetTripExpenses = async (req: ExtendedRequest, res: Response, next:
 export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
-        const normal_trips = await prisma.trip.findMany({
-            where: { user_id: user.id, is_payment_confirmed: true },
+        const trips = await prisma.customExpenseTrip.findMany({
+            where: { user_id: user.id },
             include: {
-                service: {
-                    select: {
-                        name: true,
-                        images: true
-                    }
-                }
+                customExpenses: true,
             }
         })
-        const custom_trips = await prisma.customTrip.findMany({
-            where: { user_id: user.id, is_payment_confirmed: true },
-            include: {
-                service: {
-                    select: {
-                        name: true,
-                        images: true
-                    }
-                }
-            }
-        })
-        const trips = [...normal_trips, ...custom_trips]
         let tripExpenses = []
         for (let i = 0; i < trips.length; i++) {
             const expenses = await prisma.expense.findMany({
@@ -399,11 +413,11 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
         if (!expense_id || !name) {
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id and name are required' })
         }
-        const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
+        const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         console.log(expense, 'exp');
         
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
-        const updatedExpense = await prisma.expense.update({
+        const updatedExpense = await prisma.customExpense.update({
             where: { id: expense_id },
             data: { category: name },
         })
@@ -417,6 +431,6 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
+const customExpenseController = { createCustomExpenseTrip, addUserToExpense, getCustomExpenseTrips, CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
-export default expenseController
+export default customExpenseController

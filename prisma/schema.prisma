@@ -68,8 +68,12 @@ model User {
 
   itineraries                  Itinerary[]
   liabilityExpense             Expense[]             @relation("ExpenseAddedUser") //*
+  
   friendTravelRequestsSent     friendTravelRequest[] @relation("FriendRequestSender")
   friendTravelRequestsReceived friendTravelRequest[] @relation("FriendRequestReceiver")
+  CustomExpenseTrips            CustomExpenseTrip[]
+  CustomExpenses                CustomExpense[]
+  CustomExpense                 CustomExpense[] @relation("CustomExpenseAddedUser")
 }
 
 model RequestTraveller {
@@ -323,6 +327,36 @@ model Expense {
   addedUsers User[]      @relation("ExpenseAddedUser") //*
   trip       Trip        @relation(fields: [trip_id], references: [id])
   customTrip CustomTrip? @relation(fields: [customTripId], references: [id])
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+}
+
+model CustomExpenseTrip {
+  id           Int     @id @default(autoincrement())
+  user_id      Int
+  user User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name         String
+  customExpenses CustomExpense[]
+  created_at   DateTime    @default(now())
+}
+
+model CustomExpense {
+  id           Int     @id @default(autoincrement())
+  user_id      Int
+  amount       Int
+  category     String
+  note         String?
+  custom_expense_trip_id      Int
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  splitWithUserIds Json?
+  usersData        Json?
+  isSplitDone      Boolean? @default(false)
+  isSettled        Boolean? @default(false)
+
+  addedUsers User[]      @relation("CustomExpenseAddedUser") 
+  custom_expense_trip       CustomExpenseTrip        @relation(fields: [custom_expense_trip_id], references: [id])
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
 }
