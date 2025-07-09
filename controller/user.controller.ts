@@ -173,7 +173,7 @@ const get_user_feed = async (req: ExtendedRequest, res: Response, next: NextFunc
     }
 }
 
-const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFunction) => {
+const get_user_details = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
     const user = req.user
 
     if (!user) {
@@ -184,12 +184,19 @@ const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFuncti
         })
     }
 
-    const { password, highlights, ...userDetails } = user
+    const userDetails = await prisma.user.findUnique({
+     where: { id: user.id },
+     include: {
+        highlights: true
+     }
+    })
+
+    delete (userDetails as any).password
 
     return res.status(200).send({
         status: 200,
         message: 'Ok',
-        user: { ...userDetails, highlights },
+        user: { ...userDetails },
     })
 }
 
