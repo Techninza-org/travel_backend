@@ -2641,9 +2641,12 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
 
 const createQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
-        const {name, phone, number_of_people, destinationId, start_date} = req.body;
+        const {name, phone, number_of_people, destinationId, start_date, duration} = req.body;
         if(!name){
             return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'name is required'});
+        }
+        if(!duration || isNaN(Number(duration))){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'duration is required'});
         }
         if(!phone){
             return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'phone is required'});
@@ -2667,6 +2670,7 @@ const createQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextF
             data: {
                 name,
                 phone,
+                duration,
                 number_of_people: Number(number_of_people),
                 destinationId: Number(destinationId),
                 start_date: start_date,

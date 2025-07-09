@@ -408,6 +408,7 @@ model Quote {
   destinationId     Int
   destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   number_of_people Int
+  duration         Int
   start_date       String
   name             String
   phone            String
