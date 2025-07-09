@@ -388,8 +388,8 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
         })
         let tripExpenses = []
         for (let i = 0; i < trips.length; i++) {
-            const expenses = await prisma.expense.findMany({
-                where: { user_id: user.id, trip_id: trips[i].id },
+            const expenses = await prisma.customExpense.findMany({
+                where: { user_id: user.id, custom_expense_trip_id: trips[i].id },
             })
             let total = 0
             expenses.forEach((expense) => {

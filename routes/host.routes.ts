@@ -23,5 +23,9 @@ HostRouter
     .get('/kyc', hostController.getKycDetails)
     //@ts-ignore
     .get('/notifs', hostController.getVendorNotifs)
+    //@ts-ignore
+    .get('/quotes', hostController.getAllQuoteQuery)
+    //@ts-ignore
+    .get('/quote/:quoteId', hostController.markQuoteQueryAsSent)
     
 export default HostRouter

@@ -239,7 +239,39 @@ const getVendorNotifs = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const quotes = await prisma.quote.findMany({
+            include: { user: true, destination: true},
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, quotes })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const markQuoteQueryAsSent = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const quoteId = Number(req.params.id)
+        if (!quoteId) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(quote) is required in params.' })
+        }
+        const quote = await prisma.quote.update({
+            where: { id: quoteId },
+            data: { done: true },
+        })
+        return res.status(200).send({ status: 200, message: 'Quote marked as sent successfully.', quote })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const hostController = {
+    getAllQuoteQuery,
+    markQuoteQueryAsSent,
     getHostedTrips,
     GetSpecificTripHost,
     getHostProfile,

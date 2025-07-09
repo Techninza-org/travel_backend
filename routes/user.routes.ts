@@ -123,6 +123,8 @@ userRouter
     .get('/airport/:airport_code', userController.getAirportDetailsByAirportCode)
     //@ts-ignore
     .get('/airport', userController.getAllAirports)
+    //@ts-ignore
+    .post('/quote_query', userController.createQuoteQuery)
     
 
 export default userRouter

@@ -184,12 +184,12 @@ const get_user_details = (req: ExtendedRequest, res: Response, _next: NextFuncti
         })
     }
 
-    const { password, ...userDetails } = user
+    const { password, highlights, ...userDetails } = user
 
     return res.status(200).send({
         status: 200,
         message: 'Ok',
-        user: userDetails,
+        user: { ...userDetails, highlights },
     })
 }
 
@@ -2632,10 +2632,49 @@ const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Respo
     }
 }
 
-
+const createQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {name, phone, number_of_people, destinationId, start_date} = req.body;
+        if(!name){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'name is required'});
+        }
+        if(!phone){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'phone is required'});
+        }
+        if(!number_of_people){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'number_of_people is required'});
+        }
+        if(!destinationId || isNaN(Number(destinationId))){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'destinationId is required and should be a number'});
+        }
+        if(!start_date || isNaN(Date.parse(start_date))){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'start_date is required and should be a valid date'});
+        }
+        const destinationExists = await prisma.destination.findUnique({
+            where: { id: Number(destinationId) },
+        });
+        if(!destinationExists){
+            return res.status(404).send({status: 404, error: 'Not Found', error_description: 'Destination not found'});
+        }
+        const quoteQuery = await prisma.quote.create({
+            data: {
+                name,
+                phone,
+                number_of_people: Number(number_of_people),
+                destinationId: Number(destinationId),
+                start_date: start_date,
+                user_id: req.user.id 
+            }
+        });
+        return res.status(200).send({status: 200, message: 'Quote query created successfully', quoteQuery});
+    }catch(err){
+        return next(err)
+    }
+}
 
 
 const userController = {
+    createQuoteQuery,
     submitQuery,
     getSuggestion,
     get_all_users,

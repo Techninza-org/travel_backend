@@ -66,14 +66,15 @@ model User {
   requestsTravellers RequestTraveller[]
   itineraryMembers   Itinerary[]        @relation("ItineraryMembers")
 
-  itineraries                  Itinerary[]
-  liabilityExpense             Expense[]             @relation("ExpenseAddedUser") //*
-  
+  itineraries      Itinerary[]
+  liabilityExpense Expense[]   @relation("ExpenseAddedUser") //*
+
   friendTravelRequestsSent     friendTravelRequest[] @relation("FriendRequestSender")
   friendTravelRequestsReceived friendTravelRequest[] @relation("FriendRequestReceiver")
-  CustomExpenseTrips            CustomExpenseTrip[]
-  CustomExpenses                CustomExpense[]
-  CustomExpense                 CustomExpense[] @relation("CustomExpenseAddedUser")
+  CustomExpenseTrips           CustomExpenseTrip[]
+  CustomExpenses               CustomExpense[]
+  CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
+  Quote                        Quote[]
 }
 
 model RequestTraveller {
@@ -332,21 +333,21 @@ model Expense {
 }
 
 model CustomExpenseTrip {
-  id           Int     @id @default(autoincrement())
-  user_id      Int
-  user User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  name         String
+  id             Int             @id @default(autoincrement())
+  user_id        Int
+  user           User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name           String
   customExpenses CustomExpense[]
-  created_at   DateTime    @default(now())
+  created_at     DateTime        @default(now())
 }
 
 model CustomExpense {
-  id           Int     @id @default(autoincrement())
-  user_id      Int
-  amount       Int
-  category     String
-  note         String?
-  custom_expense_trip_id      Int
+  id                     Int     @id @default(autoincrement())
+  user_id                Int
+  amount                 Int
+  category               String
+  note                   String?
+  custom_expense_trip_id Int
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -355,10 +356,10 @@ model CustomExpense {
   isSplitDone      Boolean? @default(false)
   isSettled        Boolean? @default(false)
 
-  addedUsers User[]      @relation("CustomExpenseAddedUser") 
-  custom_expense_trip       CustomExpenseTrip        @relation(fields: [custom_expense_trip_id], references: [id])
-  created_at DateTime    @default(now())
-  updated_at DateTime    @updatedAt
+  addedUsers          User[]            @relation("CustomExpenseAddedUser")
+  custom_expense_trip CustomExpenseTrip @relation(fields: [custom_expense_trip_id], references: [id])
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
 }
 
 model Destination {
@@ -372,6 +373,7 @@ model Destination {
   latitude          Float?
   longitude         Float?
   requestTravellers RequestTraveller[]
+  quotes            Quote[]
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
 }
@@ -396,6 +398,21 @@ model Host {
   submitted           Boolean              @default(false)
   verified            Boolean              @default(false)
   created_at          DateTime             @default(now())
+}
+
+model Quote {
+  id               Int     @id @default(autoincrement())
+  user_id          Int
+  user             User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  done             Boolean @default(false)
+  destinationId     Int
+  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  number_of_people Int
+  start_date       String
+  name             String
+  phone            String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model VendorNotification {
@@ -709,7 +726,7 @@ model Query {
 
 model Airport {
   id            Int      @id @default(autoincrement())
-  airportCode   String 
+  airportCode   String
   airportName   String
   cityName      String
   cityCode      String
