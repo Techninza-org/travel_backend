@@ -2647,7 +2647,7 @@ const createQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextF
         if(!destinationId || isNaN(Number(destinationId))){
             return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'destinationId is required and should be a number'});
         }
-        if(!start_date || isNaN(Date.parse(start_date))){
+        if(!start_date){
             return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'start_date is required and should be a valid date'});
         }
         const destinationExists = await prisma.destination.findUnique({
