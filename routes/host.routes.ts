@@ -26,6 +26,6 @@ HostRouter
     //@ts-ignore
     .get('/quotes', hostController.getAllQuoteQuery)
     //@ts-ignore
-    .get('/quote/:quoteId', hostController.markQuoteQueryAsSent)
+    .get('/quote/:id', hostController.markQuoteQueryAsSent)
     
 export default HostRouter
