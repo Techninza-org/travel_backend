@@ -110,6 +110,26 @@ const getHotelDetails = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+const getHotelRoomInfo = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body
+
+        const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/GetHotelInfo', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        return res.status(200).json({
+            data: response.data,
+        })
+
+    }catch(err){
+        console.log(err);
+        return next(err);
+    }
+}
+
 const bookHotel = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const body = req.body
@@ -190,7 +210,8 @@ const hotelBookingController = {
     bookHotel,
     getBookingDetails,
     checkHotelAvailability,
-    cancelHotelBooking
+    cancelHotelBooking,
+    getHotelRoomInfo
 }
 
 export default hotelBookingController
