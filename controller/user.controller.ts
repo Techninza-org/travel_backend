@@ -2315,9 +2315,6 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
         if(date_type !== 0 && date_type !== 1) {
             return res.send({status: 400, error_description: 'date_type must be 0 for flexible or 1 for fixed date.'})
         }
-        if(traveler_type !== 0 && traveler_type !== 1) {
-            return res.send({status: 400, error_description: 'traveler_type must be 0 for solo or 1 for group.'})
-        }
         if(budget_type !== 0 && budget_type !== 1) {
             return res.send({status: 400, error_description: 'budget_type must be 0 for backpacking or 1 for premium.'})
         }
