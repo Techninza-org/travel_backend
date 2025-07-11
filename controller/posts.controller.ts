@@ -152,7 +152,23 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
     }
 }
 
-export const getMemories = async (
+function haversineDistance(
+    lat1: number, lon1: number,
+    lat2: number, lon2: number
+  ): number {
+    const toRad = (deg: number) => deg * (Math.PI / 180);
+    const R = 6371000; // Earth radius in meters
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  export const getMemories = async (
     req: ExtendedRequest,
     res: Response,
     next: NextFunction
@@ -160,34 +176,68 @@ export const getMemories = async (
     try {
       const userId = req.user.id;
   
+      // 1. Fetch all posts for this user
       const posts = await prisma.post.findMany({
         where: { user_id: userId },
         orderBy: { created_at: 'desc' },
       });
   
-      interface LocationBucket {
-        latitude: string | null;
-        longitude: string | null;
+      // 2. Cluster posts by 200m radius
+      interface Cluster {
+        latitude: number;
+        longitude: number;
         posts: typeof posts;
       }
-      const buckets: Record<string, LocationBucket> = {};
+      const clusters: Cluster[] = [];
+      const noLocationCluster: { posts: typeof posts } = { posts: [] };
   
       for (const post of posts) {
-        const lat = post.latitude ?? null;
-        const lng = post.longitude ?? null;
-        const key = `${lat}:${lng}`;
+        const lat = post.latitude ? parseFloat(post.latitude) : null;
+        const lng = post.longitude ? parseFloat(post.longitude) : null;
   
-        if (!buckets[key]) {
-          buckets[key] = {
+        if (lat === null || lng === null) {
+          // Collect posts with missing coords separately
+          noLocationCluster.posts.push(post);
+          continue;
+        }
+  
+        // Try to fit into an existing cluster
+        let added = false;
+        for (const cluster of clusters) {
+          const dist = haversineDistance(
+            lat, lng,
+            cluster.latitude, cluster.longitude
+          );
+          if (dist <= 200) {
+            cluster.posts.push(post);
+            added = true;
+            break;
+          }
+        }
+  
+        if (!added) {
+          // Start a new cluster centered at this post
+          clusters.push({
             latitude: lat,
             longitude: lng,
-            posts: [],
-          };
+            posts: [post],
+          });
         }
-        buckets[key].posts.push(post);
       }
   
-      const allPosts = Object.values(buckets);
+      // 3. Format response
+    const allPosts = clusters.map(c => ({
+        latitude: c.latitude as number | null,
+        longitude: c.longitude as number | null,
+        posts: c.posts,
+    }));
+    if (noLocationCluster.posts.length) {
+        allPosts.push({
+            latitude: null as number | null,
+            longitude: null as number | null,
+            posts: noLocationCluster.posts,
+        });
+    }
   
       return res.status(200).json({
         status: 200,
