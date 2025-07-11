@@ -2307,7 +2307,7 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
 export const createTravelRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user_id = req.user.id;
-        const { destination_id, gender, date, date_type, traveler_type, budget_type, description } = req.body;
+        const { destination_id, gender, date, date_type, traveler_type, budget_type, description , end_date, count} = req.body;
         
         if(gender !== 0 && gender !== 1 && gender !== 2) {
             return res.send({status: 400, error_description: 'gender must be 0 for any, 1 for male or 2 for female.'})
@@ -2347,6 +2347,8 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
                 traveler_type,
                 budget_type,
                 description,
+                end_date,
+                count
             }
         })
 

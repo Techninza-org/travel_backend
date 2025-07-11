@@ -82,10 +82,13 @@ model RequestTraveller {
   user_id             Int
   destination_id      Int
   gender              Int //0 any, 1 male, 2 female
-  date                DateTime
+  date                DateTime?
+  end_date            DateTime?
+  count               Int?
   date_type           Int //0 flexible, 1 fixed
   traveler_type       String //0 solo, 1 group
   budget_type         Int //0 backpacking, 1 premium
+
   description         String
   created_at          DateTime              @default(now())
   updated_at          DateTime              @updatedAt
