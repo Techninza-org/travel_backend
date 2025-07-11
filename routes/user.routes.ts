@@ -125,6 +125,8 @@ userRouter
     .get('/airport', userController.getAllAirports)
     //@ts-ignore
     .post('/quote_query', userController.createQuoteQuery)
+    //@ts-ignore
+    .get('/filter_travel_requests', userController.filterTravelRequests)
     
 
 export default userRouter

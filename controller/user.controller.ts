@@ -2412,6 +2412,63 @@ const deleteTravelRequestById = async (req: ExtendedRequest, res: Response, next
     }
 }
 
+export const filterTravelRequests = async (
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const user_id = req.user.id;
+  
+      const {
+        destination_id,
+        gender,
+        date,
+        end_date,
+        date_type,
+        traveler_type,
+        budget_type,
+        count,
+      } = req.query as Record<string, string>;
+  
+      const where: any = { user_id };
+  
+      if (destination_id)    where.destination_id = Number(destination_id);
+      if (gender)            where.gender         = Number(gender);
+      if (date_type)         where.date_type      = Number(date_type);
+      if (traveler_type)     where.traveler_type  = traveler_type;
+      if (budget_type)       where.budget_type    = Number(budget_type);
+      if (count)             where.count          = Number(count);
+  
+      // Date filtering
+      if (date && end_date) {
+        where.AND = [
+          { date:     { gte: new Date(date) } },
+          { end_date: { lte: new Date(end_date) } },
+        ];
+      } else if (date) {
+        where.date = new Date(date);
+      } else if (end_date) {
+        where.end_date = new Date(end_date);
+      }
+  
+      const travelRequests = await prisma.requestTraveller.findMany({
+        where,
+        include: {
+          destination: true,
+          user: {
+            select: { id: true, username: true, image: true },
+          },
+        },
+        orderBy: { created_at: 'desc' },
+      });
+  
+      return res.status(200).json({ status: 200, message: 'Ok', travelRequests });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 const getAllAirports = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const airports = await prisma.airport.findMany({
@@ -2743,6 +2800,7 @@ const userController = {
     getAirportDetailsByAirportCode,
     getAllAirports,
     getTravelRequestsByDestinationId,
+    filterTravelRequests
 }
 
 export default userController
