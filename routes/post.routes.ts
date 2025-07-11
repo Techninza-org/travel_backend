@@ -23,5 +23,7 @@ postRouter
     .post('/user', postController.GetPostsByUserId)
     //@ts-ignore
     .put('/edit/:id', postController.editPost)
+    //@ts-ignore
+    .get('/memories', postController.getMemories)
 
 export default postRouter

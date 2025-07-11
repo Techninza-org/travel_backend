@@ -152,6 +152,54 @@ export const GetPosts = async (req: ExtendedRequest, res: Response, _next: NextF
     }
 }
 
+export const getMemories = async (
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+  
+      const posts = await prisma.post.findMany({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+      });
+  
+      interface LocationBucket {
+        latitude: string | null;
+        longitude: string | null;
+        posts: typeof posts;
+      }
+      const buckets: Record<string, LocationBucket> = {};
+  
+      for (const post of posts) {
+        const lat = post.latitude ?? null;
+        const lng = post.longitude ?? null;
+        const key = `${lat}:${lng}`;
+  
+        if (!buckets[key]) {
+          buckets[key] = {
+            latitude: lat,
+            longitude: lng,
+            posts: [],
+          };
+        }
+        buckets[key].posts.push(post);
+      }
+  
+      const allPosts = Object.values(buckets);
+  
+      return res.status(200).json({
+        status: 200,
+        message: 'Ok',
+        allPosts,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  };
+
+
 export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
     try {
         const id = Number(req.body.userId)
@@ -415,5 +463,6 @@ const postController = {
     GetPostsByUserId,
     createTemplate,
     editPost,
+    getMemories
 }
 export default postController
