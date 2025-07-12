@@ -242,9 +242,7 @@ const getVendorNotifs = async (req: ExtendedRequest, res: Response, next: NextFu
 const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const quotes = await prisma.quote.findMany({
-            include: { user: {
-                    select: { id: true, username: true }
-            }, 
+            include: {
             destination: true},
             orderBy: { created_at: 'desc' },
         })
