@@ -2418,109 +2418,6 @@ const deleteTravelRequestById = async (req: ExtendedRequest, res: Response, next
     }
 }
 
-export const filterTravelRequests = async (
-    req: ExtendedRequest,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const user_id = req.user.id;
-  
-      const {
-        destination_id,
-        gender,
-        date,
-        end_date,
-        date_type,
-        traveler_type,
-        budget_type,
-        count,
-      } = req.query as Record<string, string>;
-  
-      const where: any = { user_id };
-  
-      if (destination_id)    where.destination_id = Number(destination_id);
-      if (gender)            where.gender         = Number(gender);
-      if (date_type)         where.date_type      = Number(date_type);
-      if (traveler_type)     where.traveler_type  = traveler_type;
-      if (budget_type)       where.budget_type    = Number(budget_type);
-      if (count)             where.count          = Number(count);
-  
-      // Date filtering
-      if (date && end_date) {
-        where.AND = [
-          { date:     { gte: new Date(date) } },
-          { end_date: { lte: new Date(end_date) } },
-        ];
-      } else if (date) {
-        where.date = new Date(date);
-      } else if (end_date) {
-        where.end_date = new Date(end_date);
-      }
-  
-      const travelRequests = await prisma.requestTraveller.findMany({
-        where,
-        include: {
-          destination: true,
-          user: {
-            select: { id: true, username: true, image: true },
-          },
-        },
-        orderBy: { created_at: 'desc' },
-      });
-  
-      return res.status(200).json({ status: 200, message: 'Ok', travelRequests });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-const getAllAirports = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try {
-        const airports = await prisma.airport.findMany({
-            select: {
-                airportCode: true,
-                airportName: true,
-                cityName: true,
-                cityCode: true,
-                countryCode: true,
-                country: true,
-                continentCode: true,
-            },
-            orderBy: { airportName: 'asc' }
-        });
-
-        return res.status(200).send({ status: 200, message: 'Ok', airports });
-    } catch (error) {
-        return next(error);
-    }
-}
-
-const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const { airport_code } = req.params;
-
-        if (!airport_code || typeof airport_code !== 'string') {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Airport code is required and should be a string.' });
-        }
-
-        const airportDetails = await prisma.airport.findFirst({
-            where: {
-                airportCode: airport_code
-            }
-        })
-
-        if (!airportDetails) {
-            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Airport not found.' });
-        }
-
-        return res.status(200).send({ status: 200, message: 'Ok', airportDetails });
-    }
-    catch(err){
-    return next(err)
-    }
-}
-
 const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const blockedUsers = await prisma.block.findMany({
@@ -2583,6 +2480,149 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
         return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
     } catch (error) {
         return next(error);
+    }
+}
+
+export const filterTravelRequests = async (
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const user_id = req.user.id;
+  
+      const {
+        destination_id,
+        gender,
+        date,
+        end_date,
+        date_type,
+        traveler_type,
+        budget_type,
+        count,
+      } = req.query as Record<string, string>;
+  
+      const where: any = { user_id };
+  
+      if (destination_id)    where.destination_id = Number(destination_id);
+      if (gender)            where.gender         = Number(gender);
+      if (date_type)         where.date_type      = Number(date_type);
+      if (traveler_type)     where.traveler_type  = traveler_type;
+      if (budget_type)       where.budget_type    = Number(budget_type);
+      if (count)             where.count          = Number(count);
+  
+      // Date filtering
+      if (date && end_date) {
+        where.AND = [
+          { date:     { gte: new Date(date) } },
+          { end_date: { lte: new Date(end_date) } },
+        ];
+      } else if (date) {
+        const day = new Date(date);
+        day.setUTCHours(0,0,0,0);
+        const next = new Date(day);
+        next.setUTCDate(day.getUTCDate()+1);
+        where.date = { gte: day, lt: next }
+      } else if (end_date) {
+        const day = new Date(end_date);
+        day.setUTCHours(0,0,0,0);
+        const next = new Date(day);
+        next.setUTCDate(day.getUTCDate()+1);
+        where.end_date = { gte: day, lt: next }
+      }
+
+        // Exclude requests made by the current user
+        where.user_id = { not: user_id };
+  
+      const travelRequestsall = await prisma.requestTraveller.findMany({
+        where,
+        include: {
+          destination: true,
+          user: {
+            select: { id: true, username: true, image: true },
+          },
+        },
+        orderBy: { created_at: 'desc' },
+      });
+
+      const travelRequests = await Promise.all(travelRequestsall.map(async (request) => {
+        let status = 0;
+        const isFollowing = await prisma.follows.findFirst({
+            where: {
+                user_id: request.user.id,
+                follower_id: req.user.id,
+            },
+        });
+
+        const isRequested = await prisma.followRequest.findFirst({
+            where: {
+                user_id: request.user.id,
+                follower_id: req.user.id,
+                status: 0,
+            },
+        });
+
+        if (isRequested) {
+            status = 1; // requested
+        } else if (isFollowing) {
+            status = 2; // following
+        }
+
+        return {
+            ...request,
+            isFollowing: status,
+        };
+    }))
+  
+      return res.status(200).json({ status: 200, message: 'Ok', travelRequests });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+const getAllAirports = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const airports = await prisma.airport.findMany({
+            select: {
+                airportCode: true,
+                airportName: true,
+                cityName: true,
+                cityCode: true,
+                countryCode: true,
+                country: true,
+                continentCode: true,
+            },
+            orderBy: { airportName: 'asc' }
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', airports });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const { airport_code } = req.params;
+
+        if (!airport_code || typeof airport_code !== 'string') {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Airport code is required and should be a string.' });
+        }
+
+        const airportDetails = await prisma.airport.findFirst({
+            where: {
+                airportCode: airport_code
+            }
+        })
+
+        if (!airportDetails) {
+            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Airport not found.' });
+        }
+
+        return res.status(200).send({ status: 200, message: 'Ok', airportDetails });
+    }
+    catch(err){
+    return next(err)
     }
 }
 
