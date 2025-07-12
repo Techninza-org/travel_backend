@@ -23,4 +23,6 @@ authRouter.post('/upload', upload.single('file'), authController.uploadImage)
 
 authRouter.get('/facebook/callback', authController.facebookCallback)
 
+authRouter.post('/quote_query', authController.createQuoteQuery)
+
 export default authRouter
