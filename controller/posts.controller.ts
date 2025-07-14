@@ -81,6 +81,21 @@ export const createTemplate = async (req: ExtendedRequest, res: Response, next: 
     }
 }
 
+export const getAdminTemplates = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const templates = await prisma.post.findMany({
+            where: { media_type: 'TEMPLATE', user_id: {in: [3, 171]} },
+            include: {
+                filterName: true,
+            },
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', templates })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 export const GetOnlyVideos = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
     const user = req.user
     const query = req.query
@@ -513,6 +528,7 @@ const postController = {
     GetPostsByUserId,
     createTemplate,
     editPost,
-    getMemories
+    getMemories,
+    getAdminTemplates
 }
 export default postController

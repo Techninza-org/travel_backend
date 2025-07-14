@@ -25,5 +25,7 @@ postRouter
     .put('/edit/:id', postController.editPost)
     //@ts-ignore
     .get('/get/memories', postController.getMemories)
+    //@ts-ignore
+    .get('/templates/all', postController.getAdminTemplates)
 
 export default postRouter
