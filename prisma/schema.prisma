@@ -668,9 +668,6 @@ model Itinerary {
   start_city     String?
   end_city       String?
   cover_img      String?
-  hotel          String?
-  transport      String?
-  places_visited  String?
 
   status       ItineraryStatus @default(NOT_ASIGNED)
   city_details ItineraryCity[]
@@ -691,6 +688,9 @@ model ItineraryCity {
   lat_long    String
   title       String?
   description String?
+  hotel          String?
+  transport      String?
+  places_visited  String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
