@@ -1786,6 +1786,9 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                                 lat_long: helper.removeWhitespace(lat_long),
                                 title: city_title ? city_title : null,
                                 description: city_description ? city_description : null,
+                                hotel: hotel,
+                                transport: transport,
+                                places_visited: placesVisited,
                                 imges_url: {
                                     createMany: {
                                         data: img_urls.map((url) => ({ image_url: url })),
@@ -1852,6 +1855,9 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                                 lat_long: helper.removeWhitespace(lat_long),
                                 title: city_title ? city_title : null,
                                 description: city_description ? city_description : null,
+                                hotel: hotel,
+                                transport: transport,
+                                places_visited: placesVisited,
                                 // ...(img_url ? { imges_url: { create: { image_url: img_url } } } : {}), // only create, if img_url is provided
                                 imges_url: {
                                     createMany: {
