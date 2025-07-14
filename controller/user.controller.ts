@@ -1710,6 +1710,8 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
 
     const user = req.user;
     const { lat_long, status, itinerary_id, img_urls, city, city_title, city_description, isAutomatic, hotel, transport, placesVisited } = req.body;
+    console.log("createItinerary body :::::::::::::::", req.body);
+    
 
     // if (!lat_long || !status || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
     if (!lat_long || !city || typeof lat_long !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat_long, status and city are required' }); }
