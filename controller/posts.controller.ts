@@ -193,7 +193,7 @@ function haversineDistance(
   
       // 1. Fetch all posts for this user
       const posts = await prisma.post.findMany({
-        where: { user_id: userId },
+        where: { user_id: userId, media_type: 'IMAGE'},
         orderBy: { created_at: 'desc' },
       });
   
