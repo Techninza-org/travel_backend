@@ -1719,15 +1719,17 @@ const deleteItineraryById = async ( req: ExtendedRequest, res: Response, next: N
         if(!itinerary){
             return res.status(200).send({status: 404, message: "Itinerary not found."})
         }
-        const deletedItineary = await prisma.itinerary.delete({
-            where: {
-                id: Number(id),
-                user_id: user.id
-            }
-        })
-        if(!deletedItineary){
-            return res.status(200).send({status: 404, message: "Itinerary not found."})
-        }
+        console.log(itinerary, 'ITINERARY TO DELETE');
+        
+        // const deletedItineary = await prisma.itinerary.delete({
+        //     where: {
+        //         id: Number(id),
+        //         user_id: user.id
+        //     }
+        // })
+        // if(!deletedItineary){
+        //     return res.status(200).send({status: 404, message: "Itinerary not found."})
+        // }
         return res.status(200).send({status: 200, send: "Itinerary deleted successfully!"})
     }catch(err){
         return next(err)
