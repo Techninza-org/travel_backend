@@ -1725,6 +1725,9 @@ const deleteItineraryById = async ( req: ExtendedRequest, res: Response, next: N
                 user_id: user.id
             }
         })
+        if(!deletedItineary){
+            return res.status(200).send({status: 404, message: "Itinerary not found."})
+        }
         return res.status(200).send({status: 200, send: "Itinerary deleted successfully!"})
     }catch(err){
         return next(err)
