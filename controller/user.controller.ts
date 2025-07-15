@@ -1706,6 +1706,31 @@ const getHighlightsByUserId = async (req: ExtendedRequest, res: Response, next: 
 
 //====== Itinerary ======//
 
+const deleteItineraryById = async ( req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const user = req.user;
+        const {id} = req.params;
+        const itinerary = prisma.itinerary.findFirst({
+            where: {
+                id: Number(id),
+                user_id: user.id
+            }
+        })
+        if(!itinerary){
+            return res.status(200).send({status: 404, message: "Itinerary not found."})
+        }
+        const deletedItineary = await prisma.itinerary.delete({
+            where: {
+                id: Number(id),
+                user_id: user.id
+            }
+        })
+        return res.status(200).send({status: 200, send: "Itinerary deleted successfully!"})
+    }catch(err){
+        return next(err)
+    }
+}
+
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const user = req.user;
@@ -2809,7 +2834,8 @@ const userController = {
     getAirportDetailsByAirportCode,
     getAllAirports,
     getTravelRequestsByDestinationId,
-    filterTravelRequests
+    filterTravelRequests,
+    deleteItineraryById
 }
 
 export default userController
