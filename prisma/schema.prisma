@@ -680,7 +680,7 @@ model ItineraryCity {
   id Int @id @default(autoincrement())
 
   itinerary_id Int?
-  itinerary    Itinerary? @relation(fields: [itinerary_id], references: [id], onDelete: SetNull)
+  itinerary    Itinerary? @relation(fields: [itinerary_id], references: [id], onDelete: Cascade)
 
   imges_url CityImg[]
 
@@ -700,7 +700,7 @@ model CityImg {
   id Int @id @default(autoincrement())
 
   iterary_city_id Int?
-  itineraryCity   ItineraryCity? @relation(fields: [iterary_city_id], references: [id], onDelete: SetNull)
+  itineraryCity   ItineraryCity? @relation(fields: [iterary_city_id], references: [id], onDelete: Cascade)
 
   image_url String
 
