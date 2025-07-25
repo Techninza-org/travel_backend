@@ -80,7 +80,10 @@ model User {
 model RequestTraveller {
   id                  Int                   @id @default(autoincrement())
   user_id             Int
-  destination_id      Int
+  // destination_id      Int
+  destinationName       String?
+  destination_latitude  Float?
+  destination_longitude Float?
   gender              Int //0 any, 1 male, 2 female
   date                DateTime?
   end_date            DateTime?
@@ -92,7 +95,7 @@ model RequestTraveller {
   description         String
   created_at          DateTime              @default(now())
   updated_at          DateTime              @updatedAt
-  destination         Destination           @relation(fields: [destination_id], references: [id], onDelete: Cascade)
+  // destination         Destination           @relation(fields: [destination_id], references: [id], onDelete: Cascade)
   user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   friendTravelRequest friendTravelRequest[]
 }
@@ -375,7 +378,6 @@ model Destination {
   customise_options Json?
   latitude          Float?
   longitude         Float?
-  requestTravellers RequestTraveller[]
   quotes            Quote[]
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt

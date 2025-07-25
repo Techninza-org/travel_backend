@@ -2351,7 +2351,7 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
 export const createTravelRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user_id = req.user.id;
-        const { destination_id, gender, date, date_type, traveler_type, budget_type, description , end_date, count} = req.body;
+        const { destinationName, destination_latitude, destination_longitude, gender, date, date_type, traveler_type, budget_type, description , end_date, count} = req.body;
         
         if(gender !== 0 && gender !== 1 && gender !== 2) {
             return res.send({status: 400, error_description: 'gender must be 0 for any, 1 for male or 2 for female.'})
@@ -2362,9 +2362,6 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
         if(budget_type !== 0 && budget_type !== 1) {
             return res.send({status: 400, error_description: 'budget_type must be 0 for backpacking or 1 for premium.'})
         }
-        if(typeof destination_id !== 'number' || !Number.isInteger(destination_id) || destination_id <= 0) {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Destination Id should be a positive integer.' });
-        }
         if(date && isNaN(Date.parse(date))) {
             return res.status(400).send({
                 status: 400,
@@ -2372,19 +2369,13 @@ export const createTravelRequest = async (req: ExtendedRequest, res: Response, n
                 error_description: 'Date should be a valid date string.',
             });
         }
-        
-        const destinationExists = await prisma.destination.findUnique({
-            where: { id: destination_id },
-        })
-        
-        if(!destinationExists) {
-            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Destination not found.' });
-        }
 
         const travelRequest = await prisma.requestTraveller.create({
             data: {
                 user_id,
-                destination_id,
+                destinationName,
+                destination_latitude: Number(destination_latitude),
+                destination_longitude: Number(destination_longitude),
                 gender,
                 date,
                 date_type,
@@ -2413,7 +2404,6 @@ const getMyTravelRequests = async (req: ExtendedRequest, res: Response, next: Ne
         const travelRequests = await prisma.requestTraveller.findMany({
             where: { user_id },
             include: {
-                destination: true,
                 user: {
                     select: {
                         id: true,
@@ -2473,7 +2463,6 @@ const getAllTravelRequests = async (req: ExtendedRequest, res: Response, next: N
                 }
             },
             include: {
-                destination: true,
                 user: {
                     select: {
                         id: true,
@@ -2530,7 +2519,7 @@ export const filterTravelRequests = async (
       const user_id = req.user.id;
   
       const {
-        destination_id,
+        destinationName,
         gender,
         date,
         end_date,
@@ -2542,7 +2531,7 @@ export const filterTravelRequests = async (
   
       const where: any = { user_id };
   
-      if (destination_id)    where.destination_id = Number(destination_id);
+      if (destinationName)   where.destinationName = destinationName;
       if (gender)            where.gender         = Number(gender);
       if (date_type)         where.date_type      = Number(date_type);
       if (traveler_type)     where.traveler_type  = traveler_type;
@@ -2575,7 +2564,6 @@ export const filterTravelRequests = async (
       const travelRequestsall = await prisma.requestTraveller.findMany({
         where,
         include: {
-          destination: true,
           user: {
             select: { id: true, username: true, image: true },
           },
@@ -2617,6 +2605,111 @@ export const filterTravelRequests = async (
       next(error);
     }
   };
+
+  const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { destination_id } = req.params;
+
+        if (!destination_id) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Destination Name as destination_id is required and should be a string.' });
+        }
+
+        const travelRequestsDest = await prisma.requestTraveller.findMany({
+            where: { destinationName: destination_id },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        });
+
+        const travelRequestWithFollowingStatus = await Promise.all(travelRequestsDest.map(async (request) => {
+            let status = 0;
+            const isFollowing = await prisma.follows.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                },
+            });
+
+            const isRequested = await prisma.followRequest.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                    status: 0,
+                },
+            });
+
+            if (isRequested) {
+                status = 1; // requested
+            } else if (isFollowing) {
+                status = 2; // following
+            }
+
+            return {
+                ...request,
+                isFollowing: status,
+            };
+        }))
+
+        const otherRequests = await prisma.requestTraveller.findMany({
+            where: {
+                destinationName: { not: destination_id },
+                user: {
+                    id: { not: req.user.id }
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' }
+        })
+
+        const otherRequestsWithFollowingStatus = await Promise.all(otherRequests.map(async (request) => {
+            let status = 0;
+            const isFollowing = await prisma.follows.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                },
+            });
+
+            const isRequested = await prisma.followRequest.findFirst({
+                where: {
+                    user_id: request.user.id,
+                    follower_id: req.user.id,
+                    status: 0,
+                },
+            });
+
+            if (isRequested) {
+                status = 1; // requested
+            } else if (isFollowing) {
+                status = 2; // following
+            }
+
+            return {
+                ...request,
+                isFollowing: status,
+            };
+        }))
+        
+        return res.status(200).send({ status: 200, message: 'Ok', destination: travelRequestWithFollowingStatus, other: otherRequestsWithFollowingStatus });
+    } catch (error) {
+        return next(error);
+    }
+}
 
 const getAllAirports = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -2661,121 +2754,6 @@ const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Respons
     }
     catch(err){
     return next(err)
-    }
-}
-
-const getTravelRequestsByDestinationId = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try {
-        const { destination_id } = req.params;
-
-        if (!destination_id || isNaN(Number(destination_id))) {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Destination ID is required and should be a number.' });
-        }
-
-        const destinationExists = await prisma.destination.findUnique({
-            where: { id: Number(destination_id) },
-        });
-
-        if (!destinationExists) {
-            return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Destination not found.' });
-        }
-
-        const travelRequestsDest = await prisma.requestTraveller.findMany({
-            where: { destination_id: Number(destination_id) },
-            include: {
-                destination: true,
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        image: true
-                    }
-                }
-            },
-            orderBy: { created_at: 'desc' }
-        });
-
-        const travelRequestWithFollowingStatus = await Promise.all(travelRequestsDest.map(async (request) => {
-            let status = 0;
-            const isFollowing = await prisma.follows.findFirst({
-                where: {
-                    user_id: request.user.id,
-                    follower_id: req.user.id,
-                },
-            });
-
-            const isRequested = await prisma.followRequest.findFirst({
-                where: {
-                    user_id: request.user.id,
-                    follower_id: req.user.id,
-                    status: 0,
-                },
-            });
-
-            if (isRequested) {
-                status = 1; // requested
-            } else if (isFollowing) {
-                status = 2; // following
-            }
-
-            return {
-                ...request,
-                isFollowing: status,
-            };
-        }))
-
-        const otherRequests = await prisma.requestTraveller.findMany({
-            where: {
-                destination_id: { not: Number(destination_id) },
-                user: {
-                    id: { not: req.user.id }
-                }
-            },
-            include: {
-                destination: true,
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        image: true
-                    }
-                }
-            },
-            orderBy: { created_at: 'desc' }
-        })
-
-        const otherRequestsWithFollowingStatus = await Promise.all(otherRequests.map(async (request) => {
-            let status = 0;
-            const isFollowing = await prisma.follows.findFirst({
-                where: {
-                    user_id: request.user.id,
-                    follower_id: req.user.id,
-                },
-            });
-
-            const isRequested = await prisma.followRequest.findFirst({
-                where: {
-                    user_id: request.user.id,
-                    follower_id: req.user.id,
-                    status: 0,
-                },
-            });
-
-            if (isRequested) {
-                status = 1; // requested
-            } else if (isFollowing) {
-                status = 2; // following
-            }
-
-            return {
-                ...request,
-                isFollowing: status,
-            };
-        }))
-        
-        return res.status(200).send({ status: 200, message: 'Ok', destination: travelRequestWithFollowingStatus, other: otherRequestsWithFollowingStatus });
-    } catch (error) {
-        return next(error);
     }
 }
 
