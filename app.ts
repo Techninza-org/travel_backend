@@ -570,6 +570,26 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
+async function deleteOldHighlights() {
+    
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  
+    await prisma.highlight.deleteMany({
+      where: {
+        created_at: {
+          lt: twentyFourHoursAgo,
+        },
+      },
+    })
+  
+    console.log('Old highlights deleted.')
+}
+
+cron.schedule('0 * * * *', () => {
+  console.log('Running highlight cleanup...')
+  deleteOldHighlights()
+})
+
 //every hour
 // cron.schedule('0 * * * *', async () => {
 //     console.log('sending every hour notifications');
