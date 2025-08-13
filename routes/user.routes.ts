@@ -127,6 +127,19 @@ userRouter
     .get('/filter_travel_requests', userController.filterTravelRequests)
     //@ts-ignore
     .delete('/deleteItinerary/:id', userController.deleteItineraryById)
-    
+    //@ts-ignore
+    .get('/domestic_packages_home', userController.domesticPackages)
+    //@ts-ignore
+    .get('/international_packages_home', userController.intlPackages)
+    //@ts-ignore
+    .get('/domestic_by_category/:category', userController.getDomesticPackagesByCategoryName)
+    //@ts-ignore
+    .get('/intl_by_category/:category', userController.getIntlPackagesByCategoryName)
+    //@ts-ignore
+    .get('/domestic_by_state/:state', userController.getDomesticPackagesByStateName)
+    //@ts-ignore
+    .get('/intl_by_country/:country', userController.getIntlPackagesByCountryName)
+    //@ts-ignore
+    .get('/package/:id', userController.getPackageById)
 
 export default userRouter

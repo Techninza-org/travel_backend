@@ -764,12 +764,183 @@ const deletePackageById = async (req: ExtendedRequest, res: Response, next: Next
     }
 }
 
+const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const quotes = await prisma.quote.findMany({
+            include: {
+            package: true},
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, quotes })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const markQuoteQueryAsSent = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const quoteId = Number(req.params.id)
+        if (!quoteId) {
+            return res
+                .status(200)
+                .send({ status: 400, error: 'Invalid payload', error_description: 'id(quote) is required in params.' })
+        }
+        const quote = await prisma.quote.update({
+            where: { id: quoteId },
+            data: { done: true },
+        })
+        return res.status(200).send({ status: 200, message: 'Quote marked as sent successfully.', quote })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const createPackageCategory = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { name, image } = req.body
+        if (!name || !image) {
+            return res.status(400).send({ error: 'Name and image are required' })
+        }
+        const category = await prisma.packageCategory.create({
+            data: { name, image },
+        })
+        return res.status(201).send({ status: 201, category })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in creating package category' })
+    }
+}
+
+const createPackageState = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { name, image } = req.body
+        if (!name || !image) {
+            return res.status(400).send({ error: 'Name and image are required' })
+        }
+        const state = await prisma.packageState.create({
+            data: { name, image },
+        })
+        return res.status(201).send({ status: 201, state })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in creating package state' })
+    }
+}
+
+const createPackageCountry = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { name, image } = req.body
+        if (!name || !image) {
+            return res.status(400).send({ error: 'Name and image are required' })
+        }
+        const country = await prisma.packageCountry.create({
+            data: { name, image },
+        })
+        return res.status(201).send({ status: 201, country })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in creating package country' })
+    }
+}
+
+const getAllPackageCategories = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const categories = await prisma.packageCategory.findMany({
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, categories })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getAllPackageStates = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const states = await prisma.packageState.findMany({
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, states })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getAllPackageCountries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const countries = await prisma.packageCountry.findMany({
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, countries })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deletePackageCategory = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const id = req.params.id
+        if (isNaN(Number(id))) {
+            return res.status(400).send({ error: 'Invalid category id' })
+        }
+        const categoryExists = await prisma.packageCategory.findUnique({ where: { id: Number(id) } })
+        if (!categoryExists) {
+            return res.status(404).send({ error: 'Category not found' })
+        }
+        await prisma.packageCategory.delete({ where: { id: Number(id) } })
+        return res.status(200).send({ message: 'Category deleted successfully' })
+    }catch(err){
+        return next(err)
+    }
+}
+
+const deletePackageState = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const id = req.params.id
+        if (isNaN(Number(id))) {
+            return res.status(400).send({ error: 'Invalid state id' })
+        }
+        const stateExists = await prisma.packageState.findUnique({ where: { id: Number(id) } })
+        if (!stateExists) {
+            return res.status(404).send({ error: 'State not found' })
+        }
+        await prisma.packageState.delete({ where: { id: Number(id) } })
+        return res.status(200).send({ message: 'State deleted successfully' })
+    }catch(err){
+        return next(err)
+    }
+}
+
+const deletePackageCountry = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const id = req.params.id
+        if (isNaN(Number(id))) {
+            return res.status(400).send({ error: 'Invalid country id' })
+        }
+        const countryExists = await prisma.packageCountry.findUnique({ where: { id: Number(id) } })
+        if (!countryExists) {
+            return res.status(404).send({ error: 'Country not found' })
+        }
+        await prisma.packageCountry.delete({ where: { id: Number(id) } })
+        return res.status(200).send({ message: 'Country deleted successfully' })
+    }catch(err){
+        return next(err)
+    }
+}
+
 const superAdminController = {
     createPackage,
     getPackages,
     getPackageById,
     deletePackageById,
+    getAllQuoteQuery,
+    markQuoteQueryAsSent,
     getQueries,
+    createPackageCategory,
+    createPackageState,
+    createPackageCountry,
+    getAllPackageCategories,
+    getAllPackageStates,
+    getAllPackageCountries,
+    deletePackageCategory,
+    deletePackageState,
+    deletePackageCountry,
     updateUserPassword,
     getAllUsers,
     getAllVendors,

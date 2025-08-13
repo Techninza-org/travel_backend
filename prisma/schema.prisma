@@ -122,6 +122,7 @@ model Package {
   highlights Json
   cancellation_policy Json
   date_change_policy Json
+  quotes   Quote[]
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
@@ -442,7 +443,6 @@ model Destination {
   customise_options Json?
   latitude          Float?
   longitude         Float?
-  quotes            Quote[]
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
 }
@@ -477,10 +477,9 @@ enum QuoteSource{
 model Quote {
   id               Int     @id @default(autoincrement())
   done             Boolean @default(false)
-  destinationId     Int
-  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  packageId        Int
+  package          Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
   number_of_people Int
-  duration         Int
   start_date       String
   name             String
   phone            String

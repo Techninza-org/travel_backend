@@ -76,5 +76,27 @@ SuperAdminRouter
     .get('/package/:id', superAdminController.getPackageById)
     //@ts-ignore
     .delete('/package/:id', superAdminController.deletePackageById)
-
+    //@ts-ignore
+    .get('/quotes', superAdminController.getAllQuoteQuery)
+    //@ts-ignore
+    .get('/quote/:id', superAdminController.markQuoteQueryAsSent)
+    //@ts-ignore
+    .post('/package-category', superAdminController.createPackageCategory)
+    //@ts-ignore
+    .get('/package-category', superAdminController.getPackageCategories)
+    //@ts-ignore
+    .delete('/package-category/:id', superAdminController.deletePackageCategory)
+    //@ts-ignore
+    .post('/package-state', superAdminController.createPackageState)
+    //@ts-ignore
+    .get('/package-state', superAdminController.getAllPackageStates)
+    //@ts-ignore
+    .delete('/package-state/:id', superAdminController.deletePackageState)
+    //@ts-ignore
+    .post('/package-country', superAdminController.createPackageCountry)
+    //@ts-ignore
+    .get('/package-country', superAdminController.getAllPackageCountries)
+    //@ts-ignore
+    .delete('/package-country/:id', superAdminController.deletePackageCountry)
+    
 export default SuperAdminRouter

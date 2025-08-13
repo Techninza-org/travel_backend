@@ -2757,9 +2757,125 @@ const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Respons
     }
 }
 
+const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const categories = await prisma.packageCategory.findMany();
+        const states = await prisma.packageState.findMany();
+        const domesticPackages = await prisma.package.findMany({
+            where: {type: 0}
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', categories, states, packages: domesticPackages });
+    }catch(err){
+        return next(err)
+    }
+}
+const intlPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const categories = await prisma.packageCategory.findMany();
+        const countries = await prisma.packageCountry.findMany();
+        const intlPackages = await prisma.package.findMany({
+            where: {type: 1}
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', categories, countries, packages: intlPackages });
+    }catch(err){
+        return next(err)
+    }
+}
+
+const getDomesticPackagesByCategoryName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const category = req.params.category;
+        const packages = await prisma.package.findMany({
+            where: {
+                type: 0,
+                category: category
+            }
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', packages });
+
+    }catch(err){
+        return next(err)
+    }
+} 
+
+const getIntlPackagesByCategoryName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const category = req.params.category;
+        const packages = await prisma.package.findMany({
+            where: {
+                type: 1,
+                category: category
+            }
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', packages });
+
+    }catch(err){
+        return next(err)
+    }
+} 
+
+const getDomesticPackagesByStateName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const state = req.params.state;
+        const packages = await prisma.package.findMany({
+            where: {
+                type: 0,
+                state: state
+            }
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', packages });
+
+    }catch(err){
+        return next(err)
+    }
+} 
+
+const getIntlPackagesByCountryName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const country = req.params.country;
+        const packages = await prisma.package.findMany({
+            where: {
+                type: 1,
+                country: country
+            }
+        })
+        return res.status(200).send({ status: 200, message: 'Ok', packages });
+
+    }catch(err){
+        return next(err)
+    }
+} 
+
+const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const packageId = req.params.id
+
+    if (isNaN(Number(packageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid package id Parameters' })
+    }
+    try {
+        const packageDetails = await prisma.package.findUnique({
+            where: { id: Number(packageId) },
+        })
+        if (!packageDetails) {
+            return res.status(404).send({ status: 404, error: 'Package not found' })
+        }
+        return res.status(200).send({ status: 200, package: packageDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
 
 const userController = {
     submitQuery,
+    domesticPackages,
+    intlPackages,
+    getPackageById,
+    getDomesticPackagesByCategoryName,
+    getDomesticPackagesByStateName,
+    getIntlPackagesByCategoryName,
+    getIntlPackagesByCountryName,
     getSuggestion,
     get_all_users,
     get_user_feed,
