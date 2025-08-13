@@ -613,7 +613,104 @@ type AirportRow = {
     }
   };
 
+  
+type AnyObj = Record<string, any>;
+
+function safeJson<T = any>(val: any, fallback: T): T {
+  if (val == null) return fallback;
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return fallback;
+    }
+  }
+  return val as T;
+}
+
+function toInt(v: any, d = 0) {
+  const n = parseInt(String(v), 10);
+  return Number.isFinite(n) ? n : d;
+}
+
+
+  export const createPackage = async (req: Request, res: Response, _next: NextFunction) => {
+    try {
+      const b = req.body as AnyObj;
+  
+      const type = toInt(b.type);              // 0=india, 1=international
+      const category = String(b.category || '').trim();
+      const state = String(b.state || '').trim();
+      const country = String(b.country || '').trim();
+      const name = String(b.name || '').trim();
+      const description = String(b.description || '').trim();
+      const price = toInt(b.price);
+      const tax = toInt(b.tax);
+      const days = Math.max(1, toInt(b.days, 1));
+      const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)));
+  
+      const itinerary = safeJson(b.itinerary, [] as AnyObj[]);
+      const inclusions = safeJson(b.inclusions, [] as string[]);
+      const exclusions = safeJson(b.exclusions, [] as string[]);
+      const highlights = safeJson(b.highlights, [] as string[]);
+      const cancellation_policy = safeJson(b.cancellation_policy, [] as string[]);
+      const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
+      const destination_guide = String(b.destination_guide || '');
+      const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
+  
+  
+      if (![0, 1].includes(type)) {
+        return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' });
+      }
+      if (!category) return res.status(400).send({ error: 'Category is required' });
+      if (!name) return res.status(400).send({ error: 'Name is required' });
+      if (!description) return res.status(400).send({ error: 'Description is required' });
+      if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' });
+    
+  
+      // --- Create
+      const created = await prisma.package.create({
+        data: {
+          type,
+          category,
+          name,
+          state,
+          country,
+          description,
+          images: images as any, // Prisma Json
+          price,
+          tax,
+          days,
+          nights,
+          itinerary: itinerary as any, // Prisma Json
+          destination_guide,
+          inclusions: inclusions as any,
+          exclusions: exclusions as any,
+          highlights: highlights as any,
+          cancellation_policy: cancellation_policy as any,
+          date_change_policy: date_change_policy as any,
+        },
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          type: true,
+          days: true,
+          nights: true,
+          price: true,
+          created_at: true,
+        },
+      });
+  
+      return res.status(201).send({ status: 201, package: created });
+    } catch (err) {
+      console.error('createPackage error:', err);
+      return res.status(400).send({ error: 'Error in creating package' });
+    }
+  };
+
 const superAdminController = {
+    createPackage,
     getQueries,
     updateUserPassword,
     getAllUsers,

@@ -4,6 +4,12 @@ import moment from 'moment';
 import axios from 'axios'
 import dotenv from 'dotenv'
 dotenv.config()
+import Razorpay from 'razorpay'
+
+const razorpayInstance = new Razorpay({
+    key_id: process.env.KEY_ID!,
+    key_secret: process.env.KEY_SECRET!,
+})
 
 const USERNAME = "HotelAPIUserTest";
 const PASSWORD = "BDvRwrEwX5waYF6NKHbRNN4pSD9G2H";

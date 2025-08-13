@@ -75,6 +75,70 @@ model User {
   CustomExpenseTrips           CustomExpenseTrip[]
   CustomExpenses               CustomExpense[]
   CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
+  UserHotelBookings            UserHotelBooking[]
+}
+
+model PackageCategory {
+  id          Int      @id @default(autoincrement())
+  name        String
+  image       String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model PackageState {
+  id          Int      @id @default(autoincrement())
+  name        String
+  image       String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model PackageCountry {
+  id          Int      @id @default(autoincrement())
+  name        String
+  image       String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model Package {
+  id          Int      @id @default(autoincrement())
+  type        Int  // 0 = india, 1 = international
+  category    String
+  name        String
+  state       String?
+  country     String?
+  description String   @db.Text
+  images      Json
+  price       Int
+  tax         Int
+  days        Int
+  nights      Int
+  itinerary   Json
+  destination_guide   String @db.Text
+  inclusions Json
+  exclusions Json
+  highlights Json
+  cancellation_policy Json
+  date_change_policy Json
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model UserHotelBooking {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  hotel_name String
+  check_in   DateTime
+  check_out  DateTime
+  room_type  String
+  amount     Int
+  booking_id String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model RequestTraveller {

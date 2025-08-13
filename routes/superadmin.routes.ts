@@ -68,5 +68,7 @@ SuperAdminRouter
     .post('/update-password', superAdminController.updateUserPassword)
     //@ts-ignore
     .post('/airportCodes', upload.single('file'), superAdminController.importAirportDataFromExcel)
+    //@ts-ignore
+    .post('/package', superAdminController.createPackage)
 
 export default SuperAdminRouter
