@@ -83,7 +83,7 @@ SuperAdminRouter
     //@ts-ignore
     .post('/package-category', superAdminController.createPackageCategory)
     //@ts-ignore
-    .get('/package-category', superAdminController.getPackageCategories)
+    .get('/package-category', superAdminController.getAllPackageCategories)
     //@ts-ignore
     .delete('/package-category/:id', superAdminController.deletePackageCategory)
     //@ts-ignore
