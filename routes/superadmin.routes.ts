@@ -50,7 +50,7 @@ SuperAdminRouter
     .delete('/blog/:id', superAdminController.deleteBlog)
     //@ts-ignore
     .get("/user/:user_id", superAdminController.getUserById)
-    //@ts-ignore
+    //@ts-ignore                                                                                                
     .delete("/user/post/:post_id", superAdminController.deletePostById)
     //@ts-ignore
     .delete("/user/comment/:comment_id", superAdminController.deleteCommentById)
@@ -70,5 +70,11 @@ SuperAdminRouter
     .post('/airportCodes', upload.single('file'), superAdminController.importAirportDataFromExcel)
     //@ts-ignore
     .post('/package', superAdminController.createPackage)
+    //@ts-ignore
+    .get('/package', superAdminController.getPackages)
+    //@ts-ignore
+    .get('/package/:id', superAdminController.getPackageById)
+    //@ts-ignore
+    .delete('/package/:id', superAdminController.deletePackageById)
 
 export default SuperAdminRouter

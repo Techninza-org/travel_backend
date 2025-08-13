@@ -707,10 +707,68 @@ function toInt(v: any, d = 0) {
       console.error('createPackage error:', err);
       return res.status(400).send({ error: 'Error in creating package' });
     }
-  };
+};
+
+const getPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const packages = await prisma.package.findMany({
+            orderBy: { created_at: 'desc' },
+        })
+        return res.status(200).send({ status: 200, packages: packages, count: packages.length })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const packageId = req.params.id
+
+    if (isNaN(Number(packageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid package id Parameters' })
+    }
+    try {
+        const packageDetails = await prisma.package.findUnique({
+            where: { id: Number(packageId) },
+        })
+        if (!packageDetails) {
+            return res.status(404).send({ status: 404, error: 'Package not found' })
+        }
+        return res.status(200).send({ status: 200, package: packageDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deletePackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const packageId = req.params.id
+    if (isNaN(Number(packageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid package id Parameters' })
+    }
+    try{
+        const packageExists = await prisma.package.findUnique({
+            where: {
+                id: Number(packageId)
+            }
+        })
+        if(!packageExists){
+            return res.status(404).send({status: 404, error: 'Package not found'})
+        }
+        await prisma.package.delete({where: {id: Number(packageId)}});
+        return res.status(200).send({message: 'Package deleted successfully'})
+    }catch(err){
+        return next(err)
+    }
+}
 
 const superAdminController = {
     createPackage,
+    getPackages,
+    getPackageById,
+    deletePackageById,
     getQueries,
     updateUserPassword,
     getAllUsers,
