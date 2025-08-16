@@ -499,5 +499,40 @@ export const getAllConversations = async (req: ExtendedRequest, res: Response, n
     }
 }
 
-const messageController = { sendMessage, getConversation, deleteMessageFromConversation, getConversationByConvoId, getAllConversations, removeParticipantFromGroup, editGroupName, createGroup, sendGroupMessage, addParticipantsToGroup }
+export const searchConversationByUsernameOrGroupName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const senderId = req.user.id
+        const searchQuery = req.query.q as string
+        if (!searchQuery) return res.status(400).send({ message: 'Search query is required' })
+
+        const conversations = await prisma.conversation.findMany({
+            where: {
+                OR: [
+                    { name: { contains: searchQuery } },
+                    {
+                        participants: {
+                            some: {
+                                user: {
+                                    username: { contains: searchQuery },
+                                },
+                            },
+                        },
+                    },
+                ],
+                participants: {
+                    some: {
+                        userId: senderId,
+                    },
+                },
+            },
+            include: { messages: true, participants: {select: {isAdmin: true, user: {select: {username: true, image: true, id: true}}}}},
+        })
+
+        return res.status(200).send({ conversations })
+    } catch (err) {
+        return res.status(500).send({ message: 'Error searching conversations' })
+    }
+}
+
+const messageController = { sendMessage, getConversation, deleteMessageFromConversation, getConversationByConvoId, getAllConversations, removeParticipantFromGroup, editGroupName, createGroup, sendGroupMessage, addParticipantsToGroup, searchConversationByUsernameOrGroupName }
 export default messageController

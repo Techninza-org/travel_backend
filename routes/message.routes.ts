@@ -10,6 +10,8 @@ messageRouter.post('/conversation/:receiverId', messageController.getConversatio
 //@ts-ignore
 messageRouter.get('/conversations', messageController.getAllConversations)
 //@ts-ignore
+messageRouter.get('/conversations/all/search', messageController.searchConversationByUsernameOrGroupName)
+//@ts-ignore
 messageRouter.post('/group', messageController.createGroup)
 //@ts-ignore
 messageRouter.post('/group/:conversationId', messageController.sendGroupMessage)
