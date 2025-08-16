@@ -2789,7 +2789,7 @@ const intlPackages = async (req: ExtendedRequest, res: Response, next: NextFunct
         })
         const countryWithPackageCount = countries.map((country) => {
             const statePackageCount = intlPackages.filter(
-              (pkg) => pkg.state === country.name
+              (pkg) => pkg.country === country.name
             ).length;
           
             return {
