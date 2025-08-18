@@ -130,29 +130,33 @@ Return ONLY valid JSON with the schema:
 };
 
 // citiesDescription: returns array/object per your schema request
-export const citiesDescription = async (cities: string[]) => {
-  const prompt = `
-Given the cities: ${JSON.stringify(cities)}
-
-For EACH city, write a ~200-word description.
-
-Return ONLY valid JSON as an array of objects:
-[
-  { "city": "city_name", "description": "city_description" },
-  ...
-]
-`;
-
-  try {
-    const text = await callPerplexity(prompt);
-    const citiesDesc = safeParseJSON<any>(text);
-    console.log("Cities desc:", citiesDesc);
-    return citiesDesc;
-  } catch (error) {
-    console.error("Error fetching city description:", error);
-    return null;
-  }
-};
+export const citiesDescription = async (cities: string[]): Promise<any[]> => {
+    const prompt = `
+  Given the cities: ${JSON.stringify(cities)}
+  
+  For EACH city, write a ~200-word description.
+  
+  Return ONLY valid JSON as an array of objects:
+  [
+    { "city": "city_name", "description": "city_description" },
+    ...
+  ]
+  `;
+  
+    try {
+      const text = await callPerplexity(prompt);
+      const parsed = safeParseJSON<any>(text);
+  
+      // Normalize: if model returns a single object, wrap it; if it returns the target shape, pass through.
+      const out = Array.isArray(parsed) ? parsed : [parsed];
+      console.log("Cities desc:", out);
+      return out;
+    } catch (error) {
+      console.error("Error fetching city description:", error);
+      return []; // << important: never return null
+    }
+  };
+  
 
 // optimizedCitiesDescription: reads from DB, generates missing, stores, returns combined
 export const optimizedCitiesDescription = async (cities: string[]): Promise<any[]> => {

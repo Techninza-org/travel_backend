@@ -2104,64 +2104,70 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
 const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { place, type } = req.query;
-    if (!place || typeof place !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'place and type are required' }); }
-    if (typeof type !== 'string') { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be a string' }); }
-
-    try {
-
-        const cityDetails = await citiesDescription([place]);
-        const cityDescription = cityDetails[0].description;
-
-
-        if (type === 'attractions') {
-            const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
-
-            const data = {
-                city: place,
-                city_description: cityDescription,
-                attractions: attractions,
-            }
-
-            return res.status(200).send({ status: 200, message: 'Ok', data: data });
-        } else if (type === 'restaurants') {
-            const restaurants = await marketplaceDetails(place, TripAdvisorCategory.Restrurants);
-
-            const data = {
-                city: place,
-                city_description: cityDescription,
-                restaurants: restaurants,
-            }
-
-            return res.status(200).send({ status: 200, message: 'Ok', data: data });
-        } else if (type === 'geos') {
-            const geos = await marketplaceDetails(place, TripAdvisorCategory.Geos);
-
-            const data = {
-                city: place,
-                city_description: cityDescription,
-                geos: geos,
-            }
-
-            return res.status(200).send({ status: 200, message: 'Ok', data: data });
-        } else if (type === 'hotels') {
-
-            const hotels = await marketplaceDetails(place, TripAdvisorCategory.hotels);
-
-            const data = {
-                city: place,
-                city_description: cityDescription,
-                hotels: hotels,
-            }
-
-            return res.status(200).send({ status: 200, message: 'Ok', data: data });
-        } else {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'type should be attractions, restaurants, hotels or geos' });
-        }
-    } catch (error) {
-        return next(error);
+  
+    if (!place || typeof place !== "string") {
+      return res.status(400).send({
+        status: 400,
+        error: "Bad Request",
+        error_description: "place and type are required",
+      });
     }
-
-};
+    if (typeof type !== "string") {
+      return res.status(400).send({
+        status: 400,
+        error: "Bad Request",
+        error_description: "type should be a string",
+      });
+    }
+  
+    try {
+      // Get city description (safe: returns [] on failure)
+      const cityDetails = await citiesDescription([place]);
+      const cityDescription = cityDetails?.[0]?.description || ""; // fallback to empty string
+  
+      // Helper to send a uniform response
+      const sendData = (payloadKey: "attractions" | "restaurants" | "geos" | "hotels", payloadValue: any) => {
+        return res.status(200).send({
+          status: 200,
+          message: "Ok",
+          data: {
+            city: place,
+            city_description: cityDescription,
+            [payloadKey]: payloadValue ?? [],
+          },
+        });
+      };
+  
+      // Fetch TripAdvisor data per type
+      switch (type) {
+        case "attractions": {
+          const attractions = await marketplaceDetails(place, TripAdvisorCategory.Attractions);
+          return sendData("attractions", attractions);
+        }
+        case "restaurants": {
+          const restaurants = await marketplaceDetails(place, TripAdvisorCategory.Restrurants);
+          return sendData("restaurants", restaurants);
+        }
+        case "geos": {
+          const geos = await marketplaceDetails(place, TripAdvisorCategory.Geos);
+          return sendData("geos", geos);
+        }
+        case "hotels": {
+          const hotels = await marketplaceDetails(place, TripAdvisorCategory.hotels);
+          return sendData("hotels", hotels);
+        }
+        default:
+          return res.status(400).send({
+            status: 400,
+            error: "Bad Request",
+            error_description: "type should be attractions, restaurants, hotels or geos",
+          });
+      }
+    } catch (error) {
+      return next(error);
+    }
+  };
+  
 
 const test = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
