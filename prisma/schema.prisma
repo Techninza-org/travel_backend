@@ -116,7 +116,7 @@ model Package {
   days        Int
   nights      Int
   itinerary   Json
-  destination_guide   String @db.Text
+  destination_guide   Json
   inclusions Json
   exclusions Json
   highlights Json
