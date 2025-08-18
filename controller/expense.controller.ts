@@ -400,14 +400,12 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id and name are required' })
         }
         const expense = await prisma.expense.findFirst({ where: { id: expense_id } })
-        console.log(expense, 'exp');
         
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         const updatedExpense = await prisma.expense.update({
             where: { id: expense_id },
             data: { category: name },
         })
-        console.log(updatedExpense, 'updated exp');
         
         return res.status(200).send({ status: 200, message: 'Expense updated successfully', expense: updatedExpense })
     }catch(err){
@@ -417,6 +415,23 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
     }
 }
 
-const expenseController = { CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
+export const deleteExpenseById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const expenseId = req.params.id
+        if (!expenseId) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id is required' })
+        }
+        const expense = await prisma.expense.findFirst({ where: { id: Number(expenseId) } })
+        if (!expense) {
+            return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' })
+        }
+        await prisma.expense.delete({ where: { id: Number(expenseId) } })
+        return res.status(200).send({ status: 200, message: 'Expense deleted successfully' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const expenseController = { CreateExpense, deleteExpenseById, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
 export default expenseController
