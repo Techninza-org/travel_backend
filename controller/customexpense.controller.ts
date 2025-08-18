@@ -50,7 +50,7 @@ export const deleteCustomExpenseTrip = async (req: ExtendedRequest, res: Respons
         if (expenses.length > 0) {
             await prisma.customExpense.deleteMany({ where: { custom_expense_trip_id: Number(tripId) } })
         }
-        
+
         await prisma.customExpenseTrip.delete({ where: { id: Number(tripId) } })
         return res.status(200).send({ status: 200, message: 'Trip deleted successfully' })
     } catch (err) {
@@ -446,9 +446,9 @@ export const getEachTripsExpenses = async (req: ExtendedRequest, res: Response, 
 
 export const editExpenseName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
-        const { expense_id, name } = req.body
-        if (!expense_id || !name) {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id and name are required' })
+        const { expense_id, name, amount } = req.body
+        if (!expense_id) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id is required' })
         }
         const expense = await prisma.customExpense.findFirst({ where: { id: expense_id } })
         console.log(expense, 'exp');
@@ -456,7 +456,7 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
         if (!expense) { return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' }) }
         const updatedExpense = await prisma.customExpense.update({
             where: { id: expense_id },
-            data: { category: name },
+            data: { category: name, amount: amount },
         })
         console.log(updatedExpense, 'updated exp');
         
