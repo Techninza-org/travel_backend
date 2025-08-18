@@ -46,6 +46,11 @@ export const deleteCustomExpenseTrip = async (req: ExtendedRequest, res: Respons
         if (!tripId) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Trip id is required' }) }
         const trip = await prisma.customExpenseTrip.findFirst({ where: { id: Number(tripId), user_id: user.id } })
         if (!trip) { return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' }) }
+        const expenses = await prisma.customExpense.findMany({ where: { custom_expense_trip_id: Number(tripId) } })
+        if (expenses.length > 0) {
+            await prisma.customExpense.deleteMany({ where: { custom_expense_trip_id: Number(tripId) } })
+        }
+        
         await prisma.customExpenseTrip.delete({ where: { id: Number(tripId) } })
         return res.status(200).send({ status: 200, message: 'Trip deleted successfully' })
     } catch (err) {
