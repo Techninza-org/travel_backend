@@ -5,7 +5,8 @@ const prisma = new PrismaClient();
 
 const PERPLEXITY_API_KEY: string = process.env.PERPLEXITY_API_KEY || "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";
 const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
-const PERPLEXITY_MODEL = "llama-3.1-sonar-large-128k-chat";
+const PERPLEXITY_MODEL_PRIMARY = "llama-3.1-sonar-large-128k-chat";
+const PERPLEXITY_MODEL_FALLBACK = "llama-3.1-sonar-small-128k-chat";
 
 const TRIP_ADVISOR_API_KEY: string = process.env.TRIP_ADVISOR_API_KEY || "B4825F3FE60D4D718AD0B6DFEEF1E58C";
 const TRIP_ADVISOR_BASE_URL: string =
@@ -40,32 +41,78 @@ export enum TripAdvisorCategory {
 }
 
 // Centralized Perplexity call that returns the assistant's raw text
-async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns valid JSON when asked. Do not add explanations.") {
-  if (!PERPLEXITY_API_KEY) {
-    throw new Error("Missing PERPLEXITY_API_KEY");
-  }
-
-  const { data } = await axios.post<PerplexityResponse>(
-    PERPLEXITY_URL,
-    {
-      model: PERPLEXITY_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+async function callPerplexity(
+    userPrompt: string,
+    systemPrompt = "You are a helpful assistant that ONLY returns valid JSON when asked. Do not add explanations."
+  ): Promise<string> {
+    if (!PERPLEXITY_API_KEY) {
+      throw new Error("Missing PERPLEXITY_API_KEY");
     }
-  );
-
-  const text = data?.choices?.[0]?.message?.content ?? "";
-  if (!text) throw new Error("Empty response from Perplexity");
-  return text.trim();
-}
+  
+    const makeReq = async (model: string) => {
+      return axios.post(
+        PERPLEXITY_URL,
+        {
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          // Add conservative, API-friendly defaults
+          temperature: 0.2,
+          max_tokens: 1200,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 15000,
+        }
+      );
+    };
+  
+    try {
+      const { data } = await makeReq(PERPLEXITY_MODEL_PRIMARY);
+      const text = data?.choices?.[0]?.message?.content ?? "";
+      if (!text) throw new Error("Empty response from Perplexity");
+      return text.trim();
+    } catch (err: any) {
+      // If it's a 400/422 type, log the error body, then try fallback once
+      const status = err?.response?.status;
+      const apiError = err?.response?.data?.error || err?.response?.data;
+  
+      console.error("Perplexity error (primary):", {
+        status,
+        apiError,
+      });
+  
+      // Try once more with a smaller/alternate model (sometimes the model name/mode is the issue)
+      if (status === 400 || status === 422) {
+        try {
+          const { data } = await makeReq(PERPLEXITY_MODEL_FALLBACK);
+          const text = data?.choices?.[0]?.message?.content ?? "";
+          if (!text) throw new Error("Empty response from Perplexity (fallback)");
+          return text.trim();
+        } catch (err2: any) {
+          const status2 = err2?.response?.status;
+          const apiError2 = err2?.response?.data?.error || err2?.response?.data;
+          console.error("Perplexity error (fallback):", {
+            status: status2,
+            apiError: apiError2,
+          });
+        }
+      }
+  
+      // Re-throw with the API error message for visibility
+      const message =
+        apiError?.message ||
+        apiError?.error ||
+        err?.message ||
+        "Perplexity request failed";
+      throw new Error(`Perplexity  error: ${message}`);
+    }
+  }
 
 
 function safeParseJSON<T = any>(text: string): T {
