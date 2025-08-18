@@ -21,6 +21,38 @@ export const createCustomExpenseTrip = async (req: ExtendedRequest, res: Respons
     }
 }
 
+export const editCustomExpenseTripName = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const tripId = req.params.id
+        const name = req.body.name
+        if (!tripId || !name) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Trip id and name are required' }) }
+        const trip = await prisma.customExpenseTrip.findFirst({ where: { id: Number(tripId), user_id: user.id } })
+        if (!trip) { return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' }) }
+        const updatedTrip = await prisma.customExpenseTrip.update({
+            where: { id: Number(tripId) },
+            data: { name: name },
+        })
+        return res.status(200).send({ status: 200, message: 'Trip updated successfully', customExpenseTrip: updatedTrip })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+export const deleteCustomExpenseTrip = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user
+        const tripId = req.params.id
+        if (!tripId) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Trip id is required' }) }
+        const trip = await prisma.customExpenseTrip.findFirst({ where: { id: Number(tripId), user_id: user.id } })
+        if (!trip) { return res.status(404).send({ status: 404, error: 'Trip not found', error_description: 'Trip not found for the given id.' }) }
+        await prisma.customExpenseTrip.delete({ where: { id: Number(tripId) } })
+        return res.status(200).send({ status: 200, message: 'Trip deleted successfully' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 export const getCustomExpenseTrips = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user = req.user
@@ -448,6 +480,6 @@ export const deleteExpenseById = async (req: ExtendedRequest, res: Response, nex
     }
 }
 
-const customExpenseController = { createCustomExpenseTrip, deleteExpenseById, addUserToExpense, getCustomExpenseTrips, CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
+const customExpenseController = { editCustomExpenseTripName, deleteCustomExpenseTrip, createCustomExpenseTrip, deleteExpenseById, addUserToExpense, getCustomExpenseTrips, CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
 export default customExpenseController

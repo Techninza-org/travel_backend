@@ -28,6 +28,10 @@ CustomExpenseRouter
     .post('/edit/name', customExpenseController.editExpenseName)
      //@ts-ignore
     .delete('/delete/:id', customExpenseController.deleteExpenseById)
+    //@ts-ignore
+    .put('/edit/trip/:id', customExpenseController.editCustomExpenseTripName)
+    //@ts-ignore
+    .delete('/delete/trip/:id', customExpenseController.deleteCustomExpenseTrip)
     
 
 export default CustomExpenseRouter
