@@ -641,6 +641,7 @@ function toInt(v: any, d = 0) {
       const type = toInt(b.type);              // 0=india, 1=international
       const category = String(b.category || '').trim();
       const state = String(b.state || '').trim();
+      const city = String(b.city || '').trim();
       const country = String(b.country || '').trim();
       const name = String(b.name || '').trim();
       const description = String(b.description || '').trim();
@@ -675,6 +676,7 @@ function toInt(v: any, d = 0) {
           category,
           name,
           state,
+          city,
           country,
           description,
           images: images as any, // Prisma Json

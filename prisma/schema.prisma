@@ -108,6 +108,7 @@ model Package {
   category    String
   name        String
   state       String?
+  city        String?
   country     String?
   description String   @db.Text
   images      Json
