@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const PERPLEXITY_API_KEY: string = process.env.PERPLEXITY_API_KEY || "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";
 const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
-const PERPLEXITY_MODEL = "sonar-medium-online";
+const PERPLEXITY_MODEL = "sonar-pro";
 
 const TRIP_ADVISOR_API_KEY: string = process.env.TRIP_ADVISOR_API_KEY || "B4825F3FE60D4D718AD0B6DFEEF1E58C";
 const TRIP_ADVISOR_BASE_URL: string =
