@@ -431,6 +431,23 @@ export const editExpenseName = async (req: ExtendedRequest, res: Response, next:
     }
 }
 
-const customExpenseController = { createCustomExpenseTrip, addUserToExpense, getCustomExpenseTrips, CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
+export const deleteExpenseById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const expenseId = req.params.id
+        if (!expenseId) {
+            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Expense id is required' })
+        }
+        const expense = await prisma.customExpense.findFirst({ where: { id: Number(expenseId) } })
+        if (!expense) {
+            return res.status(404).send({ status: 404, error: 'Expense not found', error_description: 'Expense not found for the given id.' })
+        }
+        await prisma.customExpense.delete({ where: { id: Number(expenseId) } })
+        return res.status(200).send({ status: 200, message: 'Expense deleted successfully' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const customExpenseController = { createCustomExpenseTrip, deleteExpenseById, addUserToExpense, getCustomExpenseTrips, CreateExpense, GetTripExpenses, getEachTripsExpenses, editExpenseName, splitExpense, getMySplitBills, settleExpense, settleBillWithAUser }
 
 export default customExpenseController

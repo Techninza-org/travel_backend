@@ -26,6 +26,8 @@ CustomExpenseRouter
     .get('/split/bills', customExpenseController.getMySplitBills)
     //@ts-ignore
     .post('/edit/name', customExpenseController.editExpenseName)
+     //@ts-ignore
+    .delete('/delete/:id', expenseController.deleteExpenseById)
     
 
 export default CustomExpenseRouter
