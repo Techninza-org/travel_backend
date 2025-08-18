@@ -27,7 +27,7 @@ CustomExpenseRouter
     //@ts-ignore
     .post('/edit/name', customExpenseController.editExpenseName)
      //@ts-ignore
-    .delete('/delete/:id', expenseController.deleteExpenseById)
+    .delete('/delete/:id', customExpenseController.deleteExpenseById)
     
 
 export default CustomExpenseRouter
