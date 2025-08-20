@@ -12,7 +12,7 @@ const razorpayInstance = new Razorpay({
 })
 
 const USERNAME = "HotelAPIUserTest";
-const PASSWORD = "BDvRwrEwX5waYF6NKHbRNN4pSD9G2H";
+const PASSWORD = "hotelapitest6NKHbRNN4pSD9G2H";
 const IPADDRESS = "110.235.232.3"
 const AGENTCODE = 1
 
@@ -75,6 +75,8 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             }
         })
         const data = response.data;
+        console.log(`Response Data for search hotels: ${JSON.stringify(data)}`);
+        
         return res.status(200).json({
             message: 'Hotels fetched successfully',
             data: data
@@ -201,6 +203,9 @@ const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: Nex
                 'Content-Type': 'application/json',
             },
         })
+
+        console.log(`Response from hotel cancellation: ${JSON.stringify(response.data)}`);
+        
 
         return res.status(200).json({
             data: response.data,
