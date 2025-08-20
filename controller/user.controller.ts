@@ -11,6 +11,47 @@ const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY!,
 });
 import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
+import axios from 'axios'
+
+const PERPLEXITY_API_KEY: string = process.env.PERPLEXITY_API_KEY || "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";
+const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
+const PERPLEXITY_MODEL = "sonar-pro";
+
+interface PerplexityResponse {
+    choices: {
+      message: {
+        role: string;
+        content: string;
+      };
+    }[];
+}
+
+async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked. Do not add explanations.") {
+    if (!PERPLEXITY_API_KEY) {
+      throw new Error("Missing PERPLEXITY_API_KEY");
+    }
+  
+    const { data } = await axios.post<PerplexityResponse>(
+      PERPLEXITY_URL,
+      {
+        model: PERPLEXITY_MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  
+    const text = data?.choices?.[0]?.message?.content ?? "";
+    if (!text) throw new Error("Empty response from Perplexity");
+    return text.trim();
+  }
 
 const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
@@ -19,13 +60,15 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
             return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Prompt is required and should be a string.' })
         }
         
-        const response = await client.responses.create({
-            model: "gpt-3.5-turbo",
-            input: prompt,
-        });
+        // const response = await client.responses.create({
+        //     model: "gpt-3.5-turbo",
+        //     input: prompt,
+        // });
 
-        console.log(response.output_text);
-        return res.status(200).send({ status: 200, message: 'Ok', result: response.output_text });
+        const response = await callPerplexity(prompt);
+
+        console.log(response, 'Response from Perplexity');
+        return res.status(200).send({ status: 200, message: 'Ok', result: response });
     }catch(err){
         console.error('Error in GPT:', err)
         return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' })
