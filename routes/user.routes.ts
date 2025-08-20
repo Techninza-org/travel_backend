@@ -110,6 +110,8 @@ userRouter
     //@ts-ignore
     .post('/gpt', userController.gpt)
     //@ts-ignore
+    .get('/click_travel_request/:id', userController.addUserInTravelRequestResuests)
+    //@ts-ignore
     .post('/travel_request', userController.createTravelRequest)
     //@ts-ignore
     .get('/travel_request/get/my', userController.getMyTravelRequests)

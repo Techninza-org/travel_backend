@@ -2399,9 +2399,12 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
 
 export const addUserInTravelRequestResuests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const user = req.user;
-    const { request_id } = req.body;
+    const request_id  = req.params.id;
+    if (!request_id || isNaN(Number(request_id))) {
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Request ID is required and should be a number.' });
+    }
     const travelRequest = await prisma.requestTraveller.findFirst({
-        where: { id: request_id, user_id: { not: user.id } }, // Ensure the request belongs to another user
+        where: { id: Number(request_id), user_id: { not: user.id } }, // Ensure the request belongs to another user
     })
     const usersClicked = travelRequest?.usersClicked ? travelRequest.usersClicked : [];
     if (!travelRequest) {
@@ -2411,7 +2414,7 @@ export const addUserInTravelRequestResuests = async (req: ExtendedRequest, res: 
     if (!usersClickedArray.includes(user.id)) {
         usersClickedArray.push(user.id);
         await prisma.requestTraveller.update({
-            where: { id: request_id },
+            where: { id: Number(request_id) },
             data: { usersClicked: usersClickedArray }
         });
         return res.status(200).send({ status: 200, message: 'User added to travel request', usersClicked: usersClickedArray });
@@ -3043,7 +3046,8 @@ const userController = {
     getAllAirports,
     getTravelRequestsByDestinationId,
     filterTravelRequests,
-    deleteItineraryById
+    deleteItineraryById,
+    addUserInTravelRequestResuests
 }
 
 export default userController
