@@ -158,6 +158,8 @@ model RequestTraveller {
   traveler_type       String //0 solo, 1 group
   budget_type         Int //0 backpacking, 1 premium
 
+  usersClicked        Json? // user ids who clicked on this request
+
   description         String
   created_at          DateTime              @default(now())
   updated_at          DateTime              @updatedAt

@@ -2397,6 +2397,27 @@ export const followerFollowingHilights = async (req: ExtendedRequest, res: Respo
     }
 };
 
+export const addUserInTravelRequestResuests = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const { request_id } = req.body;
+    const travelRequest = await prisma.requestTraveller.findFirst({
+        where: { id: request_id, user_id: { not: user.id } }, // Ensure the request belongs to another user
+    })
+    const usersClicked = travelRequest?.usersClicked ? travelRequest.usersClicked : [];
+    if (!travelRequest) {
+        return res.status(404).send({ status: 404, error: 'Not Found', error_description: 'Travel request not found.' });
+    }
+    const usersClickedArray = Array.isArray(usersClicked) ? usersClicked : [];
+    if (!usersClickedArray.includes(user.id)) {
+        usersClickedArray.push(user.id);
+        await prisma.requestTraveller.update({
+            where: { id: request_id },
+            data: { usersClicked: usersClickedArray }
+        });
+        return res.status(200).send({ status: 200, message: 'User added to travel request', usersClicked: usersClickedArray });
+    }
+}
+
 export const createTravelRequest = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const user_id = req.user.id;
@@ -2464,7 +2485,25 @@ const getMyTravelRequests = async (req: ExtendedRequest, res: Response, next: Ne
             orderBy: { created_at: 'desc' }
         });
 
-        return res.status(200).send({ status: 200, message: 'Ok', travelRequests });
+        const travelRequestsWithUsersClickedDetails = await Promise.all(travelRequests.map(async (request) => {
+            const usersClicked = request.usersClicked || [];
+            const usersClickedArray = Array.isArray(usersClicked) ? usersClicked.filter((id): id is number => id !== null) : [];
+            const userDetails = await prisma.user.findMany({
+                where: { id: { in: usersClickedArray } },
+                select: {
+                    id: true,
+                    username: true,
+                    image: true
+                }
+            });
+            return {
+                ...request,
+                usersClickedDetails: userDetails,
+                usersClickedCount: usersClickedArray.length,
+            };
+        }))
+
+        return res.status(200).send({ status: 200, message: 'Ok', travelRequests: travelRequestsWithUsersClickedDetails });
     } catch (error) {
         return next(error);
     }
