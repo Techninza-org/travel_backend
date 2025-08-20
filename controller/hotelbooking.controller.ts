@@ -61,6 +61,7 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             currency: currency,
             Nights: nights,
             Engine: 15,
+            TotalHotel: 10,
             EMTAuthentication: {
                 UserName: USERNAME,
                 Password: PASSWORD,
