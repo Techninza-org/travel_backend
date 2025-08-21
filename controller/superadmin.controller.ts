@@ -658,7 +658,7 @@ function toInt(v: any, d = 0) {
       const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
       const destination_guide = safeJson(b.destination_guide, [] as string[]);
       const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
-      const providedBy = b.providedBy ? String(b.providedBy).trim() : '';
+      const providedBy = b.provided_by ? String(b.provided_by).trim() : '';
   
   
       if (![0, 1].includes(type)) {
