@@ -933,7 +933,38 @@ const getReportedForumQuestions = async (req: ExtendedRequest, res: Response, ne
                 question: true
             },
         })
-        return res.status(200).send({ status: 200, questions })
+        const questionWithReportCountMap = new Map<number, { question: any; reportCount: number }>()
+        questions.forEach((report) => {
+            const questionId = report.question.id
+            const existing = questionWithReportCountMap.get(questionId)
+            if (existing) {
+                existing.reportCount += 1
+            } else {
+                questionWithReportCountMap.set(questionId, { question: report.question, reportCount: 1 })
+            }
+        })
+        const questionss = Array.from(questionWithReportCountMap.values())
+        questionss.sort((a, b) => b.reportCount - a.reportCount) // Sort by report count in descending order
+        return res.status(200).send({ status: 200, questions: questionss })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deleteForumQuestion = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const questionId = req.params.id
+    if (isNaN(Number(questionId))) {
+        return res.status(400).send({ error: 'Invalid question id' })
+    }
+    try {
+        const questionExists = await prisma.forumQuestion.findUnique({ where: { id: Number(questionId) } })
+        if (!questionExists) {
+            return res.status(404).send({ error: 'Question not found' })
+        }
+        //delete all answers
+        await prisma.forumAnswer.deleteMany({ where: { question_id: Number(questionId) } })
+        await prisma.forumQuestion.delete({ where: { id: Number(questionId) } })
+        return res.status(200).send({ message: 'Question deleted successfully' })
     } catch (err) {
         return next(err)
     }
@@ -966,6 +997,7 @@ const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextF
 
 const superAdminController = {
     getReportedForumQuestions,
+    deleteForumQuestion,
     getReportedPosts,
     createPackage,
     getPackages,
