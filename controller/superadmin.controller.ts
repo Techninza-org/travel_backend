@@ -946,7 +946,19 @@ const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextF
                 post: true
             },
         })
-        return res.status(200).send({ status: 200, posts })
+        const postWithReportCountMap = new Map<number, { post: any; reportCount: number }>()
+        posts.forEach((report) => {
+            const postId = report.post.id
+            const existing = postWithReportCountMap.get(postId)
+            if (existing) {
+                existing.reportCount += 1
+            } else {
+                postWithReportCountMap.set(postId, { post: report.post, reportCount: 1 })
+            }
+        })
+        const postss = Array.from(postWithReportCountMap.values())
+        postss.sort((a, b) => b.reportCount - a.reportCount) // Sort by report count in descending order
+        return res.status(200).send({ status: 200, posts: postss })
     } catch (err) {
         return next(err)
     }
