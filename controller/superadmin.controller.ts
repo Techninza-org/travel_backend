@@ -658,6 +658,7 @@ function toInt(v: any, d = 0) {
       const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
       const destination_guide = safeJson(b.destination_guide, [] as string[]);
       const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
+      const providedBy = b.providedBy ? String(b.providedBy).trim() : '';
   
   
       if (![0, 1].includes(type)) {
@@ -684,6 +685,7 @@ function toInt(v: any, d = 0) {
           tax,
           days,
           nights,
+          providedBy,
           itinerary: itinerary as any, // Prisma Json
           destination_guide: destination_guide as any, // Prisma Json
           inclusions: inclusions as any,

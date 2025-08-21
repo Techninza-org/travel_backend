@@ -123,6 +123,7 @@ model Package {
   highlights Json
   cancellation_policy Json
   date_change_policy Json
+  providedBy  String?
   quotes   Quote[]
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
