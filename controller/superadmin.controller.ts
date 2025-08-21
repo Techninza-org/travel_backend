@@ -926,7 +926,35 @@ const deletePackageCountry = async (req: ExtendedRequest, res: Response, next: N
     }
 }
 
+const getReportedForumQuestions = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const questions = await prisma.forumReport.findMany({
+            include: {
+                question: true
+            },
+        })
+        return res.status(200).send({ status: 200, questions })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const posts = await prisma.postReport.findMany({
+            include: {
+                post: true
+            },
+        })
+        return res.status(200).send({ status: 200, posts })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
+    getReportedForumQuestions,
+    getReportedPosts,
     createPackage,
     getPackages,
     getPackageById,

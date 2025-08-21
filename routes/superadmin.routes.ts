@@ -98,5 +98,9 @@ SuperAdminRouter
     .get('/package-country', superAdminController.getAllPackageCountries)
     //@ts-ignore
     .delete('/package-country/:id', superAdminController.deletePackageCountry)
+    //@ts-ignore
+    .get('/reported-posts', superAdminController.getReportedPosts)
+    //@ts-ignore
+    .get('/reported-forums', superAdminController.getReportedForumQuestions)
     
 export default SuperAdminRouter
