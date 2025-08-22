@@ -9,6 +9,8 @@ hotelBookingRouter
     //@ts-ignore
     .post('/hotelDetails', hotelBookingController.getHotelDetails)
     //@ts-ignore
+    .post('/lockPrice', hotelBookingController.lockHotelPrice)
+    //@ts-ignore
     .post('/book', hotelBookingController.bookHotel)
     //@ts-ignore
     .post('/bookingDetails', hotelBookingController.getBookingDetails)

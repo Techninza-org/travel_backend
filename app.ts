@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import dotenv from 'dotenv'
 dotenv.config()
 import authRouter from './routes/auth.routes'
@@ -31,6 +31,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import crypto from 'node:crypto'
 import helper from './utils/helpers'
 import hotelBookingRouter from './routes/hotelBooking.routes'
+import paymentsRouter from './routes/payments.routes'
 import busRouter from './routes/bus.routes'
 import flightRouter from './routes/air.routes'
 import activitiesRouter from './routes/activities.routes'
@@ -126,11 +127,16 @@ app.use('/superAdmin', SuperAdminRouter)
 //@ts-ignore
 app.use('/hotel', middleware.AuthMiddleware, hotelBookingRouter)
 //@ts-ignore
+app.use('/payments', paymentsRouter)
+//@ts-ignore
 app.use('/bus', middleware.AuthMiddleware, busRouter)
 //@ts-ignore
 app.use('/flight', middleware.AuthMiddleware, flightRouter)
 //@ts-ignore
 app.use('/activity', middleware.AuthMiddleware, activitiesRouter)
+
+
+  
 
 export const sendVendordNotif = async (
     hostId: number,

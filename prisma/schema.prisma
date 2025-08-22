@@ -75,91 +75,127 @@ model User {
   CustomExpenseTrips           CustomExpenseTrip[]
   CustomExpenses               CustomExpense[]
   CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
-  UserHotelBookings            UserHotelBooking[]
+  hotelBookings                HotelBooking[]
+  payments                     Payment[]
 }
 
 model PackageCategory {
-  id          Int      @id @default(autoincrement())
-  name        String
-  image       String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String
+  image      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PackageState {
-  id          Int      @id @default(autoincrement())
-  name        String
-  image       String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String
+  image      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PackageCountry {
-  id          Int      @id @default(autoincrement())
-  name        String
-  image       String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String
+  image      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Package {
-  id          Int      @id @default(autoincrement())
-  type        Int  // 0 = india, 1 = international
-  category    String
-  name        String
-  state       String?
-  city        String?
-  country     String?
-  description String   @db.Text
-  images      Json
-  price       Int
-  tax         Int
-  days        Int
-  nights      Int
-  itinerary   Json
+  id                  Int      @id @default(autoincrement())
+  type                Int // 0 = india, 1 = international
+  category            String
+  name                String
+  state               String?
+  city                String?
+  country             String?
+  description         String   @db.Text
+  images              Json
+  price               Int
+  tax                 Int
+  days                Int
+  nights              Int
+  itinerary           Json
   destination_guide   Json
-  inclusions Json
-  exclusions Json
-  highlights Json
+  inclusions          Json
+  exclusions          Json
+  highlights          Json
   cancellation_policy Json
-  date_change_policy Json
-  providedBy  String?
-  quotes   Quote[]
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  date_change_policy  Json
+  providedBy          String?
+  quotes              Quote[]
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
 }
 
-model UserHotelBooking {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  hotel_name String
-  check_in   DateTime
-  check_out  DateTime
-  room_type  String
-  amount     Int
-  booking_id String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+enum BookingStatus {
+  INIT
+  PRICE_LOCKED
+  ORDER_CREATED
+  PENDING_WEBHOOK
+  CONFIRMED
+  FAILED_REFUNDED
+}
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model HotelBooking {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          BookingStatus @default(INIT)
+  amount          Int // in paise
+  currency        String        @default("INR") // only INR supported for now
+  vendorPayload   Json // the exact body you'll POST to EMT /HotelBooking
+  vendorResponse  Json // EMT booking confirmation
+  vendorPnr       String? // PNR from EMT
+  vendorBookingId String? // Booking ID from EMT
+  rzpOrderId      String? // Razorpay order id
+  rzpPaymentId    String? // Razorpay payment id
+  rzpRefundId     String? // Razorpay refund id
+  notes           String? // any additional notes from user
+  expiresAt       DateTime? // optional price/room hold window
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum PaymentStatus {
+  CREATED
+  CAPTURED
+  REFUNDED
+  FAILED
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  paymentId String // Razorpay payment ID
+  orderId   String
+  userId    Int
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    PaymentStatus @default(CREATED)
+  amount    Int // in paise
+  currency  String        @default("INR") // only INR supported for now
+  bookingId Int? // HotelBooking ID if this payment is for a hotel booking
+  payload   Json // the exact body you'll POST to Razorpay
+  createdAt DateTime      @default(now())
 }
 
 model RequestTraveller {
-  id                  Int                   @id @default(autoincrement())
-  user_id             Int
+  id                    Int       @id @default(autoincrement())
+  user_id               Int
   // destination_id      Int
   destinationName       String?
   destination_latitude  Float?
   destination_longitude Float?
-  gender              Int //0 any, 1 male, 2 female
-  date                DateTime?
-  end_date            DateTime?
-  count               Int?
-  date_type           Int //0 flexible, 1 fixed
-  traveler_type       String //0 solo, 1 group
-  budget_type         Int //0 backpacking, 1 premium
+  gender                Int //0 any, 1 male, 2 female
+  date                  DateTime?
+  end_date              DateTime?
+  count                 Int?
+  date_type             Int //0 flexible, 1 fixed
+  traveler_type         String //0 solo, 1 group
+  budget_type           Int //0 backpacking, 1 premium
 
-  usersClicked        Json? // user ids who clicked on this request
+  usersClicked Json? // user ids who clicked on this request
 
   description         String
   created_at          DateTime              @default(now())
@@ -438,7 +474,7 @@ model CustomExpense {
 }
 
 model Destination {
-  id                Int                @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   destination       String
   pincode           String
   description       String?
@@ -447,8 +483,8 @@ model Destination {
   customise_options Json?
   latitude          Float?
   longitude         Float?
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 }
 
 model Host {
@@ -473,23 +509,23 @@ model Host {
   created_at          DateTime             @default(now())
 }
 
-enum QuoteSource{
+enum QuoteSource {
   WEBSITE
   APP
 }
 
 model Quote {
-  id               Int     @id @default(autoincrement())
-  done             Boolean @default(false)
+  id               Int          @id @default(autoincrement())
+  done             Boolean      @default(false)
   packageId        Int
-  package          Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  package          Package      @relation(fields: [packageId], references: [id], onDelete: Cascade)
   number_of_people Int
   start_date       String
   name             String
   phone            String
   source           QuoteSource?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
 }
 
 model VendorNotification {
@@ -753,13 +789,13 @@ model ItineraryCity {
 
   imges_url CityImg[]
 
-  city_name   String
-  lat_long    String
-  title       String?
-  description String?
+  city_name      String
+  lat_long       String
+  title          String?
+  description    String?
   hotel          String?
   transport      String?
-  places_visited  String?
+  places_visited String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

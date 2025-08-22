@@ -3,8 +3,11 @@ import { ExtendedRequest } from '../utils/middleware'
 import moment from 'moment';
 import axios from 'axios'
 import dotenv from 'dotenv'
+import { PrismaClient } from '@prisma/client'
 dotenv.config()
 import Razorpay from 'razorpay'
+
+const prisma = new PrismaClient()
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.KEY_ID!,
@@ -139,6 +142,55 @@ const getHotelRoomInfo = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+// New function to lock price and create booking record
+const lockHotelPrice = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { vendorPayload, amount, currency = 'INR', notes, expiresAt } = req.body;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        if (!vendorPayload || !amount) {
+            return res.status(400).json({ message: 'Missing required fields: vendorPayload, amount' });
+        }
+
+        // Set default expiry time (30 minutes from now) if not provided
+        const expiryTime = expiresAt ? new Date(expiresAt) : new Date(Date.now() + 30 * 60 * 1000);
+
+        // Create booking record with PRICE_LOCKED status
+        const booking = await prisma.hotelBooking.create({
+            data: {
+                userId,
+                status: 'PRICE_LOCKED',
+                amount: Math.round(amount * 100), // Convert to paise
+                currency,
+                vendorPayload,
+                notes,
+                vendorResponse: {},
+                expiresAt: expiryTime,
+            },
+        });
+
+        return res.status(200).json({
+            message: 'Price locked successfully',
+            data: {
+                bookingId: booking.id,
+                amount: booking.amount,
+                currency: booking.currency,
+                status: booking.status,
+                expiresAt: booking.expiresAt,
+            },
+        });
+
+    } catch (err) {
+        console.error('lockHotelPrice error', err);
+        return next(err);
+    }
+};
+
+// Keep the old bookHotel function for backward compatibility (but it should not be used in new flow)
 const bookHotel = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const body = req.body
@@ -219,6 +271,7 @@ const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: Nex
 const hotelBookingController = {
     searchHotels,
     getHotelDetails,
+    lockHotelPrice,
     bookHotel,
     getBookingDetails,
     checkHotelAvailability,
