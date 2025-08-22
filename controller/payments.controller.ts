@@ -21,8 +21,7 @@ async function confirmVendorBooking(vendorPayload: any): Promise<{ ok: boolean; 
     });
 
     const data = resp.data;
-    // Decide success criteria based on EMT schema
-    const isOk = data?.Status === 'Success' || data?.status === 'Success' || data?.IsSuccess === true;
+    const isOk = data?.reservationStatusCode === 'CF'
     return isOk ? { ok: true, data } : { ok: false, error: JSON.stringify(data) };
   } catch (e: any) {
     return { ok: false, error: e?.message || 'Vendor error' };

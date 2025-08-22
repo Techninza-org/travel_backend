@@ -3,8 +3,8 @@
 
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000'; // Adjust as needed
-const AUTH_TOKEN = 'your-auth-token'; // Replace with actual token
+const BASE_URL = 'https://eziotravels.com/api'; // Adjust as needed
+const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZSI6Ijg5MjA2NTg3NDMiLCJpYXQiOjE3NTU2OTY0MDQsImV4cCI6MTc1NjMwMTIwNH0._YpD7DApeT3qp2a_MDLGkTmoUExf5Pjd8Hnr0oDcGcQ'; // Replace with actual token
 
 // Test data
 const testVendorPayload = {

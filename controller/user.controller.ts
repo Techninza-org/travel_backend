@@ -2935,7 +2935,8 @@ const getDomesticPackagesByStateName = async (req: ExtendedRequest, res: Respons
                 state: state
             }
         })
-        return res.status(200).send({ status: 200, message: 'Ok', packages });
+        const citiesFromPackagesArray = packages.map((pkg) => pkg.city);
+        return res.status(200).send({ status: 200, message: 'Ok', packages, cities: [...new Set(citiesFromPackagesArray)] });
 
     }catch(err){
         return next(err)
