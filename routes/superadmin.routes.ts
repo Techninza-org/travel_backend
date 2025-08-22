@@ -104,5 +104,9 @@ SuperAdminRouter
     .get('/reported-forums', superAdminController.getReportedForumQuestions)
     //@ts-ignore
     .delete('/reported-forums/:id', superAdminController.deleteForumQuestion)
+    //@ts-ignore
+    .post('/add-banner', superAdminController.addBanner)
+    //@ts-ignore
+    .delete('/banner/:id', superAdminController.deleteBannerById)
     
 export default SuperAdminRouter

@@ -852,3 +852,10 @@ model Airport {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 }
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  image       String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}

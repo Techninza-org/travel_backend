@@ -838,7 +838,17 @@ const createQuoteQuery = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
+const getBanners = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const banners = await prisma.banner.findMany();
+        return res.status(200).send({ valid: true, banners });
+    } catch (err) {
+        return next(err);
+    }
+}
+
 const authController = {
+    getBanners,
     facebookCallback,
     Login,
     ForgotPassword,

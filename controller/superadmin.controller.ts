@@ -997,6 +997,33 @@ const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+const addBanner = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { imageUrl } = req.body;
+        if (!imageUrl) {
+            return res.status(400).send({ valid: false, error: 'Image URL is required.' });
+        }
+        const banner = await prisma.banner.create({
+            data: { image: imageUrl }
+        });
+        return res.status(200).send({ valid: true, banner });
+    } catch (err) {
+        return next(err);
+    }
+}
+
+const deleteBannerById= async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const banner = await prisma.banner.delete({
+            where: { id: parseInt(id) }
+        });
+        return res.status(200).send({ valid: true, banner });
+    } catch (err) {
+        return next(err);
+    }
+}
+
 const superAdminController = {
     getReportedForumQuestions,
     deleteForumQuestion,
@@ -1047,5 +1074,7 @@ const superAdminController = {
     getTripDetails,
     getServiceDetails,
     importAirportDataFromExcel,
+    addBanner,
+    deleteBannerById,
 }
 export default superAdminController

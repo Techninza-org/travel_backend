@@ -25,4 +25,6 @@ authRouter.get('/facebook/callback', authController.facebookCallback)
 
 authRouter.post('/quote_query', authController.createQuoteQuery)
 
+authRouter.get('/banners', authController.getBanners)
+
 export default authRouter
