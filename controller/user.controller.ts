@@ -49,9 +49,9 @@ async function callPerplexity(userPrompt: string, systemPrompt = "You are a help
       }
     );
   
-    const text = data?.choices?.[0]?.message?.content ?? "";
-    if (!text) throw new Error("Empty response from Perplexity");
-    return text.trim();
+    const response = data?.choices?.[0]?.message ?? "";
+    if (!response) throw new Error("Empty response from Perplexity");
+    return response;
   }
 
 const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
