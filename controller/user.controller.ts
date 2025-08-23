@@ -66,7 +66,7 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
         //     input: prompt,
         // });
 
-        const response = await callPerplexity(prompt);
+        const response = await callPerplexity(prompt + "and include images if possible.");
 
         console.log(response, 'Response from Perplexity');
         return res.status(200).send({ status: 200, message: 'Ok', result: response });
