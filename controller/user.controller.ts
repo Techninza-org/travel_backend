@@ -26,7 +26,7 @@ interface PerplexityResponse {
     }[];
 }
 
-async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked. Do not add explanations.") {
+async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers and related images when asked. Do not add explanations.") {
     if (!PERPLEXITY_API_KEY) {
       throw new Error("Missing PERPLEXITY_API_KEY");
     }
@@ -35,6 +35,7 @@ async function callPerplexity(userPrompt: string, systemPrompt = "You are a help
       PERPLEXITY_URL,
       {
         model: PERPLEXITY_MODEL,
+        return_images: true,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
