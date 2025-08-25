@@ -54,6 +54,23 @@ async function callPerplexity(userPrompt: string, systemPrompt = "You are a help
     return response;
   }
 
+const autoSuggestQuotesByWords = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const { words } = req.body;
+
+    if (!words || typeof words !== 'string') {
+        return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Words are required and should be a string.' });
+    }
+
+    try {
+        const response = await callPerplexity(`Suggest four one-line quotes related to: ${words} in an array of strings format.`);
+        console.log(response, 'Response from Perplexity');
+        return res.status(200).send({ status: 200, message: 'Ok', result: response });
+    } catch (err) {
+        console.error('Error in autoSuggestQuotesByWords:', err);
+        return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' });
+    }
+}
+
 const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const {prompt} = req.body
@@ -3049,7 +3066,8 @@ const userController = {
     getTravelRequestsByDestinationId,
     filterTravelRequests,
     deleteItineraryById,
-    addUserInTravelRequestResuests
+    addUserInTravelRequestResuests,
+    autoSuggestQuotesByWords
 }
 
 export default userController
