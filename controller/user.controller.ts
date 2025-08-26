@@ -70,31 +70,110 @@ const autoSuggestQuotesByWords = async (req: ExtendedRequest, res: Response, nex
         return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' });
     }
 }
-
-const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
-        const {prompt} = req.body
-        if (!prompt || typeof prompt !== 'string') {
-            return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'Prompt is required and should be a string.' })
-        }
-        
-        // const response = await client.responses.create({
-        //     model: "gpt-3.5-turbo",
-        //     input: prompt,
-        // });
-
-        const response = await callPerplexity(prompt + `Response format: {
-            title: string,
-            description: bullet points[],
-        }`);
-
-        console.log(response, 'Response from Perplexity');
-        return res.status(200).send({ status: 200, message: 'Ok', result: response });
-    }catch(err){
-        console.error('Error in GPT:', err)
-        return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' })
+// Add these tiny helpers near your controller (same file is fine)
+function _clean(s: string) {
+    return s
+      .replace(/\*\*/g, "")     // remove **bold**
+      .replace(/\[\d+]/g, "")   // remove [1], [3], ...
+      .replace(/\\+/g, "")      // remove stray backslashes
+      .replace(/\s{2,}/g, " ")  // collapse spaces
+      .trim();
+  }
+  
+  function _parseContentToBullets(content: string): { title?: string; bullets: string[] } {
+    const raw = (content || "").trim();
+  
+    // 1) Try strict JSON
+    try {
+      const obj = JSON.parse(raw);
+      const title = obj?.title ? _clean(String(obj.title)) : undefined;
+      const arr = Array.isArray(obj?.description)
+        ? obj.description
+        : Array.isArray(obj?.bullets)
+        ? obj.bullets
+        : [];
+      const bullets = arr.map((x: any) => _clean(String(x))).filter(Boolean);
+      if (title || bullets.length) return { title, bullets };
+    } catch {}
+  
+    // 2) Try JSON-ish (unquoted keys / fenced code)
+    try {
+      let txt = raw.replace(/```(?:json)?/gi, "").replace(/```/g, "");
+      txt = txt.replace(/(\btitle|\bdescription|\bbullets)\s*:/gi, '"$1":');
+      if (!/^\s*\{[\s\S]*\}\s*$/.test(txt)) txt = `{ ${txt} }`;
+      const obj = JSON.parse(txt);
+      const title = obj?.title ? _clean(String(obj.title)) : undefined;
+      const arr = Array.isArray(obj?.description)
+        ? obj.description
+        : Array.isArray(obj?.bullets)
+        ? obj.bullets
+        : [];
+      const bullets = arr.map((x: any) => _clean(String(x))).filter(Boolean);
+      if (title || bullets.length) return { title, bullets };
+    } catch {}
+  
+    // 3) Fallback: parse markdown bullets
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let title: string | undefined;
+    if (lines[0] && !/^[\-\*•]\s+/.test(lines[0])) {
+      title = _clean(lines[0].replace(/[:：]\s*$/, ""));
     }
-}
+    const start = title ? 1 : 0;
+    const bullets = lines
+      .slice(start)
+      .filter(l => /^[\-\*•]\s+/.test(l))
+      .map(l => _clean(l.replace(/^[\-\*•]\s+/, "")));
+  
+    if (!bullets.length) {
+      const body = _clean(lines.slice(start).join(" "));
+      if (body) bullets.push(body);
+    }
+    return { title, bullets };
+  }
+
+  
+  const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt || typeof prompt !== "string") {
+        return res.status(400).send({
+          status: 400,
+          error: "Bad Request",
+          error_description: "Prompt is required and should be a string.",
+        });
+      }
+  
+      const response = await callPerplexity(
+        prompt + `
+  Return JSON if possible like:
+  {
+    "title": string,
+    "bullets": string[] 
+  }`
+      );
+  
+      // response = { role, content, ... }
+      const { title, bullets } = _parseContentToBullets(response.content);
+  
+      // Keep your outgoing shape the same (title + description[] as bullets)
+      return res.status(200).send({
+        status: 200,
+        message: "Ok",
+        result: {
+          title: title || "Results",
+          description: bullets, // <-- bullet list, cleaned (no [1], **, \)
+        },
+      });
+    } catch (err) {
+      console.error("Error in GPT:", err);
+      return res.status(500).send({
+        status: 500,
+        error: "Internal Server Error",
+        error_description: "An error occurred while processing your request.",
+      });
+    }
+  };
+  
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const query = req.query
