@@ -142,7 +142,7 @@ const makeBooking = async (req: ExtendedRequest, res: Response, next: NextFuncti
         transactionid: transactionid,
         key: key,
     };
-    const response = await axios.post('http://busapi.easemytrip.com/api/detail/MakeBooking', requestBody, {
+    const response = await axios.post('http://busapi.easemytrip.com/v1/api/detail/MakeBooking', requestBody, {
         headers: {
             'Content-Type': 'application/json',
         },
