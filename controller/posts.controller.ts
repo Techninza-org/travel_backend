@@ -359,6 +359,9 @@ export const GetPostsByUserId = async (req: ExtendedRequest, res: Response, _nex
         const follower_count = await prisma.follows.count({ where: { user_id: id } })
         const trip_count = await prisma.trip.count({ where: { user_id: id } })
 
+        console.log(user, 'userdata');
+        
+
         return res.status(200).send({
             status: 200,
             message: 'Ok',
