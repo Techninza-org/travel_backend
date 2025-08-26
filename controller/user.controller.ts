@@ -26,7 +26,7 @@ interface PerplexityResponse {
     }[];
 }
 
-async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers and related images when asked. Do not add explanations.") {
+async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked. Do not add explanations.") {
     if (!PERPLEXITY_API_KEY) {
       throw new Error("Missing PERPLEXITY_API_KEY");
     }
@@ -83,7 +83,7 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
         //     input: prompt,
         // });
 
-        const response = await callPerplexity(prompt + "and include images if possible.");
+        const response = await callPerplexity(prompt);
 
         console.log(response, 'Response from Perplexity');
         return res.status(200).send({ status: 200, message: 'Ok', result: response });
