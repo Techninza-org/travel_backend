@@ -11,7 +11,7 @@ const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY!,
 });
 import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 
 const PERPLEXITY_API_KEY: string = process.env.PERPLEXITY_API_KEY || "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";
 const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
@@ -26,14 +26,7 @@ interface PerplexityResponse {
     }[];
 }
 
-async function callPerplexity(userPrompt: string, systemPrompt = `You are a helpful assistant. Respond ONLY with valid JSON matching:
-{
-  "heading": string,
-  "items": [{"title": string, "description": string?}] ,
-  "imageUrls": string[]
-}
-No extra text.
-`) {
+async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers in bullet points with title and description when asked. Do not add explanations.") {
     if (!PERPLEXITY_API_KEY) {
       throw new Error("Missing PERPLEXITY_API_KEY");
     }
