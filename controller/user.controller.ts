@@ -11,48 +11,157 @@ const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY!,
 });
 import { citiesDescription, getCityByCoordinates, getImgByPlaceName, getNearbyPlaces, marketplaceDetails, optimizedCitiesDescription, placeDetails, TripAdvisorCategory } from '../utils/marketplaceService'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 const PERPLEXITY_API_KEY: string = process.env.PERPLEXITY_API_KEY || "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";
 const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
 const PERPLEXITY_MODEL = "sonar-pro";
+type PerplexityRole = "system" | "user" | "assistant" | string;
 
-interface PerplexityResponse {
-    choices: {
-      message: {
-        role: string;
-        content: string;
-      };
-    }[];
-}
-
-async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked. Do not add explanations.") {
-    if (!PERPLEXITY_API_KEY) {
-      throw new Error("Missing PERPLEXITY_API_KEY");
-    }
-  
-    const { data } = await axios.post<PerplexityResponse>(
-      PERPLEXITY_URL,
-      {
-        model: PERPLEXITY_MODEL,
-        return_images: true,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  
-    const response = data?.choices?.[0]?.message ?? "";
-    if (!response) throw new Error("Empty response from Perplexity");
-    return response;
+interface PerplexityMessage {
+    role: PerplexityRole;
+    content: string;
+    images?: string[];       // when return_images: true and images are present
+    [k: string]: any;        // tolerate extra fields (citations, etc.)
   }
+  
+  interface PerplexityChoice {
+    index?: number;
+    message: PerplexityMessage;
+    finish_reason?: string;
+    [k: string]: any;
+  }
+  
+  interface PerplexityResponse {
+    id?: string;
+    model?: string;
+    created?: number;
+    choices: PerplexityChoice[];
+    [k: string]: any;
+  }
+
+  function extractMarkdownImageUrls(text: string): string[] {
+    // match: ![alt](https://url) or <img src="https://url">
+    const md = Array.from(
+      text.matchAll(/!\[[^\]]*]\((https?:\/\/[^)\s]+)\)/g)
+    ).map((m) => m[1]);
+  
+    const html = Array.from(
+      text.matchAll(/<img[^>]+src=["'](https?:\/\/[^"']+)["'][^>]*>/gi)
+    ).map((m) => m[1]);
+  
+    return [...md, ...html];
+  }
+  
+  function uniqueUrls(urls: string[]): string[] {
+    const set = new Set<string>();
+    for (const u of urls) {
+      try {
+        const norm = new URL(u).toString(); // normalize
+        set.add(norm);
+      } catch {
+        // skip invalid URLs
+      }
+    }
+    return [...set];
+  }
+  
+  export async function callPerplexity(
+    userPrompt: string,
+    {
+      systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked in json format to show directly to user. Do not add explanations.",
+      model = PERPLEXITY_MODEL,
+      returnImages = true,
+      timeoutMs = 30000,
+    }: {
+      systemPrompt?: string;
+      model?: string;
+      returnImages?: boolean;
+      timeoutMs?: number;
+    } = {}
+  ): Promise<any> {
+    try {
+      const { data } = await axios.post<PerplexityResponse>(
+        PERPLEXITY_URL,
+        {
+          model,
+          return_images: returnImages,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          timeout: timeoutMs,
+        }
+      );
+  
+      const choice = data?.choices?.[0];
+      const message = choice?.message;
+  
+      if (!message || typeof message.content !== "string") {
+        throw new Error("Empty or invalid response from Perplexity");
+      }
+  
+      // Collect images from API field + any markdown/html in the content
+      const apiImages = Array.isArray(message.images) ? message.images : [];
+      const mdImages = extractMarkdownImageUrls(message.content);
+      const images = uniqueUrls([...apiImages, ...mdImages]);
+  
+      return {
+        text: message.content,
+        images,
+        role: message.role,
+        raw: data,
+      };
+    } catch (err) {
+      // Normalize Axios errors for easier debugging upstream
+      const ax = err as AxiosError<any>;
+      if (ax?.response) {
+        const code = ax.response.status;
+        const body = ax.response.data;
+        throw new Error(
+          `Perplexity API error ${code}: ${JSON.stringify(body)?.slice(0, 1000)}`
+        );
+      }
+      if (ax?.request) {
+        throw new Error("Perplexity API network error (no response received).");
+      }
+      throw err;
+    }
+  }
+
+// async function callPerplexity(userPrompt: string, systemPrompt = "You are a helpful assistant that ONLY returns simple answers when asked in json format to show directly to user. Do not add explanations.") {
+//     if (!PERPLEXITY_API_KEY) {
+//       throw new Error("Missing PERPLEXITY_API_KEY");
+//     }
+  
+//     const { data } = await axios.post<PerplexityResponse>(
+//       PERPLEXITY_URL,
+//       {
+//         model: PERPLEXITY_MODEL,
+//         return_images: true,
+//         messages: [
+//           { role: "system", content: systemPrompt },
+//           { role: "user", content: userPrompt },
+//         ],
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+  
+//     const response = data?.choices?.[0]?.message ?? "";
+//     if (!response) throw new Error("Empty response from Perplexity");
+//     return response;
+//   }
 
 const autoSuggestQuotesByWords = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { words } = req.body;
