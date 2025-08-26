@@ -70,69 +70,104 @@ const autoSuggestQuotesByWords = async (req: ExtendedRequest, res: Response, nex
         return res.status(500).send({ status: 500, error: 'Internal Server Error', error_description: 'An error occurred while processing your request.' });
     }
 }
-// Add these tiny helpers near your controller (same file is fine)
-function _clean(s: string) {
-    return s
-      .replace(/\*\*/g, "")     // remove **bold**
-      .replace(/\[\d+]/g, "")   // remove [1], [3], ...
-      .replace(/\\+/g, "")      // remove stray backslashes
-      .replace(/\s{2,}/g, " ")  // collapse spaces
-      .trim();
-  }
-  
-  function _parseContentToBullets(content: string): { title?: string; bullets: string[] } {
-    const raw = (content || "").trim();
-  
-    // 1) Try strict JSON
-    try {
-      const obj = JSON.parse(raw);
-      const title = obj?.title ? _clean(String(obj.title)) : undefined;
-      const arr = Array.isArray(obj?.description)
-        ? obj.description
-        : Array.isArray(obj?.bullets)
-        ? obj.bullets
-        : [];
-      const bullets = arr.map((x: any) => _clean(String(x))).filter(Boolean);
-      if (title || bullets.length) return { title, bullets };
-    } catch {}
-  
-    // 2) Try JSON-ish (unquoted keys / fenced code)
-    try {
-      let txt = raw.replace(/```(?:json)?/gi, "").replace(/```/g, "");
-      txt = txt.replace(/(\btitle|\bdescription|\bbullets)\s*:/gi, '"$1":');
-      if (!/^\s*\{[\s\S]*\}\s*$/.test(txt)) txt = `{ ${txt} }`;
-      const obj = JSON.parse(txt);
-      const title = obj?.title ? _clean(String(obj.title)) : undefined;
-      const arr = Array.isArray(obj?.description)
-        ? obj.description
-        : Array.isArray(obj?.bullets)
-        ? obj.bullets
-        : [];
-      const bullets = arr.map((x: any) => _clean(String(x))).filter(Boolean);
-      if (title || bullets.length) return { title, bullets };
-    } catch {}
-  
-    // 3) Fallback: parse markdown bullets
-    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    let title: string | undefined;
-    if (lines[0] && !/^[\-\*•]\s+/.test(lines[0])) {
-      title = _clean(lines[0].replace(/[:：]\s*$/, ""));
-    }
-    const start = title ? 1 : 0;
-    const bullets = lines
-      .slice(start)
-      .filter(l => /^[\-\*•]\s+/.test(l))
-      .map(l => _clean(l.replace(/^[\-\*•]\s+/, "")));
-  
-    if (!bullets.length) {
-      const body = _clean(lines.slice(start).join(" "));
-      if (body) bullets.push(body);
-    }
-    return { title, bullets };
-  }
+type BulletItem = { title: string; description: string[] };
 
+function _clean(s: string) {
+  return s
+    .replace(/\*\*/g, "")     // remove **bold**
+    .replace(/\[\d+]/g, "")   // remove [1], [3], ...
+    .replace(/\\+/g, "")      // remove backslashes
+    .replace(/\s{2,}/g, " ")  // collapse spaces
+    .trim();
+}
+
+function _toBulletItem(line: string): BulletItem {
+  const text = _clean(line);
+  // split on " — / – / - " (with spaces) OR ":" (common pattern Title: desc)
+  const parts = text.split(/(?:\s[–—-]\s|:\s+)/);
+  const title = _clean(parts[0] || "");
+  const desc = _clean(parts.slice(1).join(" ").trim());
+  return {
+    title: title || text,
+    description: desc ? [desc] : [],
+  };
+}
+
+function _parseContentStructured(content: string): { title?: string; bullets: BulletItem[] } {
+  const raw = (content || "").trim();
+
+  // 1) Try strict JSON (already in target schema or close to it)
+  try {
+    const obj = JSON.parse(raw);
+    const title = obj?.title ? _clean(String(obj.title)) : undefined;
+
+    // If bullets already in desired shape
+    if (Array.isArray(obj?.bullets) && obj.bullets.length) {
+      const bullets: BulletItem[] = obj.bullets.map((b: any) => {
+        if (typeof b === "string") return _toBulletItem(b);
+        const t = _clean(String(b?.title || ""));
+        let d: string[] = [];
+        if (Array.isArray(b?.description)) d = b.description.map((x: any) => _clean(String(x))).filter(Boolean);
+        else if (typeof b?.description === "string") d = [_clean(b.description)];
+        if (!t && d.length === 0) return _toBulletItem(JSON.stringify(b));
+        return { title: t || (d[0] || ""), description: d };
+      });
+      if (title || bullets.length) return { title, bullets };
+    }
+
+    // If description[] (old shape), convert to bullets[]
+    if (Array.isArray(obj?.description)) {
+      const bullets = obj.description.map((x: any) => _toBulletItem(String(x)));
+      return { title, bullets };
+    }
+  } catch {}
+
+  // 2) Try JSON-ish (unquoted keys / fenced code)
+  try {
+    let txt = raw.replace(/```(?:json)?/gi, "").replace(/```/g, "");
+    txt = txt.replace(/(\btitle|\bbullets|\bdescription)\s*:/gi, '"$1":');
+    if (!/^\s*\{[\s\S]*\}\s*$/.test(txt)) txt = `{ ${txt} }`;
+    const obj = JSON.parse(txt);
+    const title = obj?.title ? _clean(String(obj.title)) : undefined;
+
+    if (Array.isArray(obj?.bullets)) {
+      const bullets: BulletItem[] = obj.bullets.map((b: any) => {
+        if (typeof b === "string") return _toBulletItem(b);
+        const t = _clean(String(b?.title || ""));
+        let d: string[] = [];
+        if (Array.isArray(b?.description)) d = b.description.map((x: any) => _clean(String(x))).filter(Boolean);
+        else if (typeof b?.description === "string") d = [_clean(b.description)];
+        return { title: t || (d[0] || ""), description: d };
+      });
+      return { title, bullets };
+    }
+
+    if (Array.isArray(obj?.description)) {
+      const bullets = obj.description.map((x: any) => _toBulletItem(String(x)));
+      return { title, bullets };
+    }
+  } catch {}
+
+  // 3) Fallback: parse markdown list
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let heading: string | undefined;
+  if (lines[0] && !/^[\-\*•]\s+/.test(lines[0])) {
+    heading = _clean(lines[0].replace(/[:：]\s*$/, ""));
+  }
+  const start = heading ? 1 : 0;
+  const bulletLines = lines
+    .slice(start)
+    .filter(l => /^[\-\*•]\s+/.test(l))
+    .map(l => l.replace(/^[\-\*•]\s+/, ""));
+
+  const bullets: BulletItem[] = bulletLines.length
+    ? bulletLines.map(_toBulletItem)
+    : [ _toBulletItem(lines.slice(start).join(" ")) ].filter(b => b.title);
+
+  return { title: heading, bullets };
+}
   
-  const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
       const { prompt } = req.body;
       if (!prompt || typeof prompt !== "string") {
@@ -144,24 +179,23 @@ function _clean(s: string) {
       }
   
       const response = await callPerplexity(
-        prompt + `
-  Return JSON if possible like:
+        `${prompt}
+  
+  Return ONLY valid JSON (no markdown) with this exact schema:
   {
     "title": string,
-    "bullets": string[] 
+    "bullets": [{ "title": string, "description": string[] }]
   }`
       );
   
-      // response = { role, content, ... }
-      const { title, bullets } = _parseContentToBullets(response.content);
+      const { title, bullets } = _parseContentStructured(response.content);
   
-      // Keep your outgoing shape the same (title + description[] as bullets)
       return res.status(200).send({
         status: 200,
         message: "Ok",
         result: {
           title: title || "Results",
-          description: bullets, // <-- bullet list, cleaned (no [1], **, \)
+          bullets, // [{ title, description: string[] }]
         },
       });
     } catch (err) {
@@ -173,6 +207,7 @@ function _clean(s: string) {
       });
     }
   };
+  
   
 
 const get_all_users = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
