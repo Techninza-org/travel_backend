@@ -432,139 +432,139 @@ export const getUserToken = async (userId: any) => {
 
 // updatePass('js nikhil verma');
 
-cron.schedule('0 0 * * *', async () => {
-    console.log('Running your daily task...')
+// cron.schedule('0 0 * * *', async () => {
+//     console.log('Running your daily task...')
 
-    try {
-        const trips = await prisma.trip.findMany({})
-        const customTrips = await prisma.customTrip.findMany({})
+//     try {
+//         const trips = await prisma.trip.findMany({})
+//         const customTrips = await prisma.customTrip.findMany({})
 
-        for (const trip of trips) {
-            const startDate = new Date(trip.start_date)
-            const endDate = new Date(trip.end_date)
-            const today = new Date()
+//         for (const trip of trips) {
+//             const startDate = new Date(trip.start_date)
+//             const endDate = new Date(trip.end_date)
+//             const today = new Date()
 
-            if (trip.cancelled) {
-                await prisma.trip.update({
-                    where: { id: trip.id },
-                    data: { status: 'cancelled' },
-                })
-            } else if (endDate < today) {
-                await prisma.trip.update({
-                    where: { id: trip.id },
-                    data: { status: 'completed' },
-                })
-                await prisma.user.update({
-                    where: { id: trip.user_id },
-                    data: { status: false },
-                })
-            } else if (startDate < today && today < endDate) {
-                await prisma.trip.update({
-                    where: { id: trip.id },
-                    data: { status: 'ongoing' },
-                })
-                await prisma.user.update({
-                    where: { id: trip.user_id },
-                    data: { status: true },
-                })
-            } else {
-                await prisma.trip.update({
-                    where: { id: trip.id },
-                    data: { status: 'upcoming' },
-                })
-            }
-        }
-        for (const customTrip of customTrips) {
-            const startDate = new Date(customTrip.start_date)
-            const endDate = new Date(customTrip.end_date)
-            const today = new Date()
+//             if (trip.cancelled) {
+//                 await prisma.trip.update({
+//                     where: { id: trip.id },
+//                     data: { status: 'cancelled' },
+//                 })
+//             } else if (endDate < today) {
+//                 await prisma.trip.update({
+//                     where: { id: trip.id },
+//                     data: { status: 'completed' },
+//                 })
+//                 await prisma.user.update({
+//                     where: { id: trip.user_id },
+//                     data: { status: false },
+//                 })
+//             } else if (startDate < today && today < endDate) {
+//                 await prisma.trip.update({
+//                     where: { id: trip.id },
+//                     data: { status: 'ongoing' },
+//                 })
+//                 await prisma.user.update({
+//                     where: { id: trip.user_id },
+//                     data: { status: true },
+//                 })
+//             } else {
+//                 await prisma.trip.update({
+//                     where: { id: trip.id },
+//                     data: { status: 'upcoming' },
+//                 })
+//             }
+//         }
+//         for (const customTrip of customTrips) {
+//             const startDate = new Date(customTrip.start_date)
+//             const endDate = new Date(customTrip.end_date)
+//             const today = new Date()
 
-            if (customTrip.cancelled) {
-                await prisma.customTrip.update({
-                    where: { id: customTrip.id },
-                    data: { status: 'cancelled' },
-                })
-            } else if (endDate < today) {
-                await prisma.customTrip.update({
-                    where: { id: customTrip.id },
-                    data: { status: 'completed' },
-                })
-                await prisma.user.update({
-                    where: { id: customTrip.user_id },
-                    data: { status: false },
-                })
-            } else if (startDate < today && today < endDate) {
-                await prisma.customTrip.update({
-                    where: { id: customTrip.id },
-                    data: { status: 'ongoing' },
-                })
-                await prisma.user.update({
-                    where: { id: customTrip.user_id },
-                    data: { status: true },
-                })
-            } else {
-                await prisma.customTrip.update({
-                    where: { id: customTrip.id },
-                    data: { status: 'upcoming' },
-                })
-            }
-        }
-        console.log('Trip statuses updated successfully.')
-    } catch (error) {
-        console.error('Error updating trip statuses:', error)
-    }
-})
+//             if (customTrip.cancelled) {
+//                 await prisma.customTrip.update({
+//                     where: { id: customTrip.id },
+//                     data: { status: 'cancelled' },
+//                 })
+//             } else if (endDate < today) {
+//                 await prisma.customTrip.update({
+//                     where: { id: customTrip.id },
+//                     data: { status: 'completed' },
+//                 })
+//                 await prisma.user.update({
+//                     where: { id: customTrip.user_id },
+//                     data: { status: false },
+//                 })
+//             } else if (startDate < today && today < endDate) {
+//                 await prisma.customTrip.update({
+//                     where: { id: customTrip.id },
+//                     data: { status: 'ongoing' },
+//                 })
+//                 await prisma.user.update({
+//                     where: { id: customTrip.user_id },
+//                     data: { status: true },
+//                 })
+//             } else {
+//                 await prisma.customTrip.update({
+//                     where: { id: customTrip.id },
+//                     data: { status: 'upcoming' },
+//                 })
+//             }
+//         }
+//         console.log('Trip statuses updated successfully.')
+//     } catch (error) {
+//         console.error('Error updating trip statuses:', error)
+//     }
+// })
 
-cron.schedule('30 0 * * *', async () => {
-    console.log('Running trips notifications...')
-    try {
-        const trips = await prisma.trip.findMany({})
-        const customTrips = await prisma.customTrip.findMany({})
-        const allTrips = [...trips, ...customTrips]
-        const upcomingTrips = allTrips.filter((trip) => trip.status === 'upcoming')
-        const ongoingTrips = allTrips.filter((trip) => trip.status === 'ongoing')
-        const ezio = await prisma.user.findUnique({ where: { id: 3 } })
+// cron.schedule('30 0 * * *', async () => {
+//     console.log('Running trips notifications...')
+//     try {
+//         const trips = await prisma.trip.findMany({})
+//         const customTrips = await prisma.customTrip.findMany({})
+//         const allTrips = [...trips, ...customTrips]
+//         const upcomingTrips = allTrips.filter((trip) => trip.status === 'upcoming')
+//         const ongoingTrips = allTrips.filter((trip) => trip.status === 'ongoing')
+//         const ezio = await prisma.user.findUnique({ where: { id: 3 } })
 
-        for (const trip of upcomingTrips) {
-            const startDate = new Date(trip.start_date)
-            const today = new Date()
+//         for (const trip of upcomingTrips) {
+//             const startDate = new Date(trip.start_date)
+//             const today = new Date()
 
-            if (startDate.getDate() - today.getDate() === 1) {
-                const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
-                if (user) {
-                    const registrationToken = user.registrationToken
-                    const payload = {
-                        title: 'Trip Alert',
-                        body: `Your journey starts tomorrow! Get ready for an adventure.`,
-                    }
-                    sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
-                    if (registrationToken) await sendNotification(registrationToken, payload)
-                }
-            }
-        }
+//             if (startDate.getDate() - today.getDate() === 1) {
+//                 const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
+//                 if (user) {
+//                     const registrationToken = user.registrationToken
+//                     const payload = {
+//                         title: 'Trip Alert',
+//                         body: `Your journey starts tomorrow! Get ready for an adventure.`,
+//                     }
+//                     sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
+//                     if (registrationToken) await sendNotification(registrationToken, payload)
+//                 }
+//             }
+//         }
 
-        for (const trip of ongoingTrips) {
-            const startDate = new Date(trip.start_date)
-            const today = new Date()
-            if (startDate.getDate() === today.getDate()) {
-                const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
-                if (user) {
-                    const registrationToken = user.registrationToken
-                    const payload = {
-                        title: 'Trip Alert',
-                        body: `Your journey starts today!`,
-                    }
-                    sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
-                    if (registrationToken) await sendNotification(registrationToken, payload)
-                }
-            }
-        }
+//         for (const trip of ongoingTrips) {
+//             const startDate = new Date(trip.start_date)
+//             const today = new Date()
+//             if (startDate.getDate() === today.getDate()) {
+//                 const user = await prisma.user.findUnique({ where: { id: trip.user_id } })
+//                 if (user) {
+//                     const registrationToken = user.registrationToken
+//                     const payload = {
+//                         title: 'Trip Alert',
+//                         body: `Your journey starts today!`,
+//                     }
+//                     sendNotif(3, trip.user_id, ezio?.image ?? '', payload.title, payload.body)
+//                     if (registrationToken) await sendNotification(registrationToken, payload)
+//                 }
+//             }
+//         }
 
-        console.log('User statuses updated successfully.')
-    } catch (error) {
-        console.error('Error updating user statuses:', error)
-    }
-})
+//         console.log('User statuses updated successfully.')
+//     } catch (error) {
+//         console.error('Error updating user statuses:', error)
+//     }
+// })
 
 cron.schedule('0 0 * * *', async () => {
     console.log('deleting notifications');
