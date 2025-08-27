@@ -676,6 +676,8 @@ const userTravelingStatus = async (req: ExtendedRequest, res: Response, next: Ne
             where: { id: user.id },
             data: { status: is_traveling },
         })
+        console.log(updatedUser.status, 'UPDATED STATUS', user.id);
+        
         delete (updatedUser as any).password
         return res.status(200).send({ status: 200, message: 'Ok', user: { updatedUser } })
     } catch (err) {
