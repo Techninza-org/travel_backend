@@ -3058,7 +3058,8 @@ const getIntlPackagesByCategoryName = async (req: ExtendedRequest, res: Response
                 category: category
             }
         })
-        return res.status(200).send({ status: 200, message: 'Ok', packages });
+        const packageCountriesFromPackagesArray = packages.map((pkg) => pkg.country);
+        return res.status(200).send({ status: 200, message: 'Ok', packages, countries: [...new Set(packageCountriesFromPackagesArray)] });
 
     }catch(err){
         return next(err)
