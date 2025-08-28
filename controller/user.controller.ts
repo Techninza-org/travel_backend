@@ -3041,7 +3041,8 @@ const getDomesticPackagesByCategoryName = async (req: ExtendedRequest, res: Resp
             }
         })
         const statesFromPackagesArray = packages.map((pkg) => pkg.state);
-        return res.status(200).send({ status: 200, message: 'Ok', packages, states: [...new Set(statesFromPackagesArray)] });
+        const citiesFromPackagesArray = packages.map((pkg) => pkg.city);
+        return res.status(200).send({ status: 200, message: 'Ok', packages, states: [...new Set(statesFromPackagesArray)], cities: [...new Set(citiesFromPackagesArray)] });
 
     }catch(err){
         return next(err)
