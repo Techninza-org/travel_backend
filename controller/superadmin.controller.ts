@@ -712,6 +712,78 @@ function toInt(v: any, d = 0) {
       return res.status(400).send({ error: 'Error in creating package' });
     }
 };
+  export const updatePackage = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
+    try {
+      const b = req.body as AnyObj;
+      const packageId = req.params.id;
+  
+      const type = toInt(b.type);              // 0=india, 1=international
+      const category = String(b.category || '').trim();
+      const state = String(b.state || '').trim();
+      const city = String(b.city || '').trim();
+      const country = String(b.country || '').trim();
+      const name = String(b.name || '').trim();
+      const description = String(b.description || '').trim();
+      const price = toInt(b.price);
+      const tax = toInt(b.tax);
+      const days = Math.max(1, toInt(b.days, 1));
+      const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)));
+  
+      const itinerary = safeJson(b.itinerary, [] as AnyObj[]);
+      const inclusions = safeJson(b.inclusions, [] as string[]);
+      const exclusions = safeJson(b.exclusions, [] as string[]);
+      const highlights = safeJson(b.highlights, [] as string[]);
+      const cancellation_policy = safeJson(b.cancellation_policy, [] as string[]);
+      const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
+      const destination_guide = safeJson(b.destination_guide, [] as string[]);
+      const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
+      const providedBy = b.provided_by ? String(b.provided_by).trim() : '';
+  
+  
+      if (![0, 1].includes(type)) {
+        return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' });
+      }
+      if (!category) return res.status(400).send({ error: 'Category is required' });
+      if (!name) return res.status(400).send({ error: 'Name is required' });
+      if (!description) return res.status(400).send({ error: 'Description is required' });
+      if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' });
+    
+  
+      // --- Updated
+      const updated = await prisma.package.update({
+        where: {
+            id: Number(packageId)
+        },
+        data: {
+          type,
+          category,
+          name,
+          state,
+          city,
+          country,
+          description,
+          images: images as any, // Prisma Json
+          price,
+          tax,
+          days,
+          nights,
+          providedBy,
+          itinerary: itinerary as any, // Prisma Json
+          destination_guide: destination_guide as any, // Prisma Json
+          inclusions: inclusions as any,
+          exclusions: exclusions as any,
+          highlights: highlights as any,
+          cancellation_policy: cancellation_policy as any,
+          date_change_policy: date_change_policy as any,
+        }
+      });
+  
+      return res.status(201).send({ status: 201, package: updated });
+    } catch (err) {
+      console.error('updatePackage error:', err);
+      return res.status(400).send({ error: 'Error in updating package' });
+    }
+};
 
 const getPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -1076,5 +1148,6 @@ const superAdminController = {
     importAirportDataFromExcel,
     addBanner,
     deleteBannerById,
+    updatePackage
 }
 export default superAdminController

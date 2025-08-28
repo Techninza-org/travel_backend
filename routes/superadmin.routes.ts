@@ -71,6 +71,8 @@ SuperAdminRouter
     //@ts-ignore
     .post('/package', superAdminController.createPackage)
     //@ts-ignore
+    .put('/package/:id', superAdminController.updatePackage)
+    //@ts-ignore
     .get('/package', superAdminController.getPackages)
     //@ts-ignore
     .get('/package/:id', superAdminController.getPackageById)
