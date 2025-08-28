@@ -17,7 +17,7 @@ model User {
   id                Int         @id @default(autoincrement())
   username          String?     @unique
   phone             String?     @unique
-  password          String
+  password          String?
   email             String?     @unique
   image             String?
   highlights        Highlight[]

@@ -8,6 +8,8 @@ import axios from 'axios'
 const prisma = new PrismaClient()
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from '../app'
+import { OAuth2Client } from 'google-auth-library'
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const SALT_ROUND = process.env.SALT_ROUND!
 const ITERATION = 100
@@ -339,65 +341,234 @@ const HostLogin = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const body = req.body
-        if (!helper.isValidatePaylod(body, ['email', 'password'])) {
-            return res.status(200).send({
-                status: 400,
-                error: 'Invalid Payload',
-                error_description: 'email, password are requried.',
-            })
-        }
-        const { email, password } = body
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(email)) {
-            return res.status(400).send({ status: 400, error: 'Invalid Email address' })
-        }
-        if (email.length > 74) {
-            return res.status(400).send({ status: 400, error: 'Invalid Email address' })
-        }
-        if (typeof password !== 'string') return res.status(400).send({ error: 'password must be a string' })
-        if (password.includes(' ') || password.length < 7 || password.length > 16) {
-            return res.status(400).send({
-                status: 400,
-                error: 'Password should not contain any spaces, minimum length 7, maximum 16 required',
-            })
-        }
-        const escapePattern = /^[\S]*$/
-        if (!escapePattern.test(password)) {
-            return res.status(400).send({ status: 400, error: 'Password cannot contain control characters' })
-        }
-        let hash_password: string | Buffer = crypto.pbkdf2Sync(
-            body?.password,
-            SALT_ROUND,
-            ITERATION,
-            KEYLENGTH,
-            DIGEST_ALGO
-        )
-        hash_password = hash_password.toString('hex')
-        const userDetails = await prisma.user.findUnique({
-            where: { email: body.email, password: hash_password },
-        })
 
-        if (userDetails) {
-            delete (userDetails as any).password
-            const token = jwt.sign({ email: userDetails.email }, process.env.JWT_SECRET!, {
-                expiresIn: '7d',
-            })
 
-            return res.status(200).send({
-                status: 200,
-                message: 'Ok',
-                user: userDetails,
-                token,
-            })
-        }
-        return socialSignUp(req, res, next, email, password)
-    } catch (err) {
-        return next(err)
+// Verify Google ID token
+async function verifyGoogleToken(token: string) {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new Error('Invalid Google token payload');
     }
+    return payload;
+  } catch (error) {
+    throw new Error('Invalid Google token');
+  }
 }
+
+// Google Sign In
+const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({
+        status: 400,
+        error: 'Google token required',
+        error_description: 'Please provide a valid Google ID token'
+      });
+    }
+
+    // Verify Google token
+    const googleUser = await verifyGoogleToken(token);
+    
+    if (!googleUser.email || !googleUser.email_verified) {
+      return res.status(400).json({
+        status: 400,
+        error: 'Invalid Google account',
+        error_description: 'Email must be verified with Google'
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: googleUser.email }
+    });
+
+    if (existingUser) {
+      // User exists - sign in (regardless of how they originally signed up)
+      
+      // Update user info if needed
+      const updatedUser = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          image: googleUser.picture || existingUser.image,
+          isSocialLogin: true, // Mark as social login user
+          updated_at: new Date()
+        }
+      });
+
+      delete (updatedUser as any).password;
+      
+      const jwtToken = jwt.sign(
+        { 
+          id: updatedUser.id,
+          email: updatedUser.email,
+          type: 'google'
+        }, 
+        process.env.JWT_SECRET!, 
+        { expiresIn: '7d' }
+      );
+
+      return res.status(200).json({
+        status: 200,
+        message: 'Sign in successful',
+        user: updatedUser,
+        token: jwtToken
+      });
+    } else {
+      // User doesn't exist - create new account
+      return googleSignUp(req, res, next, googleUser);
+    }
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    return res.status(500).json({
+      status: 500,
+      error: 'Authentication failed',
+      error_description: 'Unable to authenticate with Google'
+    });
+  }
+};
+
+// Google Sign Up
+const googleSignUp = async (req: Request, res: Response, next: NextFunction, googleUser: any) => {
+  try {
+    // Check if email already exists
+    const existingUser = await prisma.user.findFirst({
+      where: { email: googleUser.email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        status: 400,
+        error: 'User already exists',
+        error_description: 'An account with this email already exists'
+      });
+    }
+
+    // Generate referral code
+    function generateReferralCode() {
+      return 'EZI' + Math.floor(1000 + Math.random() * 9000) + googleUser.email.slice(0, 3).toUpperCase();
+    }
+
+    const referralCode = generateReferralCode();
+
+    // Create new user
+    const newUser = await prisma.user.create({
+      data: {
+        email: googleUser.email,
+        username: googleUser.name || googleUser.email.split('@')[0],
+        image: googleUser.picture,
+        userReferralCode: referralCode,
+        isSocialLogin: true,
+        is_verified: googleUser.email_verified || false,
+        password: '', // Empty password for social login users
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    });
+
+    // Create follow relationship with default user (ID: 2)
+    await prisma.follows.create({
+      data: {
+        user_id: 2,
+        follower_id: newUser.id,
+      }
+    });
+
+    delete (newUser as any).password;
+
+    const jwtToken = jwt.sign(
+      { 
+        id: newUser.id,
+        email: newUser.email,
+        type: 'google'
+      }, 
+      process.env.JWT_SECRET!, 
+      { expiresIn: '7d' }
+    );
+
+    return res.status(201).json({
+      status: 201,
+      message: 'Account created successfully',
+      user: newUser,
+      token: jwtToken
+    });
+
+  } catch (error) {
+    console.error('Google sign up error:', error);
+    return res.status(500).json({
+      status: 500,
+      error: 'Registration failed',
+      error_description: 'Unable to create account'
+    });
+  }
+};
+
+  
+// const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//         const body = req.body
+//         if (!helper.isValidatePaylod(body, ['email', 'password'])) {
+//             return res.status(200).send({
+//                 status: 400,
+//                 error: 'Invalid Payload',
+//                 error_description: 'email, password are requried.',
+//             })
+//         }
+//         const { email, password } = body
+//         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+//         if (!emailRegex.test(email)) {
+//             return res.status(400).send({ status: 400, error: 'Invalid Email address' })
+//         }
+//         if (email.length > 74) {
+//             return res.status(400).send({ status: 400, error: 'Invalid Email address' })
+//         }
+//         if (typeof password !== 'string') return res.status(400).send({ error: 'password must be a string' })
+//         if (password.includes(' ') || password.length < 7 || password.length > 16) {
+//             return res.status(400).send({
+//                 status: 400,
+//                 error: 'Password should not contain any spaces, minimum length 7, maximum 16 required',
+//             })
+//         }
+//         const escapePattern = /^[\S]*$/
+//         if (!escapePattern.test(password)) {
+//             return res.status(400).send({ status: 400, error: 'Password cannot contain control characters' })
+//         }
+//         let hash_password: string | Buffer = crypto.pbkdf2Sync(
+//             body?.password,
+//             SALT_ROUND,
+//             ITERATION,
+//             KEYLENGTH,
+//             DIGEST_ALGO
+//         )
+//         hash_password = hash_password.toString('hex')
+//         const userDetails = await prisma.user.findUnique({
+//             where: { email: body.email, password: hash_password },
+//         })
+
+//         if (userDetails) {
+//             delete (userDetails as any).password
+//             const token = jwt.sign({ email: userDetails.email }, process.env.JWT_SECRET!, {
+//                 expiresIn: '7d',
+//             })
+
+//             return res.status(200).send({
+//                 status: 200,
+//                 message: 'Ok',
+//                 user: userDetails,
+//                 token,
+//             })
+//         }
+//         return socialSignUp(req, res, next, email, password)
+//     } catch (err) {
+//         return next(err)
+//     }
+// }
 
 const socialSignUp = async (req: Request, res: Response, next: NextFunction, email: string, password: string) => {
     try {
