@@ -110,5 +110,11 @@ SuperAdminRouter
     .post('/add-banner', superAdminController.addBanner)
     //@ts-ignore
     .delete('/banner/:id', superAdminController.deleteBannerById)
+    //@ts-ignore
+    .post('/category-update', superAdminController.updateCategoryImage)
+    //@ts-ignore
+    .post('/state-update', superAdminController.updateStateImage)
+    //@ts-ignore
+    .post('/country-update', superAdminController.updateCountryImage)
     
 export default SuperAdminRouter

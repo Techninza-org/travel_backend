@@ -886,6 +886,67 @@ const createPackageCategory = async (req: ExtendedRequest, res: Response, next: 
     }
 }
 
+const updateCategoryImage = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id, image } = req.body
+        if (!id || !image) {
+            return res.status(400).send({ error: 'Id and image are required' })
+        }
+        const categoryExists = await prisma.packageCategory.findUnique({ where: { id: Number(id) } })
+        if (!categoryExists) {
+            return res.status(404).send({ error: 'Category not found' })
+        }
+        const category = await prisma.packageCategory.update({
+            where: { id: Number(id) },
+            data: { image },
+        })
+        return res.status(200).send({ status: 200, category })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in updating category image' })
+    }
+}
+
+const updateStateImage = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id, image } = req.body
+        if (!id || !image) {
+            return res.status(400).send({ error: 'Id and image are required' })
+        }
+        const stateExists = await prisma.packageState.findUnique({ where: { id: Number(id) } })
+        if (!stateExists) {
+            return res.status(404).send({ error: 'State not found' })
+        }
+        const state = await prisma.packageState.update({
+            where: { id: Number(id) },
+            data: { image },
+        })
+        return res.status(200).send({ status: 200, state })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in updating state image' })
+    }
+}
+
+const updateCountryImage = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id, image } = req.body
+        if (!id || !image) {
+            return res.status(400).send({ error: 'Id and image are required' })
+        }
+        const countryExists = await prisma.packageCountry.findUnique({ where: { id: Number(id) } })
+        if (!countryExists) {
+            return res.status(404).send({ error: 'Country not found' })
+        }
+        const country = await prisma.packageCountry.update({
+            where: { id: Number(id) },
+            data: { image },
+        })
+        return res.status(200).send({ status: 200, country })
+    } catch (err) {
+        return res.status(400).send({ error: 'Error in updating country image' })
+    }
+}
+
+
 const createPackageState = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const { name, image } = req.body
@@ -1148,6 +1209,9 @@ const superAdminController = {
     importAirportDataFromExcel,
     addBanner,
     deleteBannerById,
-    updatePackage
+    updatePackage,
+    updateCategoryImage,
+    updateStateImage,
+    updateCountryImage,
 }
 export default superAdminController
