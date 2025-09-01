@@ -396,7 +396,6 @@ const socialLogin = async (req: Request, res: Response, next: NextFunction) => {
       const updatedUser = await prisma.user.update({
         where: { id: existingUser.id },
         data: {
-          image: googleUser.picture || existingUser.image,
           isSocialLogin: true, // Mark as social login user
           updated_at: new Date()
         }
