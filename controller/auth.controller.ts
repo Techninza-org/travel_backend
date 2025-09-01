@@ -475,7 +475,7 @@ const googleSignUp = async (req: Request, res: Response, next: NextFunction, goo
     // Create follow relationship with default user (ID: 2)
     await prisma.follows.create({
       data: {
-        user_id: 2,
+        user_id: 3,
         follower_id: newUser.id,
       }
     });
@@ -613,7 +613,7 @@ const socialSignUp = async (req: Request, res: Response, next: NextFunction, ema
                             const userId = createdUser.id
                             return prisma.follows.create({
                                 data: {
-                                    user_id: 2,
+                                    user_id: 3,
                                     follower_id: userId,
                                 },
                             })
