@@ -773,6 +773,7 @@ model Itinerary {
   start_city     String?
   end_city       String?
   cover_img      String?
+  title          String? @db.Text
 
   status       ItineraryStatus @default(NOT_ASIGNED)
   city_details ItineraryCity[]

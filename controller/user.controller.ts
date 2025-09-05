@@ -1919,7 +1919,7 @@ const deleteItineraryById = async ( req: ExtendedRequest, res: Response, next: N
 const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
 
     const user = req.user;
-    const { lat_long, status, itinerary_id, img_urls, city, city_title, city_description, isAutomatic, hotel, transport, placesVisited } = req.body;
+    const { lat_long, status, title, itinerary_id, img_urls, city, city_title, city_description, isAutomatic, hotel, transport, placesVisited } = req.body;
     console.log("createItinerary body :::::::::::::::", req.body);
     
 
@@ -1957,6 +1957,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         start_lat_long: helper.removeWhitespace(lat_long),
                         start_city: city ? city : 'START CITY',
                         cover_img: img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE,
+                        title: title ? title : null,
                         city_details: {
                             create: {
                                 city_name: city,
@@ -2030,6 +2031,7 @@ const createItinerary = async (req: ExtendedRequest, res: Response, next: NextFu
                         start_lat_long: helper.removeWhitespace(lat_long),
                         start_city: city ? city : 'START CITY',
                         cover_img: img_urls[0] ? img_urls[0] : helper.DEFAULT_IMAGE,
+                        title: title ? title : null,
                         city_details: {
                             create: {
                                 city_name: city,
