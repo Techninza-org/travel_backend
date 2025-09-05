@@ -740,7 +740,7 @@ model Blog {
 
 model Highlight {
   id         Int            @id @default(autoincrement())
-  title      String
+  title      String?
   user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id    Int
   latitude   Float?
