@@ -1729,7 +1729,7 @@ const createHighlight = async (req: ExtendedRequest, res: Response, next: NextFu
     const user = req.user
     const { title, latitude, longitude, location, image } = req.body
 
-    if (!helper.isValidatePaylod(req.body, ['title', 'latitude', 'longitude'])) {return res.status(200).send({status: 400,error: 'Invalid payload', error_description: 'title, latitude, longitude is required.'})}
+    if (!helper.isValidatePaylod(req.body, ['latitude', 'longitude'])) {return res.status(200).send({status: 400,error: 'Invalid payload', error_description: 'latitude, longitude is required.'})}
 
     try {
 
