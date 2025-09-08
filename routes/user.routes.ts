@@ -14,6 +14,8 @@ userRouter
     //@ts-ignore
     .put("/status", userController.userTravelingStatus)
     //@ts-ignore
+    .post("/travel_status", userController.updateUserTravelStatusNew)
+    //@ts-ignore
     .put("/visible", userController.visibleStatus)
     //@ts-ignore
     .post("/block", userController.blockUser)

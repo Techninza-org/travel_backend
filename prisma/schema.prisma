@@ -37,6 +37,7 @@ model User {
   expense           Expense[]
   userReferralCode  String?
   referredByCode    String?
+  travel_status     Boolean     @default(false)
   status            Boolean     @default(false)
   typeOfTraveller   Int?        @default(1) // 0 = solo, 1 = group
   visible           Boolean     @default(true)

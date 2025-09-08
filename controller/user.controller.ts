@@ -685,6 +685,26 @@ const userTravelingStatus = async (req: ExtendedRequest, res: Response, next: Ne
     }
 }
 
+const updateUserTravelStatusNew = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const user = req.user
+    const { travel_status } = req.body
+    if (typeof travel_status !== 'boolean') {
+        return res.status(200).send({ status: 400, error: 'Bad Request', error_description: 'Boolean value required' })
+    }
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: { travel_status: travel_status },
+        })
+        console.log(updatedUser.travel_status, 'UPDATED Travel Stataus', user.id);
+        
+        delete (updatedUser as any).password
+        return res.status(200).send({ status: 200, message: 'Ok', user: { updatedUser } })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const feedByPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const place = req.params.place
     const user = req.user
@@ -3123,6 +3143,7 @@ const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFun
 
 const userController = {
     submitQuery,
+    updateUserTravelStatusNew,
     domesticPackages,
     intlPackages,
     getPackageById,
