@@ -694,7 +694,9 @@ const updateUserTravelStatusNew = async (req: ExtendedRequest, res: Response, ne
     try {
         const updatedUser = await prisma.user.update({
             where: { id: user.id },
-            data: { travel_status: travel_status },
+            data: { travel_status: travel_status,
+                status: travel_status
+             },
         })
         console.log(updatedUser.travel_status, 'UPDATED Travel Stataus', user.id);
         
