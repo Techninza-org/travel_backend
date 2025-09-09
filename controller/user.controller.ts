@@ -2253,6 +2253,8 @@ const addUserToItineraryMembers = async (req: ExtendedRequest, res: Response, ne
 
 const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { lat, long } = req.body;
+    console.log(lat, long, 'for marketplace');
+    
 
     if (lat === undefined || long === undefined) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long are required' }); }
     if (isNaN(Number(lat)) || isNaN(Number(long))) { return res.status(400).send({ status: 400, error: 'Bad Request', error_description: 'lat and long should be numbers' }); }
@@ -2307,8 +2309,13 @@ const marketPlace = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
 const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const { place, type } = req.query;
+
+    console.log(place, type, 'marketplace details');
+    
   
     if (!place || typeof place !== "string") {
+        console.log('place is required and should be a string');
+        
       return res.status(400).send({
         status: 400,
         error: "Bad Request",
@@ -2316,6 +2323,8 @@ const getMarketplaceDetails = async (req: ExtendedRequest, res: Response, next: 
       });
     }
     if (typeof type !== "string") {
+        console.log('type should be a string');
+        
       return res.status(400).send({
         status: 400,
         error: "Bad Request",
