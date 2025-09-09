@@ -14,10 +14,11 @@ const razorpayInstance = new Razorpay({
     key_secret: process.env.KEY_SECRET!,
 })
 
-const USERNAME = "HotelAPIUserTest";
-const PASSWORD = "hotelapitest6NKHbRNN4pSD9G2H";
+const USERNAME = "EzioTravels";
+const PASSWORD = "EzioTravels356dfsgfNY85tsHkYxY2";
 const IPADDRESS = "110.235.232.3"
 const AGENTCODE = 1
+const AGENTID = 'EMTIN39690345'
 
 function formatDateInput(dateStr: string) {
     const date = new Date(dateStr);
@@ -70,6 +71,7 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
                 Password: PASSWORD,
                 AgentCode: AGENTCODE,
                 IPAddress: IPADDRESS,
+                AgentId: AGENTID
             }
         }
         const response = await axios.post('https://hotelapita.easemytrip.com/MiHotel.svc/Hotellist', requestBody, {
