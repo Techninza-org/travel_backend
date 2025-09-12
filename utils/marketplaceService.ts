@@ -203,6 +203,8 @@ export const getCityByCoordinates = async (latitude: number, longitude: number):
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
     const response = await axios.get(url);
+    console.log(response.data, 'nominatim response');
+    
     const place =
       response.data.address.state_district ||
       response.data.address.city ||
