@@ -78,6 +78,18 @@ model User {
   CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
   hotelBookings                HotelBooking[]
   payments                     Payment[]
+  appFeedbacks                 AppFeedback[]
+}
+
+model AppFeedback {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model PackageCategory {

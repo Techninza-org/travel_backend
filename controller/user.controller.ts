@@ -3152,8 +3152,31 @@ const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFun
     }
 }
 
+const submitAppFeedback = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const {rating, comment} = req.body;
+        if(!rating){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'Rating is required'});
+        }
+        if(rating < 1 || rating > 5){
+            return res.status(400).send({status: 400, error: 'Bad Request', error_description: 'rating should be between 1 and 5'});
+        }
+        const feedbackEntry = await prisma.appFeedback.create({
+            data: {
+                user_id: req.user.id,
+                rating: rating,
+                comment: comment
+            }
+        })
+        return res.status(200).send({status: 200, message: 'Ok', feedback: feedbackEntry});
+    }catch(error){
+        return next(error);
+    }
+}
+
 const userController = {
     submitQuery,
+    submitAppFeedback,
     updateUserTravelStatusNew,
     domesticPackages,
     intlPackages,

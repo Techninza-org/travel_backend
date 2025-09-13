@@ -147,5 +147,7 @@ userRouter
     .get('/intl_by_country/:country', userController.getIntlPackagesByCountryName)
     //@ts-ignore
     .get('/package/:id', userController.getPackageById)
+    //@ts-ignore
+    .post('/feedback', userController.submitAppFeedback)
 
 export default userRouter
