@@ -9,7 +9,7 @@ const SALT_ROUND = process.env.SALT_ROUND!
 const ITERATION = 100
 const KEYLENGTH = 10
 const DIGEST_ALGO = 'sha512'
-import * as xlsx from 'xlsx';
+import * as xlsx from 'xlsx'
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -563,227 +563,276 @@ const updateUserPassword = async (req: ExtendedRequest, res: Response, next: Nex
 }
 
 type AirportRow = {
-    AirportCode: string;
-    AirportName: string;
-    cityName: string;
-    CityCode: string;
-    Country: string;
-    ContinentCode: string;
-    CountryCode: string;
-  };
+    AirportCode: string
+    AirportName: string
+    cityName: string
+    CityCode: string
+    Country: string
+    ContinentCode: string
+    CountryCode: string
+}
 
-  const importAirportDataFromExcel = async (
-    req: ExtendedRequest,
-    res: Response,
-    next: NextFunction
-  ) => {
+const importAirportDataFromExcel = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-      const file = req.file;
-      if (!file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-  
-      const workbook = xlsx.read(file.buffer, { type: 'buffer' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = xlsx.utils.sheet_to_json<AirportRow>(sheet, { defval: null });
-      
-      const rows = jsonData
-      .filter(row => row.AirportCode && row.AirportName) // basic validation
-      .map(row => ({
-        airportCode: row.AirportCode,
-        airportName: row.AirportName,
-        cityName: row.cityName,
-        cityCode: row.CityCode,
-        country: row.Country,
-        continentCode: row.ContinentCode,
-        countryCode: row.CountryCode,
-      }));
-    
-    await prisma.airport.createMany({
-      data: rows,
-      skipDuplicates: true,
-    });
-  
-      console.log('✅ Import completed');
-      return res.status(200).json({ message: 'Airport data imported successfully' });
-  
-    } catch (err) {
-      console.error('❌ Import error:', err);
-      return next(err);
-    }
-  };
+        const file = req.file
+        if (!file) {
+            return res.status(400).json({ error: 'No file uploaded' })
+        }
 
-  
-type AnyObj = Record<string, any>;
+        const workbook = xlsx.read(file.buffer, { type: 'buffer' })
+        const sheet = workbook.Sheets[workbook.SheetNames[0]]
+        const jsonData = xlsx.utils.sheet_to_json<AirportRow>(sheet, { defval: null })
+
+        const rows = jsonData
+            .filter((row) => row.AirportCode && row.AirportName) // basic validation
+            .map((row) => ({
+                airportCode: row.AirportCode,
+                airportName: row.AirportName,
+                cityName: row.cityName,
+                cityCode: row.CityCode,
+                country: row.Country,
+                continentCode: row.ContinentCode,
+                countryCode: row.CountryCode,
+            }))
+
+        await prisma.airport.createMany({
+            data: rows,
+            skipDuplicates: true,
+        })
+
+        console.log('✅ Import completed')
+        return res.status(200).json({ message: 'Airport data imported successfully' })
+    } catch (err) {
+        console.error('❌ Import error:', err)
+        return next(err)
+    }
+}
+
+type AnyObj = Record<string, any>
 
 function safeJson<T = any>(val: any, fallback: T): T {
-  if (val == null) return fallback;
-  if (typeof val === 'string') {
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
+    if (val == null) return fallback
+    if (typeof val === 'string') {
+        try {
+            return JSON.parse(val) as T
+        } catch {
+            return fallback
+        }
     }
-  }
-  return val as T;
+    return val as T
 }
 
 function toInt(v: any, d = 0) {
-  const n = parseInt(String(v), 10);
-  return Number.isFinite(n) ? n : d;
+    const n = parseInt(String(v), 10)
+    return Number.isFinite(n) ? n : d
 }
 
+export const createPackage = async (req: Request, res: Response, _next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
 
-  export const createPackage = async (req: Request, res: Response, _next: NextFunction) => {
-    try {
-      const b = req.body as AnyObj;
-  
-      const type = toInt(b.type);              // 0=india, 1=international
-      const category = String(b.category || '').trim();
-      const state = String(b.state || '').trim();
-      const city = String(b.city || '').trim();
-      const country = String(b.country || '').trim();
-      const name = String(b.name || '').trim();
-      const description = String(b.description || '').trim();
-      const price = toInt(b.price);
-      const tax = toInt(b.tax);
-      const days = Math.max(1, toInt(b.days, 1));
-      const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)));
-  
-      const itinerary = safeJson(b.itinerary, [] as AnyObj[]);
-      const inclusions = safeJson(b.inclusions, [] as string[]);
-      const exclusions = safeJson(b.exclusions, [] as string[]);
-      const highlights = safeJson(b.highlights, [] as string[]);
-      const cancellation_policy = safeJson(b.cancellation_policy, [] as string[]);
-      const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
-      const destination_guide = safeJson(b.destination_guide, [] as string[]);
-      const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
-      const providedBy = b.provided_by ? String(b.provided_by).trim() : '';
-  
-  
-      if (![0, 1].includes(type)) {
-        return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' });
-      }
-      if (!category) return res.status(400).send({ error: 'Category is required' });
-      if (!name) return res.status(400).send({ error: 'Name is required' });
-      if (!description) return res.status(400).send({ error: 'Description is required' });
-      if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' });
-    
-  
-      // --- Create
-      const created = await prisma.package.create({
-        data: {
-          type,
-          category,
-          name,
-          state,
-          city,
-          country,
-          description,
-          images: images as any, // Prisma Json
-          price,
-          tax,
-          days,
-          nights,
-          providedBy,
-          itinerary: itinerary as any, // Prisma Json
-          destination_guide: destination_guide as any, // Prisma Json
-          inclusions: inclusions as any,
-          exclusions: exclusions as any,
-          highlights: highlights as any,
-          cancellation_policy: cancellation_policy as any,
-          date_change_policy: date_change_policy as any,
-        },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          type: true,
-          days: true,
-          nights: true,
-          price: true,
-          created_at: true,
-        },
-      });
-  
-      return res.status(201).send({ status: 201, package: created });
-    } catch (err) {
-      console.error('createPackage error:', err);
-      return res.status(400).send({ error: 'Error in creating package' });
-    }
-};
-  export const updatePackage = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
-    try {
-      const b = req.body as AnyObj;
-      const packageId = req.params.id;
-  
-      const type = toInt(b.type);              // 0=india, 1=international
-      const category = String(b.category || '').trim();
-      const state = String(b.state || '').trim();
-      const city = String(b.city || '').trim();
-      const country = String(b.country || '').trim();
-      const name = String(b.name || '').trim();
-      const description = String(b.description || '').trim();
-      const price = toInt(b.price);
-      const tax = toInt(b.tax);
-      const days = Math.max(1, toInt(b.days, 1));
-      const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)));
-  
-      const itinerary = safeJson(b.itinerary, [] as AnyObj[]);
-      const inclusions = safeJson(b.inclusions, [] as string[]);
-      const exclusions = safeJson(b.exclusions, [] as string[]);
-      const highlights = safeJson(b.highlights, [] as string[]);
-      const cancellation_policy = safeJson(b.cancellation_policy, [] as string[]);
-      const date_change_policy = safeJson(b.date_change_policy, [] as string[]);
-      const destination_guide = safeJson(b.destination_guide, [] as string[]);
-      const images = safeJson(b.images, [] as string[]); // Array of image URLs or base64 strings
-      const providedBy = b.provided_by ? String(b.provided_by).trim() : '';
-  
-  
-      if (![0, 1].includes(type)) {
-        return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' });
-      }
-      if (!category) return res.status(400).send({ error: 'Category is required' });
-      if (!name) return res.status(400).send({ error: 'Name is required' });
-      if (!description) return res.status(400).send({ error: 'Description is required' });
-      if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' });
-    
-  
-      // --- Updated
-      const updated = await prisma.package.update({
-        where: {
-            id: Number(packageId)
-        },
-        data: {
-          type,
-          category,
-          name,
-          state,
-          city,
-          country,
-          description,
-          images: images as any, // Prisma Json
-          price,
-          tax,
-          days,
-          nights,
-          providedBy,
-          itinerary: itinerary as any, // Prisma Json
-          destination_guide: destination_guide as any, // Prisma Json
-          inclusions: inclusions as any,
-          exclusions: exclusions as any,
-          highlights: highlights as any,
-          cancellation_policy: cancellation_policy as any,
-          date_change_policy: date_change_policy as any,
+        const type = toInt(b.type) // 0=india, 1=international
+        const category = String(b.category || '').trim()
+        const state = String(b.state || '').trim()
+        const city = String(b.city || '').trim()
+        const country = String(b.country || '').trim()
+        const name = String(b.name || '').trim()
+        const description = String(b.description || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const highlights = safeJson(b.highlights, [] as string[])
+        const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
+        const date_change_policy = safeJson(b.date_change_policy, [] as string[])
+        const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const images = safeJson(b.images, [] as string[]) // Array of image URLs or base64 strings
+        const providedBy = b.provided_by ? String(b.provided_by).trim() : ''
+
+        if (![0, 1].includes(type)) {
+            return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' })
         }
-      });
-  
-      return res.status(201).send({ status: 201, package: updated });
+        if (!category) return res.status(400).send({ error: 'Category is required' })
+        if (!name) return res.status(400).send({ error: 'Name is required' })
+        if (!description) return res.status(400).send({ error: 'Description is required' })
+        if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' })
+
+        // --- Create
+        const created = await prisma.package.create({
+            data: {
+                type,
+                category,
+                name,
+                state,
+                city,
+                country,
+                description,
+                images: images as any, // Prisma Json
+                price,
+                tax,
+                days,
+                nights,
+                providedBy,
+                itinerary: itinerary as any, // Prisma Json
+                destination_guide: destination_guide as any, // Prisma Json
+                inclusions: inclusions as any,
+                exclusions: exclusions as any,
+                highlights: highlights as any,
+                cancellation_policy: cancellation_policy as any,
+                date_change_policy: date_change_policy as any,
+            },
+            select: {
+                id: true,
+                name: true,
+                category: true,
+                type: true,
+                days: true,
+                nights: true,
+                price: true,
+                created_at: true,
+            },
+        })
+
+        return res.status(201).send({ status: 201, package: created })
     } catch (err) {
-      console.error('updatePackage error:', err);
-      return res.status(400).send({ error: 'Error in updating package' });
+        console.error('createPackage error:', err)
+        return res.status(400).send({ error: 'Error in creating package' })
     }
-};
+}
+export const updatePackage = async (req: ExtendedRequest, res: Response, _next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
+        const packageId = req.params.id
+
+        const type = toInt(b.type) // 0=india, 1=international
+        const category = String(b.category || '').trim()
+        const state = String(b.state || '').trim()
+        const city = String(b.city || '').trim()
+        const country = String(b.country || '').trim()
+        const name = String(b.name || '').trim()
+        const description = String(b.description || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const highlights = safeJson(b.highlights, [] as string[])
+        const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
+        const date_change_policy = safeJson(b.date_change_policy, [] as string[])
+        const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const images = safeJson(b.images, [] as string[]) // Array of image URLs or base64 strings
+        const providedBy = b.provided_by ? String(b.provided_by).trim() : ''
+
+        if (![0, 1].includes(type)) {
+            return res.status(400).send({ error: 'Invalid type (use 0 for india, 1 for international)' })
+        }
+        if (!category) return res.status(400).send({ error: 'Category is required' })
+        if (!name) return res.status(400).send({ error: 'Name is required' })
+        if (!description) return res.status(400).send({ error: 'Description is required' })
+        if (price <= 0) return res.status(400).send({ error: 'Price must be > 0' })
+
+        // --- Updated
+        const updated = await prisma.package.update({
+            where: {
+                id: Number(packageId),
+            },
+            data: {
+                type,
+                category,
+                name,
+                state,
+                city,
+                country,
+                description,
+                images: images as any, // Prisma Json
+                price,
+                tax,
+                days,
+                nights,
+                providedBy,
+                itinerary: itinerary as any, // Prisma Json
+                destination_guide: destination_guide as any, // Prisma Json
+                inclusions: inclusions as any,
+                exclusions: exclusions as any,
+                highlights: highlights as any,
+                cancellation_policy: cancellation_policy as any,
+                date_change_policy: date_change_policy as any,
+            },
+        })
+
+        return res.status(201).send({ status: 201, package: updated })
+    } catch (err) {
+        console.error('updatePackage error:', err)
+        return res.status(400).send({ error: 'Error in updating package' })
+    }
+}
+
+const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
+        const { packageId } = req.params
+        if (!packageId) {
+            return res.status(400).send({ error: 'Package id is required' })
+        }
+
+        const name = String(b.name || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
+        if (!existingPackage) {
+            return res.status(404).send({ error: 'Package not found' })
+        }
+        const newPackage = await prisma.customPackage.create({
+            data: {
+                type: existingPackage.type,
+                category: existingPackage.category,
+                state: existingPackage.state,
+                city: existingPackage.city,
+                country: existingPackage.country,
+                name: name || existingPackage.name,
+                description: existingPackage.description,
+                images: existingPackage.images || [],
+                price: price || existingPackage.price,
+                tax: tax || existingPackage.tax,
+                days: days || existingPackage.days,
+                nights: nights || existingPackage.nights,
+                providedBy: existingPackage.providedBy,
+                itinerary: itinerary as any || existingPackage.itinerary,
+                inclusions: inclusions as any || existingPackage.inclusions,
+                exclusions: exclusions as any || existingPackage.exclusions,
+                highlights: existingPackage.highlights || [],
+                cancellation_policy: existingPackage.cancellation_policy as any,
+                date_change_policy: existingPackage.date_change_policy as any,
+                destination_guide: existingPackage.destination_guide as any,
+            },
+            select: {
+                id: true,
+                name: true,
+                category: true,
+                type: true,
+                days: true,
+                nights: true,
+                price: true,
+                created_at: true,
+            },
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
 
 const getPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -824,18 +873,18 @@ const deletePackageById = async (req: ExtendedRequest, res: Response, next: Next
             .status(200)
             .send({ status: 400, error: 'Bad Request', error_description: 'Invalid package id Parameters' })
     }
-    try{
+    try {
         const packageExists = await prisma.package.findUnique({
             where: {
-                id: Number(packageId)
-            }
+                id: Number(packageId),
+            },
         })
-        if(!packageExists){
-            return res.status(404).send({status: 404, error: 'Package not found'})
+        if (!packageExists) {
+            return res.status(404).send({ status: 404, error: 'Package not found' })
         }
-        await prisma.package.delete({where: {id: Number(packageId)}});
-        return res.status(200).send({message: 'Package deleted successfully'})
-    }catch(err){
+        await prisma.package.delete({ where: { id: Number(packageId) } })
+        return res.status(200).send({ message: 'Package deleted successfully' })
+    } catch (err) {
         return next(err)
     }
 }
@@ -844,7 +893,8 @@ const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextF
     try {
         const quotes = await prisma.quote.findMany({
             include: {
-            package: true},
+                package: true,
+            },
             orderBy: { created_at: 'desc' },
         })
         return res.status(200).send({ status: 200, quotes })
@@ -946,7 +996,6 @@ const updateCountryImage = async (req: ExtendedRequest, res: Response, next: Nex
     }
 }
 
-
 const createPackageState = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const { name, image } = req.body
@@ -1011,7 +1060,7 @@ const getAllPackageCountries = async (req: ExtendedRequest, res: Response, next:
 }
 
 const deletePackageCategory = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const id = req.params.id
         if (isNaN(Number(id))) {
             return res.status(400).send({ error: 'Invalid category id' })
@@ -1022,13 +1071,13 @@ const deletePackageCategory = async (req: ExtendedRequest, res: Response, next: 
         }
         await prisma.packageCategory.delete({ where: { id: Number(id) } })
         return res.status(200).send({ message: 'Category deleted successfully' })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 const deletePackageState = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const id = req.params.id
         if (isNaN(Number(id))) {
             return res.status(400).send({ error: 'Invalid state id' })
@@ -1039,13 +1088,13 @@ const deletePackageState = async (req: ExtendedRequest, res: Response, next: Nex
         }
         await prisma.packageState.delete({ where: { id: Number(id) } })
         return res.status(200).send({ message: 'State deleted successfully' })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
 
 const deletePackageCountry = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
-    try{
+    try {
         const id = req.params.id
         if (isNaN(Number(id))) {
             return res.status(400).send({ error: 'Invalid country id' })
@@ -1056,7 +1105,7 @@ const deletePackageCountry = async (req: ExtendedRequest, res: Response, next: N
         }
         await prisma.packageCountry.delete({ where: { id: Number(id) } })
         return res.status(200).send({ message: 'Country deleted successfully' })
-    }catch(err){
+    } catch (err) {
         return next(err)
     }
 }
@@ -1065,7 +1114,7 @@ const getReportedForumQuestions = async (req: ExtendedRequest, res: Response, ne
     try {
         const questions = await prisma.forumReport.findMany({
             include: {
-                question: true
+                question: true,
             },
         })
         const questionWithReportCountMap = new Map<number, { question: any; reportCount: number }>()
@@ -1109,7 +1158,7 @@ const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextF
     try {
         const posts = await prisma.postReport.findMany({
             include: {
-                post: true
+                post: true,
             },
         })
         const postWithReportCountMap = new Map<number, { post: any; reportCount: number }>()
@@ -1132,28 +1181,28 @@ const getReportedPosts = async (req: ExtendedRequest, res: Response, next: NextF
 
 const addBanner = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const { imageUrl } = req.body;
+        const { imageUrl } = req.body
         if (!imageUrl) {
-            return res.status(400).send({ valid: false, error: 'Image URL is required.' });
+            return res.status(400).send({ valid: false, error: 'Image URL is required.' })
         }
         const banner = await prisma.banner.create({
-            data: { image: imageUrl }
-        });
-        return res.status(200).send({ valid: true, banner });
+            data: { image: imageUrl },
+        })
+        return res.status(200).send({ valid: true, banner })
     } catch (err) {
-        return next(err);
+        return next(err)
     }
 }
 
-const deleteBannerById= async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+const deleteBannerById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params
         const banner = await prisma.banner.delete({
-            where: { id: parseInt(id) }
-        });
-        return res.status(200).send({ valid: true, banner });
+            where: { id: parseInt(id) },
+        })
+        return res.status(200).send({ valid: true, banner })
     } catch (err) {
-        return next(err);
+        return next(err)
     }
 }
 
@@ -1213,5 +1262,6 @@ const superAdminController = {
     updateCategoryImage,
     updateStateImage,
     updateCountryImage,
+    createNewEditedPackageCustom,
 }
 export default superAdminController

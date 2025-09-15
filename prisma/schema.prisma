@@ -143,6 +143,32 @@ model Package {
   updated_at          DateTime @updatedAt
 }
 
+model CustomPackage {
+  id                  Int      @id @default(autoincrement())
+  type                Int // 0 = india, 1 = international
+  category            String
+  name                String
+  state               String?
+  city                String?
+  country             String?
+  description         String   @db.Text
+  images              Json
+  price               Int
+  tax                 Int
+  days                Int
+  nights              Int
+  itinerary           Json
+  destination_guide   Json
+  inclusions          Json
+  exclusions          Json
+  highlights          Json
+  cancellation_policy Json
+  date_change_policy  Json
+  providedBy          String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
+
 enum BookingStatus {
   INIT
   PRICE_LOCKED

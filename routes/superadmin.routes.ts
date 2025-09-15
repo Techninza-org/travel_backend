@@ -116,5 +116,7 @@ SuperAdminRouter
     .post('/state-update', superAdminController.updateStateImage)
     //@ts-ignore
     .post('/country-update', superAdminController.updateCountryImage)
+    //@ts-ignore
+    .post('/custom-package/:packageId', superAdminController.createNewEditedPackageCustom)
     
 export default SuperAdminRouter
