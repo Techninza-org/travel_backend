@@ -51,7 +51,7 @@ const activityAvailability = async (req: ExtendedRequest, res: Response, next: N
                 'Content-Type': 'application/json',
             },
         })
-
+        
         const data = response.data
         return res.status(200).json({data})
     }catch(err){

@@ -118,5 +118,13 @@ SuperAdminRouter
     .post('/country-update', superAdminController.updateCountryImage)
     //@ts-ignore
     .post('/custom-package/:packageId/:quoteId', superAdminController.createNewEditedPackageCustom)
+    //@ts-ignore
+    .put('/custom-package/:id', superAdminController.updateCustomPackage)
+    //@ts-ignore
+    .get('/custom-packages', superAdminController.getAllCustomPackages)
+    //@ts-ignore
+    .get('/custom-package/:id', superAdminController.getCustomPackageById)
+    //@ts-ignore
+    .delete('/custom-package/:id', superAdminController.deleteCustomPackageById)
     
 export default SuperAdminRouter

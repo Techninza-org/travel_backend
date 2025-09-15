@@ -823,7 +823,7 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 date_change_policy: existingPackage.date_change_policy as any,
                 destination_guide: existingPackage.destination_guide as any,
                 quoteId: Number(quoteId),
-            },
+            } as any,
             select: {
                 id: true,
                 name: true,
@@ -845,7 +845,7 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 providedBy: true,
                 created_at: true,
                 quoteId: true,
-            },
+            } as any,
         })
 
         return res.status(201).send({
@@ -857,6 +857,202 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
         return next(err)
     }
 }
+
+//update customized package
+const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
+        const customPackageId = req.params.id
+        
+        if (!customPackageId || isNaN(Number(customPackageId))) {
+            return res.status(400).send({ error: 'Valid custom package id is required' })
+        }
+
+        // Check if custom package exists
+        const existingCustomPackage = await prisma.customPackage.findUnique({ 
+            where: { id: Number(customPackageId) } 
+        })
+        
+        if (!existingCustomPackage) {
+            return res.status(404).send({ error: 'Custom package not found' })
+        }
+
+        const name = String(b.name || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const images = safeJson(b.images, [] as any[])
+        const highlights = safeJson(b.highlights, [] as string[])
+        const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
+        const date_change_policy = safeJson(b.date_change_policy, [] as string[])
+        const destination_guide = safeJson(b.destination_guide, [] as string[])
+        
+        // Prepare update data - only include fields that are provided
+        const updateData: any = {}
+        
+        if (name) updateData.name = name
+        if (price > 0) updateData.price = price
+        if (tax >= 0) updateData.tax = tax
+        if (days > 0) updateData.days = days
+        if (nights >= 0) updateData.nights = nights
+        if (itinerary.length > 0) updateData.itinerary = itinerary
+        if (inclusions.length > 0) updateData.inclusions = inclusions
+        if (exclusions.length > 0) updateData.exclusions = exclusions
+        if (images.length > 0) updateData.images = images
+        if (highlights.length > 0) updateData.highlights = highlights
+        if (cancellation_policy.length > 0) updateData.cancellation_policy = cancellation_policy
+        if (date_change_policy.length > 0) updateData.date_change_policy = date_change_policy
+        if (destination_guide.length > 0) updateData.destination_guide = destination_guide
+        
+        if (b.description && String(b.description).trim()) {
+            updateData.description = String(b.description).trim()
+        }
+        if (b.category && String(b.category).trim()) {
+            updateData.category = String(b.category).trim()
+        }
+        if (b.state && String(b.state).trim()) {
+            updateData.state = String(b.state).trim()
+        }
+        if (b.city && String(b.city).trim()) {
+            updateData.city = String(b.city).trim()
+        }
+        if (b.country && String(b.country).trim()) {
+            updateData.country = String(b.country).trim()
+        }
+        if (b.providedBy && String(b.providedBy).trim()) {
+            updateData.providedBy = String(b.providedBy).trim()
+        }
+
+        // Update the custom package
+        const updatedCustomPackage = await prisma.customPackage.update({
+            where: { id: Number(customPackageId) },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                category: true,
+                type: true,
+                state: true,
+                city: true,
+                country: true,
+                description: true,
+                days: true,
+                nights: true,
+                price: true,
+                tax: true,
+                images: true,
+                itinerary: true,
+                inclusions: true,
+                exclusions: true,
+                highlights: true,
+                cancellation_policy: true,
+                date_change_policy: true,
+                destination_guide: true,
+                providedBy: true,
+                quoteId: true,
+                created_at: true,
+                updated_at: true,
+            } as any,
+        })
+
+        return res.status(200).send({
+            status: 200,
+            message: 'Custom package updated successfully',
+            customPackage: updatedCustomPackage
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getAllCustomPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const customPackages = await prisma.customPackage.findMany({
+            include: {
+                quote: {
+                    select: {
+                        id: true,
+                        name: true,
+                        phone: true,
+                        number_of_people: true,
+                        start_date: true,
+                        done: true,
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' },
+        } as any)
+        return res.status(200).send({ 
+            status: 200, 
+            customPackages: customPackages, 
+            count: customPackages.length 
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getCustomPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const customPackageId = req.params.id
+
+    if (isNaN(Number(customPackageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid custom package id Parameters' })
+    }
+    try {
+        const customPackageDetails = await prisma.customPackage.findUnique({
+            where: { id: Number(customPackageId) },
+            include: {
+                quote: {
+                    select: {
+                        id: true,
+                        name: true,
+                        phone: true,
+                        number_of_people: true,
+                        start_date: true,
+                        done: true,
+                    }
+                }
+            },
+        } as any)
+        if (!customPackageDetails) {
+            return res.status(404).send({ status: 404, error: 'Custom package not found' })
+        }
+        return res.status(200).send({ status: 200, customPackage: customPackageDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const deleteCustomPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const customPackageId = req.params.id
+    if (isNaN(Number(customPackageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid custom package id Parameters' })
+    }
+    try {
+        const customPackageExists = await prisma.customPackage.findUnique({
+            where: {
+                id: Number(customPackageId),
+            },
+        })
+        if (!customPackageExists) {
+            return res.status(404).send({ status: 404, error: 'Custom package not found' })
+        }
+        await prisma.customPackage.delete({ where: { id: Number(customPackageId) } })
+        return res.status(200).send({ message: 'Custom package deleted successfully' })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 
 const getPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -919,7 +1115,7 @@ const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextF
             include: {
                 package: true,
                 customPackage: true,
-            },
+            } as any,
             orderBy: { created_at: 'desc' },
         })
         return res.status(200).send({ status: 200, quotes })
@@ -1288,5 +1484,9 @@ const superAdminController = {
     updateStateImage,
     updateCountryImage,
     createNewEditedPackageCustom,
+    updateCustomPackage,
+    getAllCustomPackages,
+    getCustomPackageById,
+    deleteCustomPackageById,
 }
 export default superAdminController
