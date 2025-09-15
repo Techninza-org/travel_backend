@@ -778,6 +778,8 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
     try {
         const b = req.body as AnyObj
         const { packageId } = req.params
+        
+        
         if (!packageId) {
             return res.status(400).send({ error: 'Package id is required' })
         }
@@ -791,6 +793,9 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
         const itinerary = safeJson(b.itinerary, [] as AnyObj[])
         const inclusions = safeJson(b.inclusions, [] as string[])
         const exclusions = safeJson(b.exclusions, [] as string[])
+        const images = safeJson(b.images, [] as any[])
+        
+        
         const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
         if (!existingPackage) {
             return res.status(404).send({ error: 'Package not found' })
@@ -804,15 +809,15 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 country: existingPackage.country,
                 name: name || existingPackage.name,
                 description: existingPackage.description,
-                images: existingPackage.images || [],
+                images: images.length > 0 ? images : (existingPackage.images || []),
                 price: price || existingPackage.price,
                 tax: tax || existingPackage.tax,
                 days: days || existingPackage.days,
                 nights: nights || existingPackage.nights,
                 providedBy: existingPackage.providedBy,
-                itinerary: itinerary as any || existingPackage.itinerary,
-                inclusions: inclusions as any || existingPackage.inclusions,
-                exclusions: exclusions as any || existingPackage.exclusions,
+                itinerary: itinerary.length > 0 ? (itinerary as any) : existingPackage.itinerary,
+                inclusions: inclusions.length > 0 ? (inclusions as any) : existingPackage.inclusions,
+                exclusions: exclusions.length > 0 ? (exclusions as any) : existingPackage.exclusions,
                 highlights: existingPackage.highlights || [],
                 cancellation_policy: existingPackage.cancellation_policy as any,
                 date_change_policy: existingPackage.date_change_policy as any,
@@ -826,8 +831,25 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 days: true,
                 nights: true,
                 price: true,
+                tax: true,
+                images: true,
+                description: true,
+                itinerary: true,
+                inclusions: true,
+                exclusions: true,
+                highlights: true,
+                cancellation_policy: true,
+                date_change_policy: true,
+                destination_guide: true,
+                providedBy: true,
                 created_at: true,
             },
+        })
+
+        return res.status(201).send({
+            status: 201,
+            message: 'Custom package created successfully',
+            customPackage: newPackage
         })
     } catch (err) {
         return next(err)
