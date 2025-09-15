@@ -777,11 +777,11 @@ export const updatePackage = async (req: ExtendedRequest, res: Response, _next: 
 const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const b = req.body as AnyObj
-        const { packageId } = req.params
+        const { packageId, quoteId } = req.params
         
         
-        if (!packageId) {
-            return res.status(400).send({ error: 'Package id is required' })
+        if (!packageId || !quoteId) {
+            return res.status(400).send({ error: 'Package id and quote id is required' })
         }
 
         const name = String(b.name || '').trim()
@@ -822,6 +822,7 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 cancellation_policy: existingPackage.cancellation_policy as any,
                 date_change_policy: existingPackage.date_change_policy as any,
                 destination_guide: existingPackage.destination_guide as any,
+                quoteId: Number(quoteId),
             },
             select: {
                 id: true,
@@ -843,6 +844,7 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 destination_guide: true,
                 providedBy: true,
                 created_at: true,
+                quoteId: true,
             },
         })
 
@@ -916,6 +918,7 @@ const getAllQuoteQuery = async (req: ExtendedRequest, res: Response, next: NextF
         const quotes = await prisma.quote.findMany({
             include: {
                 package: true,
+                customPackage: true,
             },
             orderBy: { created_at: 'desc' },
         })

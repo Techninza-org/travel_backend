@@ -165,6 +165,8 @@ model CustomPackage {
   cancellation_policy Json
   date_change_policy  Json
   providedBy          String?
+  quoteId             Int
+  quote               Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 }
@@ -563,6 +565,7 @@ model Quote {
   name             String
   phone            String
   source           QuoteSource?
+  customPackage    CustomPackage?
   created_at       DateTime     @default(now())
   updated_at       DateTime     @updatedAt
 }
