@@ -201,7 +201,7 @@ export const optimizedCitiesDescription = async (cities: string[]): Promise<any[
 // Use OpenStreetMap Nominatim to reverse geocode a city name
 export const getCityByCoordinates = async (latitude: number, longitude: number): Promise<string | null> => {
   try {
-    const url =  `https://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&key=${process.env.MAPS_API_KEY}`;
+    const url =  `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.MAPS_API_KEY}`;
     const response = await axios.get(url);
     console.log(response.data, 'google maps response');
     const place = response.data.results[0].address_components.find((component: any) =>
