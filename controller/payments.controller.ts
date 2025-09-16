@@ -15,15 +15,19 @@ const razorpay = new Razorpay({
 // Helper function to confirm vendor booking with EMT
 async function confirmVendorBooking(vendorPayload: any): Promise<{ ok: boolean; data?: any; error?: string }> {
   try {
+    console.log('Confirming vendor booking with payload', vendorPayload);
+    
     const resp = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking', vendorPayload, {
       headers: { 'Content-Type': 'application/json' },
-      timeout: 25_000,
     });
-
+    console.log('EMT booking response status', resp.status, resp);
+    
     const data = resp.data;
     console.log('EMT booking response', data);
     
     const isOk = data?.reservationStatusCode === 'CF'
+    console.log('Vendor booking success status', isOk);
+    
     return isOk ? { ok: true, data } : { ok: false, error: JSON.stringify(data) };
   } catch (e: any) {
     return { ok: false, error: e?.message || 'Vendor error' };
@@ -114,6 +118,8 @@ export const verifyHotelCheckout = async (
       bookingId,
       amount,      // <-- send amount (paise) from client if needed for validation
     } = req.body;
+    console.log('received verifyHotelCheckout', req.body);
+    
 
     const userId = req.user?.id;
     if (!userId) {
@@ -137,6 +143,8 @@ export const verifyHotelCheckout = async (
       const booking = await tx.hotelBooking.findUnique({
         where: { id: Number(bookingId), userId },
       });
+      console.log('Booking found for verification', booking);
+      
       if (!booking) throw new Error('Booking not found');
 
       if (booking.status === 'CONFIRMED') return; // already done
@@ -146,6 +154,8 @@ export const verifyHotelCheckout = async (
         throw new Error('OrderId mismatch');
       }
       if (amount && booking.amount !== amount) {
+        console.log('Amount mismatch detected', { bookingAmount: booking.amount, receivedAmount: amount });
+        
         // Optional: refund & abort
         await refundPayment(
           razorpay_payment_id,
@@ -155,6 +165,8 @@ export const verifyHotelCheckout = async (
           where: { id: booking.id },
           data: { status: 'FAILED_REFUNDED' },
         });
+        console.log('Amount mismatch, refunded payment', razorpay_payment_id);
+        
         return;
       }
 
@@ -167,11 +179,13 @@ export const verifyHotelCheckout = async (
           status: 'PENDING_WEBHOOK', 
         },
       });
+      console.log('Booking moved to PENDING WEBHOOK state');
 
       /** Call EMT to finalize */
       const emtResp = await confirmVendorBooking(booking.vendorPayload);
 
       if (emtResp.ok) {
+        console.log('Vendor booking confirmed', emtResp.data);
         await tx.hotelBooking.update({
           where: { id: booking.id },
           data: {
@@ -198,6 +212,7 @@ export const verifyHotelCheckout = async (
       } else {
         const reason = emtResp.error || 'Vendor booking failed';
         const refund = await refundPayment(razorpay_payment_id, reason);
+        console.log('Vendor booking failed, refunded payment', reason, refund);
 
         await tx.hotelBooking.update({
           where: { id: booking.id },
