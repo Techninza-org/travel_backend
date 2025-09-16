@@ -21,6 +21,8 @@ async function confirmVendorBooking(vendorPayload: any): Promise<{ ok: boolean; 
     });
 
     const data = resp.data;
+    console.log('EMT booking response', data);
+    
     const isOk = data?.reservationStatusCode === 'CF'
     return isOk ? { ok: true, data } : { ok: false, error: JSON.stringify(data) };
   } catch (e: any) {

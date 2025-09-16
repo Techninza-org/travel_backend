@@ -43,7 +43,6 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             });
         }
 
-        console.log(`CheckInDate: ${checkInDate}, CheckOutDate: ${checkOutDate}`);
         
 
         const requestBody = {
@@ -81,7 +80,6 @@ const searchHotels = async (req: ExtendedRequest, res: Response, next: NextFunct
             }
         })
         const data = response.data;
-        console.log(`Response Data for search hotels: ${JSON.stringify(data)}`);
         
         return res.status(200).json({
             message: 'Hotels fetched successfully',
