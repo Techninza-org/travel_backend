@@ -996,7 +996,7 @@ const createNewPackageCustom = async (req: ExtendedRequest, res: Response, next:
         if (!existingPackage) {
             return res.status(404).send({ error: 'Package not found' })
         }
-        const newPackage = await prisma.customPackage.create({
+        const newPackage = await prisma.customPackageMain.create({
             data: {
                 type: existingPackage.type,
                 category: existingPackage.category,
