@@ -121,6 +121,10 @@ SuperAdminRouter
     //@ts-ignore
     .put('/custom-package/:id', superAdminController.updateCustomPackage)
     //@ts-ignore
+    .post('/custom-package-main/:packageId', superAdminController.createNewPackageCustom)
+    //@ts-ignore
+    .put('/custom-package-main/:id', superAdminController.updateCustomPackageMain)
+    //@ts-ignore
     .get('/custom-packages', superAdminController.getAllCustomPackages)
     //@ts-ignore
     .get('/custom-package/:id', superAdminController.getCustomPackageById)
