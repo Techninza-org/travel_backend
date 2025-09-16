@@ -129,6 +129,8 @@ SuperAdminRouter
     //@ts-ignore
     .get('/custom-package/:id', superAdminController.getCustomPackageById)
     //@ts-ignore
+    .get('/custom-package-main/:id', superAdminController.getCustomPackageMainById)
+    //@ts-ignore
     .delete('/custom-package/:id', superAdminController.deleteCustomPackageById)
     //@ts-ignore
     .get('/app-feedbacks', superAdminController.getAppFeedbacks)

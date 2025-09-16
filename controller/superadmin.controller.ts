@@ -1193,6 +1193,26 @@ const getCustomPackageById = async (req: ExtendedRequest, res: Response, next: N
         return next(err)
     }
 }
+const getCustomPackageMainById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const customPackageId = req.params.id
+
+    if (isNaN(Number(customPackageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid custom package id Parameters' })
+    }
+    try {
+        const customPackageDetails = await prisma.customPackageMain.findUnique({
+            where: { id: Number(customPackageId) },
+        } as any)
+        if (!customPackageDetails) {
+            return res.status(404).send({ status: 404, error: 'Custom package not found' })
+        }
+        return res.status(200).send({ status: 200, customPackage: customPackageDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
 
 const deleteCustomPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const customPackageId = req.params.id
@@ -1222,6 +1242,9 @@ const getPackages = async (req: ExtendedRequest, res: Response, next: NextFuncti
     try {
         const packages = await prisma.package.findMany({
             orderBy: { created_at: 'desc' },
+            include: {
+                customPackageMain: true
+            }
         })
         return res.status(200).send({ status: 200, packages: packages, count: packages.length })
     } catch (err) {
@@ -1676,6 +1699,7 @@ const superAdminController = {
     deleteCustomPackageById,
     createNewPackageCustom,
     updateCustomPackageMain,
-    getAppFeedbacks
+    getAppFeedbacks,
+    getCustomPackageMainById
 }
 export default superAdminController
