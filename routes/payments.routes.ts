@@ -15,6 +15,6 @@ paymentsRouter
     .get('/hotel/booking/:bookingId/status', middleware.AuthMiddleware, paymentsController.getBookingStatus);
 
 // Webhook route (no auth middleware, uses raw body)
-paymentsRouter.post('/hotel/webhook', express.raw({ type: '*/*' }), paymentsController.hotelPaymentWebhook);
+// paymentsRouter.post('/hotel/webhook', express.raw({ type: '*/*' }), paymentsController.hotelPaymentWebhook);
 
 export default paymentsRouter;
