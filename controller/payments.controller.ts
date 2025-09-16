@@ -115,10 +115,6 @@ export const verifyHotelCheckout = async (req: ExtendedRequest, res: Response, n
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !bookingId) {
-      return res.status(400).json({ message: 'Missing fields' });
-    }
-
     // 1) Signature check (order|payment) using KEY_SECRET
     const hmac = crypto.createHmac('sha256', process.env.KEY_SECRET!);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
