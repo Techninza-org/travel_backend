@@ -1623,6 +1623,28 @@ const deleteBannerById = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+const getAppFeedbacks = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const feedbacks = await prisma.appFeedback.findMany({
+            orderBy: { created_at: 'desc' },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                        phone: true,
+                        image: true,
+                    }
+                }
+            }
+        })
+        return res.status(200).send({ status: 200, feedbacks })
+    } catch (err) {
+        return next(err)
+    }
+}
+
 const superAdminController = {
     getReportedForumQuestions,
     deleteForumQuestion,
@@ -1686,5 +1708,6 @@ const superAdminController = {
     deleteCustomPackageById,
     createNewPackageCustom,
     updateCustomPackageMain,
+    getAppFeedbacks
 }
 export default superAdminController
