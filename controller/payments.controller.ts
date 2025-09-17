@@ -50,44 +50,24 @@ async function refundPayment(paymentId: string, speedNote?: string) {
 // Create Razorpay order for hotel booking
 export const createHotelOrder = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
   try {
-    const { bookingId } = req.body;
+    const { amount, currency = 'INR', notes } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    // 1) Load booking you previously created after price lock
-    const booking = await prisma.hotelBooking.findUnique({ 
-      where: { id: Number(bookingId), userId: userId } 
-    });
-    
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
+    if (!amount) {
+      return res.status(400).json({ message: 'Missing required field: amount' });
     }
 
-    if (booking.status !== 'PRICE_LOCKED' && booking.status !== 'ORDER_CREATED') {
-      return res.status(400).json({ message: `Invalid status: ${booking.status}` });
-    }
-
-    // Optional: check booking.expiresAt to ensure price/room lock still valid
-    if (booking.expiresAt && new Date(booking.expiresAt) < new Date()) {
-      return res.status(410).json({ message: 'Price/room hold expired. Please re-check availability.' });
-    }
-
-    // 2) Create RZP order
+    // 1) Create RZP order
     const order = await razorpay.orders.create({
-      amount: booking.amount, // paise
-      currency: booking.currency || 'INR',
-      receipt: `hotel_booking_${booking.id}`,
-      notes: { bookingId: String(booking.id), type: 'HOTEL' },
+      amount: Math.round(amount * 100), // Convert to paise
+      currency: currency,
+      receipt: `hotel_booking_${Date.now()}`, // Use timestamp for unique receipt
+      notes: { userId: String(userId), type: 'HOTEL' },
       payment_capture: true, // auto-capture
-    });
-
-    // 3) Persist order id
-    await prisma.hotelBooking.update({
-      where: { id: booking.id },
-      data: { rzpOrderId: order.id, status: 'ORDER_CREATED' },
     });
 
     return res.status(200).json({
@@ -97,6 +77,7 @@ export const createHotelOrder = async (req: ExtendedRequest, res: Response, next
         amount: order.amount,
         currency: order.currency,
         key_id: process.env.KEY_ID,
+        receipt: order.receipt,
       },
     });
   } catch (err) {
@@ -462,9 +443,250 @@ export const getBookingStatus = async (req: ExtendedRequest, res: Response, next
   }
 };
 
+// Step 1: Create Razorpay order and verify payment
+export const verifyHotelPayment = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      amount,
+      currency = 'INR',
+      notes
+    } = req.body;
+    
+    console.log('received verifyHotelPayment', req.body);
+    
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !amount) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: razorpay_payment_id, razorpay_order_id, razorpay_signature, amount' 
+      });
+    }
+
+    /** 1️⃣  Verify Razorpay signature */
+    const hmac = crypto.createHmac('sha256', process.env.KEY_SECRET!);
+    hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+    const expected = hmac.digest('hex');
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(razorpay_signature)
+    );
+    if (!isValid) {
+      return res.status(400).json({ message: 'Signature mismatch' });
+    }
+
+    /** 2️⃣  Get payment details from Razorpay to extract transaction ID */
+    let paymentDetails;
+    try {
+      paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
+      console.log('Razorpay payment details:', paymentDetails);
+    } catch (error) {
+      console.error('Error fetching payment details from Razorpay:', error);
+      return res.status(400).json({ message: 'Failed to fetch payment details from Razorpay' });
+    }
+
+    /** 3️⃣  Create booking record and store payment (fast response) */
+    const result = await prisma.$transaction(async (tx) => {
+      // Create booking record with ORDER_CREATED status (payment verified, order created)
+      const booking = await tx.hotelBooking.create({
+        data: {
+          userId,
+          status: 'ORDER_CREATED', // Payment verified and order created
+          amount: Math.round(amount * 100), // Convert to paise
+          currency,
+          vendorPayload: {}, // Empty for now, will be filled in confirmHotelBooking
+          notes,
+          vendorResponse: {},
+          rzpPaymentId: razorpay_payment_id,
+          rzpOrderId: razorpay_order_id,
+        },
+      });
+      console.log('Booking created with payment verified and order created', booking);
+
+      // Store payment record
+      await tx.payment.create({
+        data: {
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          userId,
+          status: 'CAPTURED',
+          amount: booking.amount,
+          currency: 'INR',
+          bookingId: booking.id,
+          payload: paymentDetails as any, // Type assertion for Razorpay payment object
+        },
+      });
+
+      return {
+        bookingId: booking.id,
+        status: 'ORDER_CREATED',
+        amount: booking.amount,
+        currency: booking.currency,
+        transactionId: paymentDetails.id, // Return transaction ID for client
+        paymentDetails: {
+          id: paymentDetails.id,
+          amount: paymentDetails.amount,
+          currency: paymentDetails.currency,
+          status: paymentDetails.status,
+          method: paymentDetails.method,
+          created_at: paymentDetails.created_at,
+        },
+      };
+    });
+
+    return res.status(200).json({
+      message: 'Payment verified successfully. Order created.',
+      data: result,
+    });
+  } catch (err) {
+    console.error('verifyHotelPayment error', err);
+    return next(err);
+  }
+};
+
+// Step 2: Vendor booking confirmation API
+export const confirmHotelBooking = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { bookingId, vendorPayload } = req.body;
+    const userId = req.user?.id;
+    
+    console.log('received confirmHotelBooking', req.body);
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    if (!bookingId || !vendorPayload) {
+      return res.status(400).json({ message: 'Missing required fields: bookingId, vendorPayload' });
+    }
+
+    /** 1️⃣  Find booking and validate status */
+    const booking = await prisma.hotelBooking.findUnique({
+      where: { id: Number(bookingId), userId },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    if (booking.status !== 'ORDER_CREATED') {
+      return res.status(400).json({ 
+        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED` 
+      });
+    }
+
+    /** 2️⃣  Call vendor and update booking status */
+    const result = await prisma.$transaction(async (tx) => {
+      // Update vendorPayload and move to PENDING_WEBHOOK (processing vendor)
+      await tx.hotelBooking.update({
+        where: { id: booking.id },
+        data: { 
+          status: 'PENDING_WEBHOOK',
+          vendorPayload: vendorPayload
+        },
+      });
+
+      /** Call EMT to finalize */
+      const emtResp = await confirmVendorBooking(vendorPayload);
+
+      if (emtResp.ok) {
+        console.log('Vendor booking confirmed', emtResp.data);
+        await tx.hotelBooking.update({
+          where: { id: booking.id },
+          data: {
+            status: 'CONFIRMED',
+            vendorResponse: emtResp.data,
+            vendorPnr:
+              emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+            vendorBookingId: emtResp.data?.BookingId || null,
+          },
+        });
+
+        return {
+          success: true,
+          bookingId: booking.id,
+          status: 'CONFIRMED',
+          vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+          vendorBookingId: emtResp.data?.BookingId || null,
+        };
+      } else {
+        const reason = emtResp.error || 'Vendor booking failed';
+        const refund = await refundPayment(booking.rzpPaymentId!, reason);
+        console.log('Vendor booking failed, refunded payment', reason, refund);
+
+        await tx.hotelBooking.update({
+          where: { id: booking.id },
+          data: {
+            status: 'FAILED_REFUNDED',
+            rzpRefundId: refund?.id || null,
+            notes: reason,
+          },
+        });
+
+        // Update payment status to refunded
+        await tx.payment.updateMany({
+          where: { 
+            paymentId: booking.rzpPaymentId!,
+            bookingId: booking.id 
+          },
+          data: { status: 'REFUNDED' },
+        });
+
+        return {
+          success: false,
+          bookingId: booking.id,
+          status: 'FAILED_REFUNDED',
+          reason,
+          refundId: refund?.id || null,
+        };
+      }
+    });
+
+    if (result.success) {
+      return res.status(200).json({
+        message: 'Hotel booking confirmed successfully',
+        data: {
+          bookingId: result.bookingId,
+          status: result.status,
+          vendorPnr: result.vendorPnr,
+          vendorBookingId: result.vendorBookingId,
+        },
+      });
+    } else {
+      return res.status(400).json({
+        message: 'Hotel booking failed and payment refunded',
+        data: {
+          bookingId: result.bookingId,
+          status: result.status,
+          reason: result.reason,
+          refundId: result.refundId,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('confirmHotelBooking error', err);
+    return next(err);
+  }
+};
+
 export const paymentsController = {
   createHotelOrder,
   verifyHotelCheckout,
+  verifyHotelPayment,
+  confirmHotelBooking,
   // hotelPaymentWebhook,
   getBookingStatus,
 };
