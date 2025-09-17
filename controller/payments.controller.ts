@@ -588,99 +588,180 @@ export const confirmHotelBooking = async (
       });
     }
 
-    /** 2️⃣  Call vendor and update booking status */
-    const result = await prisma.$transaction(async (tx) => {
-      // Update vendorPayload and move to PENDING_WEBHOOK (processing vendor)
-      await tx.hotelBooking.update({
-        where: { id: booking.id },
-        data: { 
-          status: 'PENDING_WEBHOOK',
-          vendorPayload: vendorPayload
-        },
-      });
-
-      /** Call EMT to finalize */
-      const emtResp = await confirmVendorBooking(vendorPayload);
-
-      if (emtResp.ok) {
-        console.log('Vendor booking confirmed', emtResp.data);
-        await tx.hotelBooking.update({
-          where: { id: booking.id },
-          data: {
-            status: 'CONFIRMED',
-            vendorResponse: emtResp.data,
-            vendorPnr:
-              emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
-            vendorBookingId: emtResp.data?.BookingId || null,
-          },
-        });
-
-        return {
-          success: true,
-          bookingId: booking.id,
-          status: 'CONFIRMED',
-          vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
-          vendorBookingId: emtResp.data?.BookingId || null,
-        };
-      } else {
-        const reason = emtResp.error || 'Vendor booking failed';
-        const refund = await refundPayment(booking.rzpPaymentId!, reason);
-        console.log('Vendor booking failed, refunded payment', reason, refund);
-
-        await tx.hotelBooking.update({
-          where: { id: booking.id },
-          data: {
-            status: 'FAILED_REFUNDED',
-            rzpRefundId: refund?.id || null,
-            notes: reason,
-          },
-        });
-
-        // Update payment status to refunded
-        await tx.payment.updateMany({
-          where: { 
-            paymentId: booking.rzpPaymentId!,
-            bookingId: booking.id 
-          },
-          data: { status: 'REFUNDED' },
-        });
-
-        return {
-          success: false,
-          bookingId: booking.id,
-          status: 'FAILED_REFUNDED',
-          reason,
-          refundId: refund?.id || null,
-        };
-      }
+    await prisma.hotelBooking.update({
+      where: { id: booking.id },
+      data: { 
+        status: 'PENDING_WEBHOOK',
+        vendorPayload: vendorPayload
+      },
     });
 
-    if (result.success) {
-      return res.status(200).json({
-        message: 'Hotel booking confirmed successfully',
+    const emtResp = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking', vendorPayload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    console.log('EMT booking response', emtResp.data);
+
+    const data = emtResp.data;
+    const isOk = data?.reservationStatusCode === 'CF'
+    console.log('Vendor booking success status', isOk);
+
+    if (isOk) {
+      console.log('Vendor booking confirmed', emtResp.data);
+      await prisma.hotelBooking.update({
+        where: { id: booking.id },
         data: {
-          bookingId: result.bookingId,
-          status: result.status,
-          vendorPnr: result.vendorPnr,
-          vendorBookingId: result.vendorBookingId,
+          status: 'CONFIRMED',
+          vendorResponse: emtResp.data,
+          vendorPnr:
+            emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+          vendorBookingId: emtResp.data?.BookingId || null,
         },
       });
+      return {
+        success: true,
+        bookingId: booking.id,
+        status: 'CONFIRMED',
+        vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+        vendorBookingId: emtResp.data?.BookingId || null,
+      };
     } else {
-      return res.status(400).json({
-        message: 'Hotel booking failed and payment refunded',
+      const reason = 'Vendor booking failed';
+      const refund = await refundPayment(booking.rzpPaymentId!, reason);
+      console.log('Vendor booking failed, refunded payment', reason, refund);
+      await prisma.hotelBooking.update({
+        where: { id: booking.id },
         data: {
-          bookingId: result.bookingId,
-          status: result.status,
-          reason: result.reason,
-          refundId: result.refundId,
+          status: 'FAILED_REFUNDED',
+          rzpRefundId: refund?.id || null,
+          notes: reason,
         },
       });
+      // Update payment status to refunded
+      await prisma.payment.updateMany({
+        where: { 
+          paymentId: booking.rzpPaymentId!,
+          bookingId: booking.id 
+        },
+        data: { status: 'REFUNDED' },
+      });
+      return {
+        success: false,
+        bookingId: booking.id,
+        status: 'FAILED_REFUNDED',
+        reason,
+        refundId: refund?.id || null,
+      };
     }
   } catch (err) {
     console.error('confirmHotelBooking error', err);
     return next(err);
   }
 };
+
+
+    /** 2️⃣  Call vendor and update booking status */
+    // const result = await prisma.$transaction(async (tx) => {
+    //   // Update vendorPayload and move to PENDING_WEBHOOK (processing vendor)
+    //   await tx.hotelBooking.update({
+    //     where: { id: booking.id },
+    //     data: { 
+    //       status: 'PENDING_WEBHOOK',
+    //       vendorPayload: vendorPayload
+    //     },
+    //   });
+
+    //   /** Call EMT to finalize */
+    //   // const emtResp = await confirmVendorBooking(vendorPayload);
+    //   const resp = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking', vendorPayload, {
+    //     headers: { 'Content-Type': 'application/json' },
+    //   });
+    //   console.log('EMT booking response status', resp.status, resp);
+      
+    //   const data = resp.data;
+    //   console.log('EMT booking response', data);
+      
+    //   const isOk = data?.reservationStatusCode === 'CF'
+    //   console.log('Vendor booking success status', isOk);
+
+    //   if (emtResp.ok) {
+    //     console.log('Vendor booking confirmed', emtResp.data);
+    //     await tx.hotelBooking.update({
+    //       where: { id: booking.id },
+    //       data: {
+    //         status: 'CONFIRMED',
+    //         vendorResponse: emtResp.data,
+    //         vendorPnr:
+    //           emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+    //         vendorBookingId: emtResp.data?.BookingId || null,
+    //       },
+    //     });
+
+    //     return {
+    //       success: true,
+    //       bookingId: booking.id,
+    //       status: 'CONFIRMED',
+    //       vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+    //       vendorBookingId: emtResp.data?.BookingId || null,
+    //     };
+    //   } else {
+    //     const reason = emtResp.error || 'Vendor booking failed';
+    //     const refund = await refundPayment(booking.rzpPaymentId!, reason);
+    //     console.log('Vendor booking failed, refunded payment', reason, refund);
+
+    //     await tx.hotelBooking.update({
+    //       where: { id: booking.id },
+    //       data: {
+    //         status: 'FAILED_REFUNDED',
+    //         rzpRefundId: refund?.id || null,
+    //         notes: reason,
+    //       },
+    //     });
+
+    //     // Update payment status to refunded
+    //     await tx.payment.updateMany({
+    //       where: { 
+    //         paymentId: booking.rzpPaymentId!,
+    //         bookingId: booking.id 
+    //       },
+    //       data: { status: 'REFUNDED' },
+    //     });
+
+    //     return {
+    //       success: false,
+    //       bookingId: booking.id,
+    //       status: 'FAILED_REFUNDED',
+    //       reason,
+    //       refundId: refund?.id || null,
+    //     };
+    //   }
+    // });
+
+    // if (result.success) {
+    //   return res.status(200).json({
+    //     message: 'Hotel booking confirmed successfully',
+    //     data: {
+    //       bookingId: result.bookingId,
+    //       status: result.status,
+    //       vendorPnr: result.vendorPnr,
+    //       vendorBookingId: result.vendorBookingId,
+    //     },
+    //   });
+    // } else {
+    //   return res.status(400).json({
+    //     message: 'Hotel booking failed and payment refunded',
+    //     data: {
+    //       bookingId: result.bookingId,
+    //       status: result.status,
+    //       reason: result.reason,
+    //       refundId: result.refundId,
+    //     },
+    //   });
+    // }
+//   } catch (err) {
+//     console.error('confirmHotelBooking error', err);
+//     return next(err);
+//   }
+// };
 
 export const paymentsController = {
   createHotelOrder,
