@@ -134,5 +134,7 @@ SuperAdminRouter
     .delete('/custom-package/:id', superAdminController.deleteCustomPackageById)
     //@ts-ignore
     .get('/app-feedbacks', superAdminController.getAppFeedbacks)
+    //@ts-ignore
+    .post('/global-notification', superAdminController.sendNotificationToAllUsers)
     
 export default SuperAdminRouter

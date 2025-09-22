@@ -10,6 +10,7 @@ const ITERATION = 100
 const KEYLENGTH = 10
 const DIGEST_ALGO = 'sha512'
 import * as xlsx from 'xlsx'
+import helper from '../utils/helpers'
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -1636,8 +1637,41 @@ const getAppFeedbacks = async (req: ExtendedRequest, res: Response, next: NextFu
     }
 }
 
+const sendNotificationToAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { title, message } = req.body
+        if (!title || !message) {
+            return res.status(400).send({ error: 'Title and message are required' })
+        }
+        const allUsersRegistrationToken = await getAllUsersFcmTokens();
+        if (allUsersRegistrationToken.length === 0) {
+            return res.status(400).send({ error: 'No users with registration tokens found' })
+        }
+        const fcmResponse = await helper.sendNotifications(title, message, allUsersRegistrationToken);
+        return res.status(200).send({ status: 200, message: 'Notification sent successfully', fcmResponse })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+async function getAllUsersFcmTokens(): Promise<string[]> {
+    const users = await prisma.user.findMany({
+        where: {
+            registrationToken: {
+                not: null,
+            },
+        },
+        select: {
+            registrationToken: true,
+        },
+    })
+    const tokens = users.map((u) => u.registrationToken!) 
+    return tokens
+}
+
 const superAdminController = {
     getReportedForumQuestions,
+    sendNotificationToAllUsers,
     deleteForumQuestion,
     getReportedPosts,
     createPackage,

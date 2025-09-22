@@ -74,25 +74,23 @@ const sendNotification = async (title: string, body: string, token: string) => {
 };
 
 const sendNotifications = async (title: string, body: string, tokens: string[]) => {
-    const message = {
-        notification: {
-            title: title,
-            body: body,
-        },
-        tokens: tokens,
-    }
-
     try {
-        const response = await admin.messaging().sendMulticast(message)
-        console.log(`Notification sent successfully to ${response.successCount} devices, failed to send to ${response.failureCount} devices`)
+        const chunkSize = 200;
 
-        if (response.failureCount > 0) {
-            response.responses.forEach((resp, idx) => {
-                if (!resp.success) {
-                    console.error(`Failed to send notification to token ${tokens[idx]}: ${resp.error}`)
-                }
-            })
+        for (let i = 0; i < tokens.length; i += chunkSize) {
+          const slice = tokens.slice(i, i + chunkSize);
+          const message = {
+            notification: { title, body },
+            tokens: slice,
+          };
+      
+          const response = await admin.messaging().sendEachForMulticast(message);
+          console.log(
+            `Sent to ${response.successCount} devices, failed: ${response.failureCount}`
+          );
         }
+        console.log('Notifications sent successfully')
+        return true;
     } catch (error) {
         console.error('Error sending notification:', error)
     }
