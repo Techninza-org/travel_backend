@@ -795,6 +795,8 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
         const inclusions = safeJson(b.inclusions, [] as string[])
         const exclusions = safeJson(b.exclusions, [] as string[])
         const images = safeJson(b.images, [] as any[])
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         
         const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
@@ -823,6 +825,8 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 cancellation_policy: existingPackage.cancellation_policy as any,
                 date_change_policy: existingPackage.date_change_policy as any,
                 destination_guide: existingPackage.destination_guide as any,
+                sender_email,
+                sender_phone,
                 quoteId: Number(quoteId),
             } as any,
             select: {
@@ -892,6 +896,8 @@ const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: Ne
         const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
         const date_change_policy = safeJson(b.date_change_policy, [] as string[])
         const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         // Prepare update data - only include fields that are provided
         const updateData: any = {}
@@ -909,6 +915,8 @@ const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: Ne
         if (cancellation_policy.length > 0) updateData.cancellation_policy = cancellation_policy
         if (date_change_policy.length > 0) updateData.date_change_policy = date_change_policy
         if (destination_guide.length > 0) updateData.destination_guide = destination_guide
+        if (sender_email) updateData.sender_email = sender_email
+        if (sender_phone) updateData.sender_phone = sender_phone
         
         if (b.description && String(b.description).trim()) {
             updateData.description = String(b.description).trim()
@@ -991,6 +999,9 @@ const createNewPackageCustom = async (req: ExtendedRequest, res: Response, next:
         const inclusions = safeJson(b.inclusions, [] as string[])
         const exclusions = safeJson(b.exclusions, [] as string[])
         const images = safeJson(b.images, [] as any[])
+        const number_of_people = toInt(b.number_of_people)
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         
         const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
@@ -1019,6 +1030,9 @@ const createNewPackageCustom = async (req: ExtendedRequest, res: Response, next:
                 cancellation_policy: existingPackage.cancellation_policy as any,
                 date_change_policy: existingPackage.date_change_policy as any,
                 destination_guide: existingPackage.destination_guide as any,
+                number_of_people,
+                sender_email,
+                sender_phone,
                 packageId: Number(packageId),
             } as any,
             select: {
@@ -1075,6 +1089,9 @@ const updateCustomPackageMain = async (req: ExtendedRequest, res: Response, next
         const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
         const date_change_policy = safeJson(b.date_change_policy, [] as string[])
         const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const number_of_people = toInt(b.number_of_people)
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         // Prepare update data - only include fields that are provided
         const updateData: any = {}
@@ -1092,6 +1109,9 @@ const updateCustomPackageMain = async (req: ExtendedRequest, res: Response, next
         if (cancellation_policy.length > 0) updateData.cancellation_policy = cancellation_policy
         if (date_change_policy.length > 0) updateData.date_change_policy = date_change_policy
         if (destination_guide.length > 0) updateData.destination_guide = destination_guide
+        if (number_of_people > 0) updateData.number_of_people = number_of_people
+        if (sender_email) updateData.sender_email = sender_email
+        if (sender_phone) updateData.sender_phone = sender_phone
         
         if (b.description && String(b.description).trim()) {
             updateData.description = String(b.description).trim()

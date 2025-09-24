@@ -166,6 +166,9 @@ model CustomPackageMain {
   cancellation_policy Json
   date_change_policy  Json
   providedBy          String?
+  number_of_people   Int?
+  sender_email        String?
+  sender_phone        String?
   packageId          Int      @unique
   package            Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())
@@ -194,6 +197,8 @@ model CustomPackage {
   cancellation_policy Json
   date_change_policy  Json
   providedBy          String?
+  sender_email        String?
+  sender_phone        String?
   quoteId             Int      @unique
   quote               Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())
