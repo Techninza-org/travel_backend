@@ -139,6 +139,38 @@ model Package {
   date_change_policy  Json
   providedBy          String?
   quotes              Quote[]
+  customPackageMain   CustomPackageMain?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
+
+model CustomPackageMain {
+  id                  Int      @id @default(autoincrement())
+  type                Int // 0 = india, 1 = international
+  category            String
+  name                String
+  state               String?
+  city                String?
+  country             String?
+  description         String   @db.Text
+  images              Json
+  price               Int
+  tax                 Int
+  days                Int
+  nights              Int
+  itinerary           Json
+  destination_guide   Json
+  inclusions          Json
+  exclusions          Json
+  highlights          Json
+  cancellation_policy Json
+  date_change_policy  Json
+  providedBy          String?
+  number_of_people   Int?
+  sender_email        String?
+  sender_phone        String?
+  packageId          Int      @unique
+  package            Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 }
@@ -165,6 +197,8 @@ model CustomPackage {
   cancellation_policy Json
   date_change_policy  Json
   providedBy          String?
+  sender_email        String?
+  sender_phone        String?
   quoteId             Int      @unique
   quote               Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())

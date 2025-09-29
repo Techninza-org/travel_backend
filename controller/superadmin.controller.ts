@@ -10,6 +10,7 @@ const ITERATION = 100
 const KEYLENGTH = 10
 const DIGEST_ALGO = 'sha512'
 import * as xlsx from 'xlsx'
+import helper from '../utils/helpers'
 
 const getAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
@@ -794,6 +795,8 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
         const inclusions = safeJson(b.inclusions, [] as string[])
         const exclusions = safeJson(b.exclusions, [] as string[])
         const images = safeJson(b.images, [] as any[])
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         
         const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
@@ -822,6 +825,8 @@ const createNewEditedPackageCustom = async (req: ExtendedRequest, res: Response,
                 cancellation_policy: existingPackage.cancellation_policy as any,
                 date_change_policy: existingPackage.date_change_policy as any,
                 destination_guide: existingPackage.destination_guide as any,
+                sender_email,
+                sender_phone,
                 quoteId: Number(quoteId),
             } as any,
             select: {
@@ -891,6 +896,8 @@ const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: Ne
         const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
         const date_change_policy = safeJson(b.date_change_policy, [] as string[])
         const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
         
         // Prepare update data - only include fields that are provided
         const updateData: any = {}
@@ -908,6 +915,8 @@ const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: Ne
         if (cancellation_policy.length > 0) updateData.cancellation_policy = cancellation_policy
         if (date_change_policy.length > 0) updateData.date_change_policy = date_change_policy
         if (destination_guide.length > 0) updateData.destination_guide = destination_guide
+        if (sender_email) updateData.sender_email = sender_email
+        if (sender_phone) updateData.sender_phone = sender_phone
         
         if (b.description && String(b.description).trim()) {
             updateData.description = String(b.description).trim()
@@ -970,6 +979,182 @@ const updateCustomPackage = async (req: ExtendedRequest, res: Response, next: Ne
     }
 }
 
+const createNewPackageCustom = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
+        const { packageId } = req.params
+        
+        
+        if (!packageId) {
+            return res.status(400).send({ error: 'Package id is required' })
+        }
+
+        const name = String(b.name || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const images = safeJson(b.images, [] as any[])
+        const number_of_people = toInt(b.number_of_people)
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
+        
+        
+        const existingPackage = await prisma.package.findUnique({ where: { id: Number(packageId) } })
+        if (!existingPackage) {
+            return res.status(404).send({ error: 'Package not found' })
+        }
+        const newPackage = await prisma.customPackageMain.create({
+            data: {
+                type: existingPackage.type,
+                category: existingPackage.category,
+                state: existingPackage.state,
+                city: existingPackage.city,
+                country: existingPackage.country,
+                name: name || existingPackage.name,
+                description: existingPackage.description,
+                images: images.length > 0 ? images : (existingPackage.images || []),
+                price: price || existingPackage.price,
+                tax: tax || existingPackage.tax,
+                days: days || existingPackage.days,
+                nights: nights || existingPackage.nights,
+                providedBy: existingPackage.providedBy,
+                itinerary: itinerary.length > 0 ? (itinerary as any) : existingPackage.itinerary,
+                inclusions: inclusions.length > 0 ? (inclusions as any) : existingPackage.inclusions,
+                exclusions: exclusions.length > 0 ? (exclusions as any) : existingPackage.exclusions,
+                highlights: existingPackage.highlights || [],
+                cancellation_policy: existingPackage.cancellation_policy as any,
+                date_change_policy: existingPackage.date_change_policy as any,
+                destination_guide: existingPackage.destination_guide as any,
+                number_of_people,
+                sender_email,
+                sender_phone,
+                packageId: Number(packageId),
+            } as any,
+            select: {
+                id: true,
+                name: true,
+                category: true,
+                type: true,
+                days: true,
+                nights: true,
+                price: true,
+                tax: true,
+            } as any,
+        })
+
+        return res.status(201).send({
+            status: 201,
+            message: 'Custom package created successfully',
+            customPackage: newPackage
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const updateCustomPackageMain = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const b = req.body as AnyObj
+        const customPackageId = req.params.id
+        
+        if (!customPackageId || isNaN(Number(customPackageId))) {
+            return res.status(400).send({ error: 'Valid custom package id is required' })
+        }
+
+        // Check if custom package exists
+        const existingCustomPackage = await prisma.customPackageMain.findUnique({ 
+            where: { id: Number(customPackageId) } 
+        })
+        
+        if (!existingCustomPackage) {
+            return res.status(404).send({ error: 'Custom package not found' })
+        }
+
+        const name = String(b.name || '').trim()
+        const price = toInt(b.price)
+        const tax = toInt(b.tax)
+        const days = Math.max(1, toInt(b.days, 1))
+        const nights = Math.max(0, toInt(b.nights, Math.max(0, days - 1)))
+
+        const itinerary = safeJson(b.itinerary, [] as AnyObj[])
+        const inclusions = safeJson(b.inclusions, [] as string[])
+        const exclusions = safeJson(b.exclusions, [] as string[])
+        const images = safeJson(b.images, [] as any[])
+        const highlights = safeJson(b.highlights, [] as string[])
+        const cancellation_policy = safeJson(b.cancellation_policy, [] as string[])
+        const date_change_policy = safeJson(b.date_change_policy, [] as string[])
+        const destination_guide = safeJson(b.destination_guide, [] as string[])
+        const number_of_people = toInt(b.number_of_people)
+        const sender_email = String(b.sender_email || '').trim()
+        const sender_phone = String(b.sender_phone || '').trim()
+        
+        // Prepare update data - only include fields that are provided
+        const updateData: any = {}
+        
+        if (name) updateData.name = name
+        if (price > 0) updateData.price = price
+        if (tax >= 0) updateData.tax = tax
+        if (days > 0) updateData.days = days
+        if (nights >= 0) updateData.nights = nights
+        if (itinerary.length > 0) updateData.itinerary = itinerary
+        if (inclusions.length > 0) updateData.inclusions = inclusions
+        if (exclusions.length > 0) updateData.exclusions = exclusions
+        if (images.length > 0) updateData.images = images
+        if (highlights.length > 0) updateData.highlights = highlights
+        if (cancellation_policy.length > 0) updateData.cancellation_policy = cancellation_policy
+        if (date_change_policy.length > 0) updateData.date_change_policy = date_change_policy
+        if (destination_guide.length > 0) updateData.destination_guide = destination_guide
+        if (number_of_people > 0) updateData.number_of_people = number_of_people
+        if (sender_email) updateData.sender_email = sender_email
+        if (sender_phone) updateData.sender_phone = sender_phone
+        
+        if (b.description && String(b.description).trim()) {
+            updateData.description = String(b.description).trim()
+        }
+        if (b.category && String(b.category).trim()) {
+            updateData.category = String(b.category).trim()
+        }
+        if (b.state && String(b.state).trim()) {
+            updateData.state = String(b.state).trim()
+        }
+        if (b.city && String(b.city).trim()) {
+            updateData.city = String(b.city).trim()
+        }
+        if (b.country && String(b.country).trim()) {
+            updateData.country = String(b.country).trim()
+        }
+        if (b.providedBy && String(b.providedBy).trim()) {
+            updateData.providedBy = String(b.providedBy).trim()
+        }
+
+        // Update the custom package
+        const updatedCustomPackage = await prisma.customPackageMain.update({
+            where: { id: Number(customPackageId) },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                category: true,
+                type: true,
+            } as any,
+        })
+
+        return res.status(200).send({
+            status: 200,
+            message: 'Custom package main updated successfully',
+            customPackage: updatedCustomPackage
+        })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+
 const getAllCustomPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const customPackages = await prisma.customPackage.findMany({
@@ -1029,6 +1214,26 @@ const getCustomPackageById = async (req: ExtendedRequest, res: Response, next: N
         return next(err)
     }
 }
+const getCustomPackageMainById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    const customPackageId = req.params.id
+
+    if (isNaN(Number(customPackageId))) {
+        return res
+            .status(200)
+            .send({ status: 400, error: 'Bad Request', error_description: 'Invalid custom package id Parameters' })
+    }
+    try {
+        const customPackageDetails = await prisma.customPackageMain.findUnique({
+            where: { id: Number(customPackageId) },
+        } as any)
+        if (!customPackageDetails) {
+            return res.status(404).send({ status: 404, error: 'Custom package not found' })
+        }
+        return res.status(200).send({ status: 200, customPackage: customPackageDetails })
+    } catch (err) {
+        return next(err)
+    }
+}
 
 const deleteCustomPackageById = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const customPackageId = req.params.id
@@ -1058,6 +1263,9 @@ const getPackages = async (req: ExtendedRequest, res: Response, next: NextFuncti
     try {
         const packages = await prisma.package.findMany({
             orderBy: { created_at: 'desc' },
+            include: {
+                customPackageMain: true
+            }
         })
         return res.status(200).send({ status: 200, packages: packages, count: packages.length })
     } catch (err) {
@@ -1427,8 +1635,63 @@ const deleteBannerById = async (req: ExtendedRequest, res: Response, next: NextF
     }
 }
 
+const getAppFeedbacks = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const feedbacks = await prisma.appFeedback.findMany({
+            orderBy: { created_at: 'desc' },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                        phone: true,
+                        image: true,
+                    }
+                }
+            }
+        })
+        return res.status(200).send({ status: 200, feedbacks })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const sendNotificationToAllUsers = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { title, message } = req.body
+        if (!title || !message) {
+            return res.status(400).send({ error: 'Title and message are required' })
+        }
+        const allUsersRegistrationToken = await getAllUsersFcmTokens();
+        if (allUsersRegistrationToken.length === 0) {
+            return res.status(400).send({ error: 'No users with registration tokens found' })
+        }
+        const fcmResponse = await helper.sendNotifications(title, message, allUsersRegistrationToken);
+        return res.status(200).send({ status: 200, message: 'Notification sent successfully', fcmResponse })
+    } catch (err) {
+        return next(err)
+    }
+}
+
+async function getAllUsersFcmTokens(): Promise<string[]> {
+    const users = await prisma.user.findMany({
+        where: {
+            registrationToken: {
+                not: null,
+            },
+        },
+        select: {
+            registrationToken: true,
+        },
+    })
+    const tokens = users.map((u) => u.registrationToken!) 
+    return tokens
+}
+
 const superAdminController = {
     getReportedForumQuestions,
+    sendNotificationToAllUsers,
     deleteForumQuestion,
     getReportedPosts,
     createPackage,
@@ -1488,5 +1751,9 @@ const superAdminController = {
     getAllCustomPackages,
     getCustomPackageById,
     deleteCustomPackageById,
+    createNewPackageCustom,
+    updateCustomPackageMain,
+    getAppFeedbacks,
+    getCustomPackageMainById
 }
 export default superAdminController

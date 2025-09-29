@@ -12,9 +12,13 @@ paymentsRouter
     //@ts-ignore
     .post('/hotel/verify', middleware.AuthMiddleware, paymentsController.verifyHotelCheckout)
     //@ts-ignore
+    .post('/hotel/verify-payment', middleware.AuthMiddleware, paymentsController.verifyHotelPayment)
+    //@ts-ignore
+    .post('/hotel/confirm-booking', middleware.AuthMiddleware, paymentsController.confirmHotelBooking)
+    //@ts-ignore
     .get('/hotel/booking/:bookingId/status', middleware.AuthMiddleware, paymentsController.getBookingStatus);
 
 // Webhook route (no auth middleware, uses raw body)
-paymentsRouter.post('/hotel/webhook', express.raw({ type: '*/*' }), paymentsController.hotelPaymentWebhook);
+// paymentsRouter.post('/hotel/webhook', express.raw({ type: '*/*' }), paymentsController.hotelPaymentWebhook);
 
 export default paymentsRouter;

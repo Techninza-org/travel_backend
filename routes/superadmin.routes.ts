@@ -121,10 +121,20 @@ SuperAdminRouter
     //@ts-ignore
     .put('/custom-package/:id', superAdminController.updateCustomPackage)
     //@ts-ignore
+    .post('/custom-package-main/:packageId', superAdminController.createNewPackageCustom)
+    //@ts-ignore
+    .put('/custom-package-main/:id', superAdminController.updateCustomPackageMain)
+    //@ts-ignore
     .get('/custom-packages', superAdminController.getAllCustomPackages)
     //@ts-ignore
     .get('/custom-package/:id', superAdminController.getCustomPackageById)
     //@ts-ignore
+    .get('/custom-package-main/:id', superAdminController.getCustomPackageMainById)
+    //@ts-ignore
     .delete('/custom-package/:id', superAdminController.deleteCustomPackageById)
+    //@ts-ignore
+    .get('/app-feedbacks', superAdminController.getAppFeedbacks)
+    //@ts-ignore
+    .post('/global-notification', superAdminController.sendNotificationToAllUsers)
     
 export default SuperAdminRouter
