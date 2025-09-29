@@ -6,26 +6,28 @@ const prisma = new PrismaClient()
 
 const domesticInternationalPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => { 
     try {
-        const categories = await prisma.packageCategory.findMany();
-        const states = await prisma.packageState.findMany();
+        // const categories = await prisma.packageCategory.findMany();
+        // const states = await prisma.packageState.findMany();
         const countries = await prisma.packageCountry.findMany();
         const domesticPackages = await prisma.package.findMany({
-            where: { type: 0 }
+            where: { type: 0 },
+            take: 6
         });
         const internationalPackages = await prisma.package.findMany({
-            where: { type: 1 }
+            where: { type: 1 },
+            take: 6
         });
 
-        const statesWithPackageCount = states.map((state) => {
-            const statePackageCount = domesticPackages.filter(
-                (pkg) => pkg.state === state.name
-            ).length;
+        // const statesWithPackageCount = states.map((state) => {
+        //     const statePackageCount = domesticPackages.filter(
+        //         (pkg) => pkg.state === state.name
+        //     ).length;
           
-            return {
-                ...state,
-                packageCount: statePackageCount,
-            };
-        });
+        //     return {
+        //         ...state,
+        //         packageCount: statePackageCount,
+        //     };
+        // });
 
         const countriesWithPackageCount = countries.map((country) => {
             const countryPackageCount = internationalPackages.filter(
@@ -41,8 +43,8 @@ const domesticInternationalPackages = async (req: ExtendedRequest, res: Response
         return res.status(200).send({ 
             status: 200, 
             message: 'Ok', 
-            categories, 
-            states: statesWithPackageCount, 
+            // categories, 
+            // states: statesWithPackageCount, 
             countries: countriesWithPackageCount,
             domesticPackages,
             internationalPackages
@@ -78,6 +80,7 @@ const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextF
 
 //get all domestic states
 
+
 const domesticStates = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const states = await prisma.packageState.findMany();
@@ -86,6 +89,11 @@ const domesticStates = async (req: ExtendedRequest, res: Response, next: NextFun
         return next(err)
     }
 }
+
+
+
+
+
 
 
 
