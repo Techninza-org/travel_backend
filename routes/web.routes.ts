@@ -1,22 +1,23 @@
 
 import { Router } from 'express'
-import userController from '../controller/user.controller'
+//@ts-ignore
+import webController from '../controller/web.controller'
 const webRouter = Router()
 //@ts-ignore
-webRouter.get("/get-domestic-package", userController.domesticPackages)
+webRouter.get("/get-domestic-package", webController.domesticPackages)
 //@ts-ignore
-webRouter.get("/domestic_packages_home", userController.domesticPackages)
+webRouter.get("/domestic_packages_home", webController.domesticPackages)
 //@ts-ignore
-webRouter.get("/international_packages_home", userController.intlPackages)
+webRouter.get("/international_packages_home", webController.intlPackages)
 //@ts-ignore
-webRouter.get("/domestic_by_category/:category", userController.getDomesticPackagesByCategoryName)
+webRouter.get("/domestic_by_category/:category", webController.getDomesticPackagesByCategoryName)
 //@ts-ignore
-webRouter.get("/intl_by_category/:category", userController.getIntlPackagesByCategoryName)
+webRouter.get("/intl_by_category/:category", webController.getIntlPackagesByCategoryName)
 //@ts-ignore
-webRouter.get("/domestic_by_state/:state", userController.getDomesticPackagesByStateName)
+webRouter.get("/domestic_by_state/:state", webController.getDomesticPackagesByStateName)
 //@ts-ignore
-webRouter.get("/intl_by_country/:country", userController.getIntlPackagesByCountryName)
+webRouter.get("/intl_by_country/:country", webController.getIntlPackagesByCountryName)
 //@ts-ignore
-webRouter.get("/package/:id", userController.getPackageById)
+webRouter.get("/package/:id", webController.getPackageById)
 
 export default webRouter
