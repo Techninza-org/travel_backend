@@ -3017,6 +3017,9 @@ const getAirportDetailsByAirportCode = async (req: ExtendedRequest, res: Respons
     }
 }
 
+
+
+
 const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const categories = await prisma.packageCategory.findMany();
@@ -3039,6 +3042,8 @@ const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextF
         return next(err)
     }
 }
+
+
 
 const intlPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{

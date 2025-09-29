@@ -1,9 +1,11 @@
 import express, { NextFunction, Request, Response } from 'express'
 import dotenv from 'dotenv'
 dotenv.config()
+
 import authRouter from './routes/auth.routes'
 import middleware from './utils/middleware'
 import userRouter from './routes/user.routes'
+import webRouter from './routes/web.routes'
 import postRouter from './routes/post.routes'
 import fs from 'fs'
 import path from 'path'
@@ -123,6 +125,9 @@ app.use('/message', middleware.AuthMiddleware, messageRouter)
 // @ts-ignore
 app.use('/superAdmin', SuperAdminRouter)
 // app.use('/template', TemplateRouter)
+
+//web routes
+app.use('/web',webRouter);
 
 //@ts-ignore
 app.use('/hotel', middleware.AuthMiddleware, hotelBookingRouter)
