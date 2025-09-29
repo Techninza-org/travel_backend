@@ -4,6 +4,55 @@ import { ExtendedRequest } from '../utils/middleware'
 const prisma = new PrismaClient()
 
 
+const domesticInternationalPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => { 
+    try {
+        const categories = await prisma.packageCategory.findMany();
+        const states = await prisma.packageState.findMany();
+        const countries = await prisma.packageCountry.findMany();
+        const domesticPackages = await prisma.package.findMany({
+            where: { type: 0 }
+        });
+        const internationalPackages = await prisma.package.findMany({
+            where: { type: 1 }
+        });
+
+        const statesWithPackageCount = states.map((state) => {
+            const statePackageCount = domesticPackages.filter(
+                (pkg) => pkg.state === state.name
+            ).length;
+          
+            return {
+                ...state,
+                packageCount: statePackageCount,
+            };
+        });
+
+        const countriesWithPackageCount = countries.map((country) => {
+            const countryPackageCount = internationalPackages.filter(
+                (pkg) => pkg.country === country.name
+            ).length;
+          
+            return {
+                ...country,
+                packageCount: countryPackageCount,
+            };
+        });
+
+        return res.status(200).send({ 
+            status: 200, 
+            message: 'Ok', 
+            categories, 
+            states: statesWithPackageCount, 
+            countries: countriesWithPackageCount,
+            domesticPackages,
+            internationalPackages
+        });
+    } catch (err) {
+        return next(err);
+    }
+};
+
+
 const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const categories = await prisma.packageCategory.findMany();
@@ -26,6 +75,18 @@ const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextF
         return next(err)
     }
 }
+
+//get all domestic states
+
+const domesticStates = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const states = await prisma.packageState.findMany();
+        return res.status(200).send({ status: 200, message: 'Ok', states });
+    }catch(err){
+        return next(err)
+    }
+}
+
 
 
 
@@ -142,6 +203,6 @@ const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFun
 }
 
 
-const webController = { domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById }
+const webController = { domesticInternationalPackages, domesticStates, domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById }
 
 export default webController

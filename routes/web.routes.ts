@@ -4,9 +4,13 @@ import { Router } from 'express'
 import webController from '../controller/web.controller'
 const webRouter = Router()
 //@ts-ignore
+webRouter.get("/get-domestic-international-packages", webController.domesticInternationalPackages)
+//@ts-ignore
 webRouter.get("/get-domestic-package", webController.domesticPackages)
 //@ts-ignore
 webRouter.get("/domestic_packages_home", webController.domesticPackages)
+//@ts-ignore
+webRouter.get('/get-all-states', webController.domesticStates)
 //@ts-ignore
 webRouter.get("/international_packages_home", webController.intlPackages)
 //@ts-ignore
