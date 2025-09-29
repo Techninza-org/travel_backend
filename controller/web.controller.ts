@@ -142,4 +142,6 @@ const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFun
 }
 
 
-export { domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById }
+const webController = { domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById }
+
+export default webController
