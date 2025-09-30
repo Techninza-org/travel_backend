@@ -90,6 +90,19 @@ const domesticStates = async (req: ExtendedRequest, res: Response, next: NextFun
     }
 }
 
+// get all international countries
+
+const internationalCountries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const countries = await prisma.packageCountry.findMany();
+        return res.status(200).send({ status: 200, message: 'Ok', countries });
+    }catch(err){
+        return next(err)
+    }
+}
+
+
+
 
 
 
@@ -211,6 +224,10 @@ const getPackageById = async (req: ExtendedRequest, res: Response, next: NextFun
 }
 
 
-const webController = { domesticInternationalPackages, domesticStates, domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById }
+
+
+
+
+const webController = { domesticInternationalPackages, domesticStates, domesticPackages, intlPackages, getDomesticPackagesByCategoryName, getIntlPackagesByCategoryName, getDomesticPackagesByStateName, getIntlPackagesByCountryName, getPackageById ,internationalCountries}
 
 export default webController
