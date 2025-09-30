@@ -84,18 +84,47 @@ const domesticPackages = async (req: ExtendedRequest, res: Response, next: NextF
 const domesticStates = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const states = await prisma.packageState.findMany();
-        return res.status(200).send({ status: 200, message: 'Ok', states });
+        const domesticPackages = await prisma.package.findMany({
+            where: { type: 0 }
+        });
+        
+        const statesWithPackageCount = states.map((state) => {
+            const packageCount = domesticPackages.filter(
+                (pkg) => pkg.state === state.name
+            ).length;
+            
+            return {
+                ...state,
+                packageCount,
+            };
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', states: statesWithPackageCount, packages: domesticPackages });
     }catch(err){
         return next(err)
     }
 }
-
 // get all international countries
 
 const internationalCountries = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const countries = await prisma.packageCountry.findMany();
-        return res.status(200).send({ status: 200, message: 'Ok', countries });
+        const internationalPackages = await prisma.package.findMany({
+            where: { type: 1 }
+        });
+        
+        const countriesWithPackageCount = countries.map((country) => {
+            const packageCount = internationalPackages.filter(
+                (pkg) => pkg.country === country.name
+            ).length;
+            
+            return {
+                ...country,
+                packageCount,
+            };
+        });
+
+        return res.status(200).send({ status: 200, message: 'Ok', countries: countriesWithPackageCount });
     }catch(err){
         return next(err)
     }
