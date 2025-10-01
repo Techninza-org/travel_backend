@@ -11,11 +11,11 @@ const domesticInternationalPackages = async (req: ExtendedRequest, res: Response
         const countries = await prisma.packageCountry.findMany();
         const domesticPackages = await prisma.package.findMany({
             where: { type: 0 },
-            take: 6
+          
         });
         const internationalPackages = await prisma.package.findMany({
             where: { type: 1 },
-            take: 6
+            
         });
 
         // const statesWithPackageCount = states.map((state) => {
