@@ -463,11 +463,15 @@ export const verifyHotelPayment = async (
     
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
     }
 
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !amount) {
       return res.status(400).json({ 
+        success: false,
         message: 'Missing required fields: razorpay_payment_id, razorpay_order_id, razorpay_signature, amount' 
       });
     }
@@ -481,7 +485,11 @@ export const verifyHotelPayment = async (
       Buffer.from(razorpay_signature)
     );
     if (!isValid) {
-      return res.status(400).json({ message: 'Signature mismatch' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Signature mismatch',
+        error: 'Payment signature verification failed'
+      });
     }
 
     /** 2️⃣  Get payment details from Razorpay to extract transaction ID */
@@ -491,7 +499,11 @@ export const verifyHotelPayment = async (
       console.log('Razorpay payment details:', paymentDetails);
     } catch (error) {
       console.error('Error fetching payment details from Razorpay:', error);
-      return res.status(400).json({ message: 'Failed to fetch payment details from Razorpay' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Failed to fetch payment details from Razorpay',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
 
     /** 3️⃣  Create booking record and store payment (fast response) */
@@ -544,12 +556,19 @@ export const verifyHotelPayment = async (
     });
 
     return res.status(200).json({
+      success: true,
       message: 'Payment verified successfully. Order created.',
       data: result,
     });
   } catch (err) {
     console.error('verifyHotelPayment error', err);
-    return next(err);
+    
+    // Send proper error response to frontend
+    return res.status(500).json({
+      success: false,
+      message: 'Payment verification failed',
+      error: err instanceof Error ? err.message : 'An unexpected error occurred',
+    });
   }
 };
 
@@ -572,14 +591,20 @@ export const confirmHotelBooking = async (
     
     if (!userId) {
       console.log('❌ confirmHotelBooking: User not authenticated', { userId });
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
     }
 
     console.log('✅ confirmHotelBooking: User authenticated', { userId });
 
     if (!bookingId || !vendorPayload) {
       console.log('❌ confirmHotelBooking: Missing required fields', { bookingId: !!bookingId, vendorPayload: !!vendorPayload });
-      return res.status(400).json({ message: 'Missing required fields: bookingId, vendorPayload' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Missing required fields: bookingId, vendorPayload' 
+      });
     }
 
     console.log('✅ confirmHotelBooking: Input validation passed', { bookingId });
@@ -592,7 +617,10 @@ export const confirmHotelBooking = async (
 
     if (!booking) {
       console.log('❌ confirmHotelBooking: Booking not found', { bookingId: Number(bookingId), userId });
-      return res.status(404).json({ message: 'Booking not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Booking not found' 
+      });
     }
 
     console.log('✅ confirmHotelBooking: Booking found', {
@@ -610,7 +638,12 @@ export const confirmHotelBooking = async (
         bookingId: booking.id
       });
       return res.status(400).json({
-        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED`
+        success: false,
+        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED`,
+        data: {
+          currentStatus: booking.status,
+          expectedStatus: 'ORDER_CREATED'
+        }
       });
     }
 
@@ -672,13 +705,22 @@ export const confirmHotelBooking = async (
         vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
         vendorBookingId: emtResp.data?.BookingId || null
       });
-      return {
+      
+      // ✅ Send success response to frontend
+      return res.status(200).json({
         success: true,
-        bookingId: booking.id,
-        status: 'CONFIRMED',
-        vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
-        vendorBookingId: emtResp.data?.BookingId || null,
-      };
+        message: 'Hotel booking confirmed successfully',
+        data: {
+          bookingId: booking.id,
+          status: 'CONFIRMED',
+          vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+          vendorBookingId: emtResp.data?.BookingId || null,
+          amount: booking.amount,
+          currency: booking.currency,
+          rzpPaymentId: booking.rzpPaymentId,
+          rzpOrderId: booking.rzpOrderId,
+        },
+      });
     } else {
       console.log('❌ confirmHotelBooking: Vendor booking failed', {
         bookingId: booking.id,
@@ -723,13 +765,21 @@ export const confirmHotelBooking = async (
         status: 'FAILED_REFUNDED',
         refundId: refund?.id
       });
-      return {
+      
+      // ❌ Send failure response to frontend
+      return res.status(400).json({
         success: false,
-        bookingId: booking.id,
-        status: 'FAILED_REFUNDED',
-        reason,
-        refundId: refund?.id || null,
-      };
+        message: 'Hotel booking failed and payment refunded',
+        data: {
+          bookingId: booking.id,
+          status: 'FAILED_REFUNDED',
+          reason,
+          refundId: refund?.id || null,
+          amount: booking.amount,
+          currency: booking.currency,
+          rzpPaymentId: booking.rzpPaymentId,
+        },
+      });
     }
   } catch (err) {
     console.error('❌ confirmHotelBooking: Unexpected error occurred', {
@@ -738,7 +788,13 @@ export const confirmHotelBooking = async (
       stack: err instanceof Error ? err.stack : undefined,
       timestamp: new Date().toISOString()
     });
-    return next(err);
+    
+    // Send proper error response to frontend
+    return res.status(500).json({
+      success: false,
+      message: 'Booking confirmation failed',
+      error: err instanceof Error ? err.message : 'An unexpected error occurred',
+    });
   }
 };
 
