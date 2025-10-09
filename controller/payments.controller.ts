@@ -562,51 +562,101 @@ export const confirmHotelBooking = async (
   try {
     const { bookingId, vendorPayload } = req.body;
     const userId = req.user?.id;
-    
-    console.log('received confirmHotelBooking', req.body);
+
+    console.log('🔄 confirmHotelBooking initiated', {
+      bookingId,
+      vendorPayload: vendorPayload ? 'provided' : 'missing',
+      userId,
+      timestamp: new Date().toISOString()
+    });
     
     if (!userId) {
+      console.log('❌ confirmHotelBooking: User not authenticated', { userId });
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
+    console.log('✅ confirmHotelBooking: User authenticated', { userId });
+
     if (!bookingId || !vendorPayload) {
+      console.log('❌ confirmHotelBooking: Missing required fields', { bookingId: !!bookingId, vendorPayload: !!vendorPayload });
       return res.status(400).json({ message: 'Missing required fields: bookingId, vendorPayload' });
     }
 
+    console.log('✅ confirmHotelBooking: Input validation passed', { bookingId });
+
     /** 1️⃣  Find booking and validate status */
+    console.log('🔍 confirmHotelBooking: Looking up booking', { bookingId: Number(bookingId), userId });
     const booking = await prisma.hotelBooking.findUnique({
       where: { id: Number(bookingId), userId },
     });
 
     if (!booking) {
+      console.log('❌ confirmHotelBooking: Booking not found', { bookingId: Number(bookingId), userId });
       return res.status(404).json({ message: 'Booking not found' });
     }
 
+    console.log('✅ confirmHotelBooking: Booking found', {
+      bookingId: booking.id,
+      status: booking.status,
+      userId: booking.userId,
+      rzpPaymentId: booking.rzpPaymentId,
+      amount: booking.amount
+    });
+
     if (booking.status !== 'ORDER_CREATED') {
-      return res.status(400).json({ 
-        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED` 
+      console.log('❌ confirmHotelBooking: Invalid booking status', {
+        currentStatus: booking.status,
+        expectedStatus: 'ORDER_CREATED',
+        bookingId: booking.id
+      });
+      return res.status(400).json({
+        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED`
       });
     }
 
+    console.log('✅ confirmHotelBooking: Booking status validated', { bookingId: booking.id, status: booking.status });
+
+    console.log('📝 confirmHotelBooking: Updating booking status to PENDING_WEBHOOK', { bookingId: booking.id });
     await prisma.hotelBooking.update({
       where: { id: booking.id },
-      data: { 
+      data: {
         status: 'PENDING_WEBHOOK',
         vendorPayload: vendorPayload
       },
     });
+    console.log('✅ confirmHotelBooking: Booking status updated to PENDING_WEBHOOK', { bookingId: booking.id });
 
+    console.log('🌐 confirmHotelBooking: Calling EMT API for booking confirmation', {
+      url: 'http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking',
+      bookingId: booking.id
+    });
     const emtResp = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelBooking', vendorPayload, {
       headers: { 'Content-Type': 'application/json' },
+    });
+    console.log('📡 confirmHotelBooking: EMT API response received', {
+      status: emtResp.status,
+      statusText: emtResp.statusText,
+      bookingId: booking.id
     });
     console.log('EMT booking response', emtResp.data);
 
     const data = emtResp.data;
     const isOk = data?.reservationStatusCode === 'CF'
-    console.log('Vendor booking success status', isOk);
+    console.log('🔍 confirmHotelBooking: Checking vendor booking status', {
+      reservationStatusCode: data?.reservationStatusCode,
+      isOk,
+      bookingId: booking.id
+    });
 
     if (isOk) {
-      console.log('Vendor booking confirmed', emtResp.data);
+      console.log('✅ confirmHotelBooking: Vendor booking successful', {
+        bookingId: booking.id,
+        reservationStatusCode: data?.reservationStatusCode,
+        PNR: data?.PNR,
+        ConfirmationNo: data?.ConfirmationNo,
+        BookingId: data?.BookingId
+      });
+      console.log('📝 confirmHotelBooking: Updating booking to CONFIRMED status', { bookingId: booking.id });
       await prisma.hotelBooking.update({
         where: { id: booking.id },
         data: {
@@ -617,6 +667,11 @@ export const confirmHotelBooking = async (
           vendorBookingId: emtResp.data?.BookingId || null,
         },
       });
+      console.log('✅ confirmHotelBooking: Booking confirmed successfully', {
+        bookingId: booking.id,
+        vendorPnr: emtResp.data?.PNR || emtResp.data?.ConfirmationNo || null,
+        vendorBookingId: emtResp.data?.BookingId || null
+      });
       return {
         success: true,
         bookingId: booking.id,
@@ -625,9 +680,24 @@ export const confirmHotelBooking = async (
         vendorBookingId: emtResp.data?.BookingId || null,
       };
     } else {
+      console.log('❌ confirmHotelBooking: Vendor booking failed', {
+        bookingId: booking.id,
+        reservationStatusCode: data?.reservationStatusCode,
+        responseData: data
+      });
       const reason = 'Vendor booking failed';
+      console.log('💰 confirmHotelBooking: Initiating payment refund', {
+        bookingId: booking.id,
+        paymentId: booking.rzpPaymentId,
+        reason
+      });
       const refund = await refundPayment(booking.rzpPaymentId!, reason);
-      console.log('Vendor booking failed, refunded payment', reason, refund);
+      console.log('💸 confirmHotelBooking: Payment refund completed', {
+        bookingId: booking.id,
+        refundId: refund?.id,
+        refund
+      });
+      console.log('📝 confirmHotelBooking: Updating booking to FAILED_REFUNDED status', { bookingId: booking.id });
       await prisma.hotelBooking.update({
         where: { id: booking.id },
         data: {
@@ -636,13 +706,22 @@ export const confirmHotelBooking = async (
           notes: reason,
         },
       });
+      console.log('📝 confirmHotelBooking: Updating payment status to REFUNDED', {
+        bookingId: booking.id,
+        paymentId: booking.rzpPaymentId
+      });
       // Update payment status to refunded
       await prisma.payment.updateMany({
-        where: { 
+        where: {
           paymentId: booking.rzpPaymentId!,
-          bookingId: booking.id 
+          bookingId: booking.id
         },
         data: { status: 'REFUNDED' },
+      });
+      console.log('✅ confirmHotelBooking: Failed booking processed and refunded', {
+        bookingId: booking.id,
+        status: 'FAILED_REFUNDED',
+        refundId: refund?.id
       });
       return {
         success: false,
@@ -653,7 +732,12 @@ export const confirmHotelBooking = async (
       };
     }
   } catch (err) {
-    console.error('confirmHotelBooking error', err);
+    console.error('❌ confirmHotelBooking: Unexpected error occurred', {
+      error: err,
+      message: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     return next(err);
   }
 };
