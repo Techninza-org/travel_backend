@@ -268,6 +268,30 @@ const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: Nex
     }
 }
 
+const getUserHotelBookings = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const bookings = await prisma.hotelBooking.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return res.status(200).json({
+            message: 'Bookings fetched successfully',
+            data: bookings,
+        });
+
+    } catch (err) {
+        console.error('getUserHotelBookings error', err);
+        return next(err);
+    }
+}
+
 const hotelBookingController = {
     searchHotels,
     getHotelDetails,
@@ -276,7 +300,8 @@ const hotelBookingController = {
     getBookingDetails,
     checkHotelAvailability,
     cancelHotelBooking,
-    getHotelRoomInfo
+    getHotelRoomInfo,
+    getUserHotelBookings
 }
 
 export default hotelBookingController
