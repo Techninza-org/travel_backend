@@ -460,6 +460,8 @@ export const verifyHotelPayment = async (
     } = req.body;
     
     console.log('received verifyHotelPayment', req.body);
+
+    const unique9digit = Math.floor(100000000 + Math.random() * 900000000);
     
     const userId = req.user?.id;
     if (!userId) {
@@ -544,6 +546,7 @@ export const verifyHotelPayment = async (
         amount: booking.amount,
         currency: booking.currency,
         transactionId: paymentDetails.id, // Return transaction ID for client
+        ezioTransactionId: unique9digit,
         paymentDetails: {
           id: paymentDetails.id,
           amount: paymentDetails.amount,
