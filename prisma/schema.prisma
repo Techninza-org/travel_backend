@@ -212,6 +212,7 @@ enum BookingStatus {
   PENDING_WEBHOOK
   CONFIRMED
   FAILED_REFUNDED
+  CANCELLED
 }
 
 model HotelBooking {

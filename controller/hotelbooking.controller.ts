@@ -250,6 +250,14 @@ const checkHotelAvailability = async (req: ExtendedRequest, res: Response, next:
 const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const body = req.body;
+        const bookingId = req.params.id;
+        const hotelBooking = await prisma.hotelBooking.findUnique({ where: { id: Number(bookingId) } });
+        if(!hotelBooking){
+            return res.status(404).json({
+                valid: false,
+                message: 'Booking not found',
+            })
+        }
 
         const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelCancellation', body, {
             headers: {
@@ -257,12 +265,27 @@ const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: Nex
             },
         })
 
-        console.log(`Response from hotel cancellation: ${JSON.stringify(response.data)}`);
-        
-
-        return res.status(200).json({
-            data: response.data,
-        })
+        if(response.data?.Text === "cancelled"){
+           
+            await prisma.hotelBooking.update({
+                where: { id: Number(bookingId) },
+                data: {
+                    status: 'CANCELLED'
+                }
+            })
+            
+            return res.status(200).json({
+                valid: true,
+                message: 'Booking cancelled successfully',
+                data: response.data,
+            })
+        }else{
+            return res.status(400).json({
+                valid: false,
+                message: 'Failed to cancel booking',
+                data: response.data,
+            })
+        }
     }catch(err){
         return next(err);
     }
