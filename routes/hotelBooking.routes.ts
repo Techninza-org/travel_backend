@@ -17,7 +17,7 @@ hotelBookingRouter
     //@ts-ignore
     .post('/checkAvailability', hotelBookingController.checkHotelAvailability)
     //@ts-ignore
-    .post('/cancelBooking', hotelBookingController.cancelHotelBooking)
+    .post('/cancelBooking/:id', hotelBookingController.cancelHotelBooking)
     //@ts-ignore
     .post('/roomInfo', hotelBookingController.getHotelRoomInfo)
     //@ts-ignore
