@@ -259,7 +259,7 @@ const cancelHotelBooking = async (req: ExtendedRequest, res: Response, next: Nex
             })
         }
 
-        const response = await axios.post('http://hotelapita.easemytrip.com/MiHotel.svc/HotelCancellation', body, {
+        const response = await axios.post('https://hotelapi.easemytrip.com/cancellation.svc/HotelCancellation', body, {
             headers: {
                 'Content-Type': 'application/json',
             },
