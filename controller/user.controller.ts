@@ -178,8 +178,17 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
         });
       }
   
+      // Force travel-related context regardless of user prompt
+      const travelPrompt = `You are a travel expert assistant. The user asked: "${prompt}"
+      
+      IMPORTANT: You must ONLY provide travel-related information. If the user's question is not travel-related, convert it into a travel-related topic or provide general travel advice instead.
+      
+      Focus on: destinations, hotels, flights, activities, travel tips, itineraries, local attractions, travel planning, booking advice, travel safety, cultural insights, food recommendations, transportation, travel costs, best times to visit, travel documents, etc.
+      
+      If the original question was not travel-related, provide helpful travel information that could be relevant to someone planning a trip.`;
+  
       const response = await callPerplexity(
-        `${prompt}
+        `${travelPrompt}
   
   Return ONLY valid JSON (no markdown) with this exact schema:
   {
@@ -194,7 +203,7 @@ const gpt = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
         status: 200,
         message: "Ok",
         result: {
-          title: title || "Results",
+          title: title || "Travel Information",
           bullets, // [{ title, description: string[] }]
         },
       });
