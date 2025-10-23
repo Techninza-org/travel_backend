@@ -11,6 +11,11 @@ const TRIP_ADVISOR_API_KEY: string = process.env.TRIP_ADVISOR_API_KEY || "B4825F
 const TRIP_ADVISOR_BASE_URL: string =
   `https://api.content.tripadvisor.com/api/v1/location/search?key=${TRIP_ADVISOR_API_KEY}&searchQuery=`;
 
+const GOOGLE_MAPS_API_KEY: string = process.env.GOOGLE_MAPS_API_KEY || "AIzaSyA9bSNp7B8WIWN4nxYhzYegyJOdQpQEJgs";
+const GOOGLE_PLACES_BASE_URL: string = "https://maps.googleapis.com/maps/api/place/textsearch/json";
+const GOOGLE_PLACE_DETAILS_URL: string = "https://maps.googleapis.com/maps/api/place/details/json";
+const GOOGLE_PHOTOS_BASE_URL: string = "https://maps.googleapis.com/maps/api/place/photo";
+
 const RADIUS_KM = 100;
 
 interface PerplexityResponse {
@@ -37,6 +42,38 @@ export enum TripAdvisorCategory {
   Restrurants = "restaurants",
   Geos = "geos",
   hotels = "hotels",
+}
+
+// Google Places API types (for Perplexity replacements)
+export interface GooglePlaceResult {
+  place_id: string;
+  name: string;
+  formatted_address: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  rating?: number;
+  user_ratings_total?: number;
+  price_level?: number;
+  photos?: Array<{
+    photo_reference: string;
+    height: number;
+    width: number;
+  }>;
+  types: string[];
+  business_status?: string;
+  opening_hours?: {
+    open_now: boolean;
+  };
+}
+
+export interface GooglePlacesResponse {
+  results: GooglePlaceResult[];
+  status: string;
+  next_page_token?: string;
 }
 
 // Centralized Perplexity call that returns the assistant's raw text
@@ -255,49 +292,213 @@ export const getImgByPlaceName = async (placeName: string): Promise<string | nul
   }
 };
 
-// getDescriptionsByPlaceNamesClient: Perplexity-powered
+// getDescriptionsByPlaceNamesClient: Google Places API powered (faster)
 export const getDescriptionsByPlaceNamesClient = async (placeNames: string[]): Promise<any[]> => {
-  const prompt = `
-Given the places: ${JSON.stringify(placeNames)}
-
-For EACH place, write a ~200-word description.
-
-Return ONLY valid JSON as an array of objects:
-[
-  { "place": "place_name", "description": "place_description" },
-  ...
-]
-`;
-
   try {
-    const text = await callPerplexity(prompt);
-    const placesDesc = safeParseJSON<any[]>(text);
-    console.log("Places desc:", placesDesc);
-    return placesDesc;
+    if (!GOOGLE_MAPS_API_KEY) {
+      throw new Error("Missing GOOGLE_MAPS_API_KEY");
+    }
+
+    const placeDescriptions = await Promise.all(
+      placeNames.map(async (placeName) => {
+        try {
+          // Search for the place using Google Places API
+          const searchResponse = await axios.get(GOOGLE_PLACES_BASE_URL, {
+            params: {
+              query: placeName,
+              key: GOOGLE_MAPS_API_KEY,
+              language: 'en'
+            }
+          });
+
+          if (searchResponse.data.status !== 'OK' || !searchResponse.data.results.length) {
+            return {
+              place: placeName,
+              description: `Information about ${placeName} is not available.`
+            };
+          }
+
+          const place = searchResponse.data.results[0];
+          
+          // Get detailed information using Place Details API
+          const detailsResponse = await axios.get(GOOGLE_PLACE_DETAILS_URL, {
+            params: {
+              place_id: place.place_id,
+              key: GOOGLE_MAPS_API_KEY,
+              fields: 'name,formatted_address,rating,user_ratings_total,types,editorial_summary,reviews',
+              language: 'en'
+            }
+          });
+
+          if (detailsResponse.data.status !== 'OK') {
+            return {
+              place: placeName,
+              description: `${placeName} is located at ${place.formatted_address}.`
+            };
+          }
+
+          const details = detailsResponse.data.result;
+          
+          // Create description from available data
+          let description = `${details.name || placeName}`;
+          
+          if (details.formatted_address) {
+            description += ` is located at ${details.formatted_address}.`;
+          }
+          
+          if (details.rating) {
+            description += ` It has a rating of ${details.rating} stars`;
+            if (details.user_ratings_total) {
+              description += ` based on ${details.user_ratings_total} reviews.`;
+            } else {
+              description += `.`;
+            }
+          }
+          
+          if (details.types && details.types.length > 0) {
+            const typeString = details.types.slice(0, 3).join(', ');
+            description += ` This is a ${typeString}.`;
+          }
+          
+          if (details.editorial_summary && details.editorial_summary.overview) {
+            description += ` ${details.editorial_summary.overview}`;
+          } else if (details.reviews && details.reviews.length > 0) {
+            // Use first review snippet if available
+            const firstReview = details.reviews[0];
+            if (firstReview.text && firstReview.text.length > 50) {
+              const reviewSnippet = firstReview.text.substring(0, 150) + '...';
+              description += ` According to reviews: "${reviewSnippet}"`;
+            }
+          }
+
+          return {
+            place: placeName,
+            description: description
+          };
+        } catch (error) {
+          console.error(`Error fetching details for ${placeName}:`, error);
+          return {
+            place: placeName,
+            description: `Information about ${placeName} is not available.`
+          };
+        }
+      })
+    );
+
+    console.log("Places desc:", placeDescriptions);
+    return placeDescriptions;
   } catch (error) {
     console.error("Error fetching place names:", error);
     return [];
   }
 };
 
-// placeDetails: Perplexity-powered
+// placeDetails: Google Places API powered (faster)
 export const placeDetails = async (placeNames: string[]): Promise<any[]> => {
-  const prompt = `
-Given the places: ${JSON.stringify(placeNames)}
-
-For EACH place, write a ~200-word description.
-
-Return ONLY valid JSON as an array of objects:
-[
-  { "place": "place_name", "description": "place_description" },
-  ...
-]
-`;
-
   try {
-    const text = await callPerplexity(prompt);
-    const placesDesc = safeParseJSON<PlaceDescription[]>(text);
-    return placesDesc;
+    if (!GOOGLE_MAPS_API_KEY) {
+      throw new Error("Missing GOOGLE_MAPS_API_KEY");
+    }
+
+    const placeDescriptions = await Promise.all(
+      placeNames.map(async (placeName) => {
+        try {
+          // Search for the place using Google Places API
+          const searchResponse = await axios.get(GOOGLE_PLACES_BASE_URL, {
+            params: {
+              query: placeName,
+              key: GOOGLE_MAPS_API_KEY,
+              language: 'en'
+            }
+          });
+
+          if (searchResponse.data.status !== 'OK' || !searchResponse.data.results.length) {
+            return {
+              place: placeName,
+              description: `Information about ${placeName} is not available.`
+            };
+          }
+
+          const place = searchResponse.data.results[0];
+          
+          // Get detailed information using Place Details API
+          const detailsResponse = await axios.get(GOOGLE_PLACE_DETAILS_URL, {
+            params: {
+              place_id: place.place_id,
+              key: GOOGLE_MAPS_API_KEY,
+              fields: 'name,formatted_address,rating,user_ratings_total,types,editorial_summary,reviews,website,formatted_phone_number,opening_hours',
+              language: 'en'
+            }
+          });
+
+          if (detailsResponse.data.status !== 'OK') {
+            return {
+              place: placeName,
+              description: `${placeName} is located at ${place.formatted_address}.`
+            };
+          }
+
+          const details = detailsResponse.data.result;
+          
+          // Create comprehensive description from available data
+          let description = `${details.name || placeName}`;
+          
+          if (details.formatted_address) {
+            description += ` is located at ${details.formatted_address}.`;
+          }
+          
+          if (details.rating) {
+            description += ` It has a rating of ${details.rating} stars`;
+            if (details.user_ratings_total) {
+              description += ` based on ${details.user_ratings_total} reviews.`;
+            } else {
+              description += `.`;
+            }
+          }
+          
+          if (details.types && details.types.length > 0) {
+            const typeString = details.types.slice(0, 3).join(', ');
+            description += ` This is a ${typeString}.`;
+          }
+          
+          if (details.website) {
+            description += ` Visit their website at ${details.website}.`;
+          }
+          
+          if (details.formatted_phone_number) {
+            description += ` Contact them at ${details.formatted_phone_number}.`;
+          }
+          
+          if (details.opening_hours && details.opening_hours.open_now !== undefined) {
+            description += ` They are currently ${details.opening_hours.open_now ? 'open' : 'closed'}.`;
+          }
+          
+          if (details.editorial_summary && details.editorial_summary.overview) {
+            description += ` ${details.editorial_summary.overview}`;
+          } else if (details.reviews && details.reviews.length > 0) {
+            // Use first review snippet if available
+            const firstReview = details.reviews[0];
+            if (firstReview.text && firstReview.text.length > 50) {
+              const reviewSnippet = firstReview.text.substring(0, 200) + '...';
+              description += ` According to reviews: "${reviewSnippet}"`;
+            }
+          }
+
+          return {
+            place: placeName,
+            description: description
+          };
+        } catch (error) {
+          console.error(`Error fetching details for ${placeName}:`, error);
+          return {
+            place: placeName,
+            description: `Information about ${placeName} is not available.`
+          };
+        }
+      })
+    );
+
+    return placeDescriptions;
   } catch (error) {
     console.error("Error fetching place names:", error);
     return [];
