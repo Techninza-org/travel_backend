@@ -906,6 +906,399 @@ export const confirmHotelBooking = async (
 //   }
 // };
 
+export const createFlightOrder = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { amount, currency = 'INR', notes } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    if (!amount) {
+      return res.status(400).json({ message: 'Missing required field: amount' });
+    }
+
+    // 1) Create RZP order
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // Convert to paise
+      currency: currency,
+      receipt: `flight_booking_${Date.now()}`, // Use timestamp for unique receipt
+      notes: { userId: String(userId), type: 'FLIGHT' },
+      payment_capture: true, // auto-capture
+    });
+
+    return res.status(200).json({
+      message: 'Order created',
+      data: {
+        order_id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        key_id: process.env.KEY_ID,
+        receipt: order.receipt,
+      },
+    });
+  } catch (err) {
+    console.error('createFlightOrder error', err);
+    return next(err);
+  }
+};
+
+export const verifyFlightPayment = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      amount,
+      currency = 'INR',
+      notes
+    } = req.body;
+    
+    console.log('received verifyFlightPayment', req.body);
+
+    const unique9digit = Math.floor(100000000 + Math.random() * 900000000);
+    
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
+    }
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !amount) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Missing required fields: razorpay_payment_id, razorpay_order_id, razorpay_signature, amount' 
+      });
+    }
+
+    /** 1️⃣  Verify Razorpay signature */
+    const hmac = crypto.createHmac('sha256', process.env.KEY_SECRET!);
+    hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+    const expected = hmac.digest('hex');
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(razorpay_signature)
+    );
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Signature mismatch',
+        error: 'Payment signature verification failed'
+      });
+    }
+
+    /** 2️⃣  Get payment details from Razorpay to extract transaction ID */
+    let paymentDetails;
+    try {
+      paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
+      console.log('Razorpay payment details:', paymentDetails);
+    } catch (error) {
+      console.error('Error fetching payment details from Razorpay:', error);
+      return res.status(400).json({ 
+        success: false,
+        message: 'Failed to fetch payment details from Razorpay',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    /** 3️⃣  Create booking record and store payment (fast response) */
+    const result = await prisma.$transaction(async (tx) => {
+      // Create booking record with ORDER_CREATED status (payment verified, order created)
+      const booking = await tx.flightBooking.create({
+        data: {
+          userId,
+          status: 'ORDER_CREATED', // Payment verified and order created
+          amount: Math.round(amount * 100), // Convert to paise
+          currency,
+          vendorPayload: {}, // Empty for now, will be filled in confirmHotelBooking
+          notes,
+          vendorResponse: {},
+          rzpPaymentId: razorpay_payment_id,
+          rzpOrderId: razorpay_order_id,
+        },
+      });
+      console.log('Booking created with payment verified and order created', booking);
+
+      // Store payment record
+      await tx.payment.create({
+        data: {
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          userId,
+          status: 'CAPTURED',
+          amount: booking.amount,
+          currency: 'INR',
+          bookingId: booking.id,
+          payload: paymentDetails as any, // Type assertion for Razorpay payment object
+        },
+      });
+
+      return {
+        bookingId: booking.id,
+        status: 'ORDER_CREATED',
+        amount: booking.amount,
+        currency: booking.currency,
+        transactionId: paymentDetails.id, // Return transaction ID for client
+        ezioTransactionId: unique9digit,
+        paymentDetails: {
+          id: paymentDetails.id,
+          amount: paymentDetails.amount,
+          currency: paymentDetails.currency,
+          status: paymentDetails.status,
+          method: paymentDetails.method,
+          created_at: paymentDetails.created_at,
+        },
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment verified successfully. Order created.',
+      data: result,
+    });
+  } catch (err) {
+    console.error('verifyFlightPayment error', err);
+    
+    // Send proper error response to frontend
+    return res.status(500).json({
+      success: false,
+      message: 'Payment verification failed',
+      error: err instanceof Error ? err.message : 'An unexpected error occurred',
+    });
+  }
+};
+
+export const confirmFlightBooking = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { bookingId, vendorPayload } = req.body;
+    const userId = req.user?.id;
+
+    console.log('🔄 confirmFlightBooking initiated', {
+      bookingId,
+      vendorPayload: vendorPayload ? 'provided' : 'missing',
+      userId,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!userId) {
+      console.log('❌ confirmFlightBooking: User not authenticated', { userId });
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
+    }
+
+    console.log('✅ confirmFlightBooking: User authenticated', { userId });
+
+    if (!bookingId || !vendorPayload) {
+      console.log('❌ confirmFlightBooking: Missing required fields', { bookingId: !!bookingId, vendorPayload: !!vendorPayload });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Missing required fields: bookingId, vendorPayload' 
+      });
+    }
+
+    console.log('✅ confirmFlightBooking: Input validation passed', { bookingId });
+
+    /** 1️⃣  Find booking and validate status */
+    console.log('🔍 confirmFlightBooking: Looking up booking', { bookingId: Number(bookingId), userId });
+    const booking = await prisma.flightBooking.findUnique({
+      where: { id: Number(bookingId), userId },
+    });
+
+    if (!booking) {
+      console.log('❌ confirmFlightBooking: Booking not found', { bookingId: Number(bookingId), userId });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Booking not found' 
+      });
+    }
+
+    console.log('✅ confirmFlightBooking: Booking found', {
+      bookingId: booking.id,
+      status: booking.status,
+      userId: booking.userId,
+      rzpPaymentId: booking.rzpPaymentId,
+      amount: booking.amount
+    });
+
+    if (booking.status !== 'ORDER_CREATED') {
+      console.log('❌ confirmFlightBooking: Invalid booking status', {
+        currentStatus: booking.status,
+        expectedStatus: 'ORDER_CREATED',
+        bookingId: booking.id
+      });
+      return res.status(400).json({
+        success: false,
+        message: `Invalid booking status: ${booking.status}. Expected: ORDER_CREATED`,
+        data: {
+          currentStatus: booking.status,
+          expectedStatus: 'ORDER_CREATED'
+        }
+      });
+    }
+
+    console.log('✅ confirmFlightBooking: Booking status validated', { bookingId: booking.id, status: booking.status });
+
+    console.log('📝 confirmFlightBooking: Updating booking status to PENDING_WEBHOOK', { bookingId: booking.id });
+    await prisma.flightBooking.update({
+      where: { id: booking.id },
+      data: {
+        status: 'PENDING_WEBHOOK',
+        vendorPayload: vendorPayload
+      },
+    });
+    console.log('✅ confirmFlightBooking: Booking status updated to PENDING_WEBHOOK', { bookingId: booking.id });
+
+    console.log('🌐 confirmFlightBooking: Calling EMT API for booking confirmation', {
+      url: 'https://stagingapi.easemytrip.com/Flight.svc/json/AirBookRQ',
+      bookingId: booking.id
+    });
+    const emtResp = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/AirBookRQ', vendorPayload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    console.log('📡 confirmFlightBooking: EMT API response received', {
+      status: emtResp.status,
+      statusText: emtResp.statusText,
+      bookingId: booking.id
+    });
+    console.log('EMT booking response', emtResp.data);
+
+    const data = emtResp.data;
+    const isOk = data?.BookingId !== "" && data?.BookingStatus !== 0
+    console.log('🔍 confirmFlightBooking: Checking vendor booking status', {
+      reservationStatusCode: data?.BookingStatus,
+      isOk,
+      bookingId: booking.id
+    });
+
+    if (isOk) {
+      console.log('✅ confirmFlightBooking: Vendor booking successful', {
+        bookingId: booking.id,
+        reservationStatusCode: data?.BookingStatus,
+        PNR: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR,
+        ConfirmationNo: data?.EMTTransactionId,
+        BookingId: data?.BookingId
+      });
+      console.log('📝 confirmFlightBooking: Updating booking to CONFIRMED status', { bookingId: booking.id });
+      await prisma.hotelBooking.update({
+        where: { id: booking.id },
+        data: {
+          status: 'CONFIRMED',
+          vendorResponse: emtResp.data,
+          vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
+          vendorBookingId: emtResp.data?.BookingId || null,
+        },
+      });
+      console.log('✅ confirmFlightBooking: Booking confirmed successfully', {
+        bookingId: booking.id,
+        vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
+        vendorBookingId: emtResp.data?.BookingId || null
+      });
+      
+      // ✅ Send success response to frontend
+      return res.status(200).json({
+        success: true,
+        message: 'Flight booking confirmed successfully',
+        data: {
+          bookingId: booking.id,
+          status: 'CONFIRMED',
+          vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
+          vendorBookingId: emtResp.data?.BookingId || null,
+          amount: booking.amount,
+          currency: booking.currency,
+          rzpPaymentId: booking.rzpPaymentId,
+          rzpOrderId: booking.rzpOrderId,
+        },
+      });
+    } else {
+      console.log('❌ confirmFlightBooking: Vendor booking failed', {
+        bookingId: booking.id,
+        reservationStatusCode: data?.reservationStatusCode,
+        responseData: data
+      });
+      const reason = 'Vendor booking failed';
+      console.log('💰 confirmFlightBooking: Initiating payment refund', {
+        bookingId: booking.id,
+        paymentId: booking.rzpPaymentId,
+        reason
+      });
+      const refund = await refundPayment(booking.rzpPaymentId!, reason);
+      console.log('💸 confirmFlightBooking: Payment refund completed', {
+        bookingId: booking.id,
+        refundId: refund?.id,
+        refund
+      });
+      console.log('📝 confirmFlightBooking: Updating booking to FAILED_REFUNDED status', { bookingId: booking.id });
+      await prisma.flightBooking.update({
+        where: { id: booking.id },
+        data: {
+          status: 'FAILED_REFUNDED',
+          rzpRefundId: refund?.id || null,
+          notes: reason,
+        },
+      });
+      console.log('📝 confirmFlightBooking: Updating payment status to REFUNDED', {
+        bookingId: booking.id,
+        paymentId: booking.rzpPaymentId
+      });
+      // Update payment status to refunded
+      await prisma.payment.updateMany({
+        where: {
+          paymentId: booking.rzpPaymentId!,
+          bookingId: booking.id
+        },
+        data: { status: 'REFUNDED' },
+      });
+      console.log('✅ confirmFlightBooking: Failed booking processed and refunded', {
+        bookingId: booking.id,
+        status: 'FAILED_REFUNDED',
+        refundId: refund?.id
+      });
+      
+      // ❌ Send failure response to frontend
+      return res.status(400).json({
+        success: false,
+        message: 'Flight booking failed and payment refunded',
+        data: {
+          bookingId: booking.id,
+          status: 'FAILED_REFUNDED',
+          reason,
+          refundId: refund?.id || null,
+          amount: booking.amount,
+          currency: booking.currency,
+          rzpPaymentId: booking.rzpPaymentId,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('❌ confirmFlightBooking: Unexpected error occurred', {
+      error: err,
+      message: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Send proper error response to frontend
+    return res.status(500).json({
+      success: false,
+      message: 'Booking confirmation failed',
+      error: err instanceof Error ? err.message : 'An unexpected error occurred',
+    });
+  }
+};
+
 export const paymentsController = {
   createHotelOrder,
   verifyHotelCheckout,
@@ -913,6 +1306,9 @@ export const paymentsController = {
   confirmHotelBooking,
   // hotelPaymentWebhook,
   getBookingStatus,
+  createFlightOrder,
+  verifyFlightPayment,
+  confirmFlightBooking
 };
 
 export default paymentsController;

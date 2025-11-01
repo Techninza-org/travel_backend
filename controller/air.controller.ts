@@ -1,10 +1,8 @@
 import type { Response, NextFunction } from 'express'
 import { ExtendedRequest } from '../utils/middleware'
 import axios from 'axios'
-
-const PASSWORD = "EMT@uytrFYTREt"
-const USERNAME = "EMTB2B"
-const IPADDRESS = "110.235.232.209"
+import dotenv from 'dotenv'
+dotenv.config()
 
 const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{

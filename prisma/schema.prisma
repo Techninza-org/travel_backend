@@ -77,6 +77,7 @@ model User {
   CustomExpenses               CustomExpense[]
   CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
   hotelBookings                HotelBooking[]
+  flightBookings                FlightBooking[]
   payments                     Payment[]
   appFeedbacks                 AppFeedback[]
 }
@@ -216,6 +217,26 @@ enum BookingStatus {
 }
 
 model HotelBooking {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          BookingStatus @default(INIT)
+  amount          Int // in paise
+  currency        String        @default("INR") // only INR supported for now
+  vendorPayload   Json // the exact body you'll POST to EMT /HotelBooking
+  vendorResponse  Json // EMT booking confirmation
+  vendorPnr       String? // PNR from EMT
+  vendorBookingId String? // Booking ID from EMT
+  rzpOrderId      String? // Razorpay order id
+  rzpPaymentId    String? // Razorpay payment id
+  rzpRefundId     String? // Razorpay refund id
+  notes           String? // any additional notes from user
+  expiresAt       DateTime? // optional price/room hold window
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model FlightBooking {
   id              Int           @id @default(autoincrement())
   userId          Int
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
