@@ -149,5 +149,7 @@ userRouter
     .get('/package/:id', userController.getPackageById)
     //@ts-ignore
     .post('/feedback', userController.submitAppFeedback)
+    //@ts-ignore
+    .get('/flight/bookings', userController.getUserFlightBookings)
 
 export default userRouter
