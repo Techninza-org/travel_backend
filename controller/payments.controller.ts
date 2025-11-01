@@ -1562,53 +1562,33 @@ export const confirmBusBooking = async (
     const emtResp = await axios.post('http://busapi.easemytrip.com/v1/api/detail/MakeBooking', vendorPayload, {
       headers: { 'Content-Type': 'application/json' },
     });
-    console.log('📡 confirmBusBooking: EMT API response received', {
-      status: emtResp.status,
-      statusText: emtResp.statusText,
-      bookingId: booking.id
-    });
+   
     console.log('EMT booking response', emtResp.data);
 
     const data = emtResp.data;
-    const isOk = data?.BookingId !== "" && data?.BookingStatus !== 0
-    console.log('🔍 confirmBusBooking: Checking vendor booking status', {
-      reservationStatusCode: data?.BookingStatus,
-      isOk,
-      bookingId: booking.id
-    });
+    const isOk = data?.isTransactionCreated === true
 
     if (isOk) {
-      console.log('✅ confirmBusBooking: Vendor booking successful', {
-        bookingId: booking.id,
-        reservationStatusCode: data?.BookingStatus,
-        PNR: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR,
-        ConfirmationNo: data?.EMTTransactionId,
-        BookingId: data?.BookingId
-      });
-      console.log('📝 confirmBusBooking: Updating booking to CONFIRMED status', { bookingId: booking.id });
-      await prisma.hotelBooking.update({
+     
+      await prisma.busBooking.update({
         where: { id: booking.id },
         data: {
           status: 'CONFIRMED',
           vendorResponse: emtResp.data,
-          vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
+          vendorPnr: emtResp?.data?.transactionId || null,
           vendorBookingId: emtResp.data?.BookingId || null,
         },
       });
-      console.log('✅ confirmBusBooking: Booking confirmed successfully', {
-        bookingId: booking.id,
-        vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
-        vendorBookingId: emtResp.data?.BookingId || null
-      });
+     
       
       // ✅ Send success response to frontend
       return res.status(200).json({
         success: true,
-        message: 'Flight booking confirmed successfully',
+        message: 'Bus booking confirmed successfully',
         data: {
           bookingId: booking.id,
           status: 'CONFIRMED',
-          vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
+          vendorPnr: emtResp?.data?.transactionId || null,
           vendorBookingId: emtResp.data?.BookingId || null,
           amount: booking.amount,
           currency: booking.currency,
@@ -1635,7 +1615,7 @@ export const confirmBusBooking = async (
         refund
       });
       console.log('📝 confirmBusBooking: Updating booking to FAILED_REFUNDED status', { bookingId: booking.id });
-      await prisma.flightBooking.update({
+      await prisma.busBooking.update({
         where: { id: booking.id },
         data: {
           status: 'FAILED_REFUNDED',
