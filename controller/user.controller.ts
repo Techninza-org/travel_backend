@@ -3211,6 +3211,29 @@ const getUserFlightBookings = async (req: ExtendedRequest, res: Response, next: 
         return next(err);
     }
 }
+const getUserBusBookings = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const bookings = await prisma.busBooking.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return res.status(200).json({
+            message: 'Bookings fetched successfully',
+            data: bookings,
+        });
+
+    } catch (err) {
+        console.error('getUserFlightBookings error', err);
+        return next(err);
+    }
+}
 
 const userController = {
     submitQuery,
@@ -3284,7 +3307,8 @@ const userController = {
     deleteItineraryById,
     addUserInTravelRequestResuests,
     autoSuggestQuotesByWords,
-    getUserFlightBookings
+    getUserFlightBookings,
+    getUserBusBookings
 }
 
 export default userController

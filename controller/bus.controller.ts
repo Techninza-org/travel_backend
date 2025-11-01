@@ -179,30 +179,17 @@ const makeBooking = async (req: ExtendedRequest, res: Response, next: NextFuncti
 
 const cancelTicket = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
-        const { ticketNo, key, canceltype, Bookid, IPAddress, Remarks } = req.body;
-        if (!ticketNo || !key || !canceltype || !Bookid || !IPAddress || !Remarks) {
-            return res.status(400).json({
-                message: 'Please provide all required fields',
-            });
-        }
-        const requestBody = {
-            ticketNo: ticketNo,
-            key: key,
-            canceltype: canceltype,
-            Bookid: Bookid,
-            IPAddress: IPAddress,
-            Remarks: Remarks,
-        };
-        const response = await axios.post('http://busapi.easemytrip.com/api/detail/CancelTicket', requestBody, {
+        const body = req.body;
+        const response = await axios.post('http://busapi.easemytrip.com/v1/api/detail/CancelTicket', body, {
             headers: {
                 'Content-Type': 'application/json',
             },
         });
-        const data = response.data;
         return res.status(200).json({
-            message: 'Ticket canceled successfully',
-            data: data,
-        });
+            message: 'Cancellation response fetched successfully',
+            data: response.data,
+        })
+
     } catch (err) {
         console.error(err);
         return res.status(500).json({

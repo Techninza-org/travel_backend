@@ -151,5 +151,7 @@ userRouter
     .post('/feedback', userController.submitAppFeedback)
     //@ts-ignore
     .get('/flight/bookings', userController.getUserFlightBookings)
+    //@ts-ignore
+    .get('/bus/bookings', userController.getUserBusBookings)
 
 export default userRouter

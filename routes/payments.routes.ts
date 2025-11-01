@@ -23,6 +23,12 @@ paymentsRouter
     .post('/flight/verify-payment', middleware.AuthMiddleware, paymentsController.verifyFlightPayment)
     //@ts-ignore
     .post('/flight/confirm-booking', middleware.AuthMiddleware, paymentsController.confirmFlightBooking)
+     //@ts-ignore
+     .post('/bus/create-order', middleware.AuthMiddleware, paymentsController.createBusOrder)
+     //@ts-ignore
+     .post('/bus/verify-payment', middleware.AuthMiddleware, paymentsController.verifyBusPayment)
+     //@ts-ignore
+     .post('/bus/confirm-booking', middleware.AuthMiddleware, paymentsController.confirmBusBooking)
 
 // Webhook route (no auth middleware, uses raw body)
 // paymentsRouter.post('/hotel/webhook', express.raw({ type: '*/*' }), paymentsController.hotelPaymentWebhook);
