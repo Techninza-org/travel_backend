@@ -114,12 +114,66 @@ const getBookingDetails = async (req: ExtendedRequest, res: Response, next: Next
     }
 }
 
+const getAuthKeyForCancellation = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+        const response = await axios.post('https://stagingapi.easemytrip.com/cancellationjson/api/GetAuthKey', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        const data = response.data
+        return res.status(200).json({
+            data
+        })
+    }catch(err){
+        console.log(err);
+    }
+}
+
+const getFlightBookingDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+        const response = await axios.post('http://stagingapi.easemytrip.com/cancellationjson/api/flightbookingdetailv1', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        const data = response.data
+        return res.status(200).json({
+            data
+        })
+    }catch(err){
+        console.log(err);
+    }
+}
+
+const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try{
+        const body = req.body;
+        const response = await axios.post('http://stagingapi.easemytrip.com/cancellationjson/api/cancelv1', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        const data = response.data
+        return res.status(200).json({
+            data
+        })
+    }catch(err){
+        console.log(err);
+    }
+}
+
 const airController = {
     searchFlight,
     getPrice,
     seatMap,
     bookFlight,
-    getBookingDetails
+    getBookingDetails,
+    getAuthKeyForCancellation,
+    getFlightBookingDetails,
+    cancelFlightBooking
 }
 
 export default airController
