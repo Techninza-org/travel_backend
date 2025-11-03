@@ -1192,7 +1192,7 @@ export const confirmFlightBooking = async (
         BookingId: data?.BookingId
       });
       console.log('📝 confirmFlightBooking: Updating booking to CONFIRMED status', { bookingId: booking.id });
-      await prisma.hotelBooking.update({
+      await prisma.flightBooking.update({
         where: { id: booking.id },
         data: {
           status: 'CONFIRMED',
