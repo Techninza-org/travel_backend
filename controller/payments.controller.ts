@@ -1176,7 +1176,7 @@ export const confirmFlightBooking = async (
     console.log('EMT booking response', emtResp.data);
 
     const data = emtResp.data;
-    const isOk = data?.BookingId !== "" && data?.BookingStatus !== 0
+    const isOk = data?.EMTTransactionId !== '' 
     console.log('🔍 confirmFlightBooking: Checking vendor booking status', {
       reservationStatusCode: data?.BookingStatus,
       isOk,
