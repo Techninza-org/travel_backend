@@ -918,10 +918,11 @@ export const createFlightOrder = async (req: ExtendedRequest, res: Response, nex
     if (!amount) {
       return res.status(400).json({ message: 'Missing required field: amount' });
     }
+    const rzpAmount =  Math.round(amount * 100); // Convert to paise
 
     // 1) Create RZP order
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // Convert to paise
+      amount: rzpAmount, // Convert to paise
       currency: currency,
       receipt: `flight_booking_${Date.now()}`, // Use timestamp for unique receipt
       notes: { userId: String(userId), type: 'FLIGHT' },
