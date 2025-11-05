@@ -918,7 +918,7 @@ export const createFlightOrder = async (req: ExtendedRequest, res: Response, nex
     if (!amount) {
       return res.status(400).json({ message: 'Missing required field: amount' });
     }
-    const rzpAmount =  Math.round(amount);  //to be multiplied by 100 again // Convert to paise
+    const rzpAmount =  Math.round(amount * 100);  //to be multiplied by 100 again // Convert to paise
 
     // 1) Create RZP order
     const order = await razorpay.orders.create({
