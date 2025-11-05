@@ -7,6 +7,8 @@ dotenv.config()
 const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try{
         const body = req.body
+        console.log(body, 'FLIGHT SEARCH BODY');
+        
 
         const response = await axios.post('https://stagingapi.easemytrip.com/Flight.svc/json/FlightSearch', body, {
             headers: {
