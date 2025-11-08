@@ -12,6 +12,90 @@ const razorpay = new Razorpay({
   key_secret: process.env.KEY_SECRET!,
 });
 
+// EMT flight booking detail polling (no cron; in-memory intervals)
+const EMT_FLIGHT_BOOKING_DETAIL_URL = 'https://stagingapi.easemytrip.com/cancellationjson/api/flightbookingdetail';
+const EMT_USERNAME = process.env.EMT_USERNAME || 'EMTB2B';
+const EMT_PASSWORD = process.env.EMT_PASSWORD || 'EMT@uytrFYTREt';
+
+const flightBookingPollers: Map<number, NodeJS.Timeout> = new Map();
+
+function stopFlightBookingDetailPolling(bookingId: number) {
+  const timer = flightBookingPollers.get(bookingId);
+  if (timer) {
+    clearInterval(timer);
+    flightBookingPollers.delete(bookingId);
+  }
+}
+
+function startFlightBookingDetailPolling(bookingId: number, transactionId: string) {
+  if (!transactionId) return;
+  if (flightBookingPollers.has(bookingId)) return;
+
+  const normalizedTransactionId = transactionId.startsWith('#')
+    ? transactionId
+    : `#${transactionId}`;
+
+  const pollOnce = async () => {
+    try {
+      const booking = await prisma.flightBooking.findUnique({ where: { id: bookingId } });
+      if (!booking) {
+        stopFlightBookingDetailPolling(bookingId);
+        return;
+      }
+
+      // If already confirmed/cancelled, stop polling
+      if (booking.bookingStatus !== 'PENDING') {
+        stopFlightBookingDetailPolling(bookingId);
+        return;
+      }
+
+      const payload = {
+        Authentication: {
+          Password: EMT_PASSWORD,
+          UserName: EMT_USERNAME
+        },
+        transactionScreenId: normalizedTransactionId
+      };
+
+      const resp = await axios.post(EMT_FLIGHT_BOOKING_DETAIL_URL, payload, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      // Persist latest vendor response snapshot for traceability
+      await prisma.flightBooking.update({
+        where: { id: bookingId },
+        data: {
+          vendorResponse: resp.data as any
+        }
+      });
+
+      const pax = Array.isArray(resp.data?.passengerDetails) ? resp.data.passengerDetails[0] : null;
+      const vendorStatus: string | undefined = pax?.status;
+
+      if (vendorStatus && vendorStatus.toLowerCase() !== 'pending') {
+        await prisma.flightBooking.update({
+          where: { id: bookingId },
+          data: {
+            bookingStatus: 'CONFIRMED'
+          }
+        });
+        stopFlightBookingDetailPolling(bookingId);
+      }
+    } catch (err) {
+      // Log and continue polling on transient failures
+      console.error('flightbookingdetail poll error', {
+        bookingId,
+        error: err instanceof Error ? err.message : err
+      });
+    }
+  };
+
+  // Run immediately, then every 5 minutes
+  void pollOnce();
+  const timer = setInterval(pollOnce, 5 * 60 * 1000);
+  flightBookingPollers.set(bookingId, timer);
+}
+
 // Helper function to confirm vendor booking with EMT
 async function confirmVendorBooking(vendorPayload: any): Promise<{ ok: boolean; data?: any; error?: string }> {
   try {
@@ -1224,63 +1308,42 @@ export const confirmFlightBooking = async (
         },
       });
     } else {
-      console.log('❌ confirmFlightBooking: Vendor booking failed', {
-        bookingId: booking.id,
-        reservationStatusCode: data?.reservationStatusCode,
-        responseData: data
+      // Treat as pending: start EMT flightbookingdetail polling instead of refunding
+      console.log('⏳ confirmFlightBooking: Vendor booking pending, starting status polling', {
+        bookingId: booking.id
       });
-      const reason = 'Vendor booking failed';
-      console.log('💰 confirmFlightBooking: Initiating payment refund', {
-        bookingId: booking.id,
-        paymentId: booking.rzpPaymentId,
-        reason
-      });
-      const refund = await refundPayment(booking.rzpPaymentId!, reason);
-      console.log('💸 confirmFlightBooking: Payment refund completed', {
-        bookingId: booking.id,
-        refundId: refund?.id,
-        refund
-      });
-      console.log('📝 confirmFlightBooking: Updating booking to FAILED_REFUNDED status', { bookingId: booking.id });
+
+      // Store initial response for traceability
       await prisma.flightBooking.update({
         where: { id: booking.id },
         data: {
-          status: 'FAILED_REFUNDED',
-          rzpRefundId: refund?.id || null,
-          notes: reason,
-        },
+          vendorResponse: emtResp.data,
+          bookingStatus: 'PENDING'
+        }
       });
-      console.log('📝 confirmFlightBooking: Updating payment status to REFUNDED', {
-        bookingId: booking.id,
-        paymentId: booking.rzpPaymentId
-      });
-      // Update payment status to refunded
-      await prisma.payment.updateMany({
-        where: {
-          paymentId: booking.rzpPaymentId!,
+
+      const transactionId =
+        vendorPayload?.TransactionId ||
+        vendorPayload?.TransactionID ||
+        vendorPayload?.transactionId ||
+        '';
+
+      if (transactionId) {
+        startFlightBookingDetailPolling(booking.id, String(transactionId));
+      } else {
+        console.warn('confirmFlightBooking: TransactionId missing in vendorPayload, skipping polling', {
           bookingId: booking.id
-        },
-        data: { status: 'REFUNDED' },
-      });
-      console.log('✅ confirmFlightBooking: Failed booking processed and refunded', {
-        bookingId: booking.id,
-        status: 'FAILED_REFUNDED',
-        refundId: refund?.id
-      });
-      
-      // ❌ Send failure response to frontend
-      return res.status(400).json({
-        success: false,
-        message: 'Flight booking failed and payment refunded',
+        });
+      }
+
+      // Send 202 Accepted indicating background polling
+      return res.status(202).json({
+        success: true,
+        message: 'Flight booking pending. Polling vendor every 5 minutes until confirmation.',
         data: {
           bookingId: booking.id,
-          status: 'FAILED_REFUNDED',
-          reason,
-          refundId: refund?.id || null,
-          amount: booking.amount,
-          currency: booking.currency,
-          rzpPaymentId: booking.rzpPaymentId,
-        },
+          status: 'PENDING'
+        }
       });
     }
   } catch (err) {
