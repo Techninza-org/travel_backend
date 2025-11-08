@@ -38,6 +38,7 @@ import busRouter from './routes/bus.routes'
 import flightRouter from './routes/air.routes'
 import activitiesRouter from './routes/activities.routes'
 import CustomExpenseRouter from './routes/customexpense.routes'
+import airController from './controller/air.controller'
 
 const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
@@ -464,6 +465,23 @@ async function deleteOldHighlights() {
 cron.schedule('0 * * * *', () => {
   console.log('Running highlight cleanup...')
   deleteOldHighlights()
+})
+
+// Check flight booking status every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  const cronStartTime = Date.now();
+  const cronExecutionId = `CRON-${cronStartTime}`;
+
+  console.log(`[${cronExecutionId}] 🔄 CRON JOB STARTED: Flight booking status check at ${new Date().toISOString()}`);
+
+  try {
+    await airController.checkFlightBookingStatus();
+    const cronEndTime = Date.now();
+    console.log(`[${cronExecutionId}] ✅ CRON JOB COMPLETED: Flight booking status check finished in ${cronEndTime - cronStartTime}ms`);
+  } catch (error) {
+    const cronEndTime = Date.now();
+    console.error(`[${cronExecutionId}] ❌ CRON JOB FAILED: Flight booking status check failed after ${cronEndTime - cronStartTime}ms:`, error);
+  }
 })
 
 //every hour
