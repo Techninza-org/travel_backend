@@ -35,7 +35,7 @@ const searchFlight = async (req: ExtendedRequest, res: Response, next: NextFunct
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] FLIGHT SEARCH ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] FLIGHT SEARCH FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -72,7 +72,7 @@ const getPrice = async (req: ExtendedRequest, res: Response, next: NextFunction)
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] FLIGHT PRICE CHECK ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] FLIGHT PRICE CHECK FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -109,7 +109,7 @@ const seatMap = async (req: ExtendedRequest, res: Response, next: NextFunction) 
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] FLIGHT SEAT MAP ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] FLIGHT SEAT MAP FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -153,7 +153,7 @@ const bookFlight = async (req: ExtendedRequest, res: Response, next: NextFunctio
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] FLIGHT BOOKING ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] FLIGHT BOOKING FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -198,7 +198,7 @@ const getBookingDetails = async (req: ExtendedRequest, res: Response, next: Next
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] GET BOOKING DETAILS ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] GET BOOKING DETAILS FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -240,9 +240,9 @@ const getAuthKeyForCancellation = async (req: ExtendedRequest, res: Response, ne
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] GET AUTH KEY ERROR:`, err?.response?.data || err?.message || err);
-        console.error(`[${requestId}] GET AUTH KEY FAILED - User: ${userId || 'Anonymous'}`);
+        console.error(`[${requestId}] GET AUTH KEY FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
             message: 'Internal server error',
         })
@@ -303,7 +303,7 @@ const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: Ne
         return res.status(200).json({
             data
         })
-    }catch(err){
+    }catch(err: any){
         console.error(`[${requestId}] FLIGHT CANCELLATION ERROR:`, err?.response?.data || err?.message || err);
         console.error(`[${requestId}] FLIGHT CANCELLATION FAILED - User: ${req.user?.id || 'Anonymous'}`);
         return res.status(500).json({
@@ -414,7 +414,7 @@ const checkFlightBookingStatus = async () => {
 
                 processedCount++;
 
-            } catch (bookingError) {
+            } catch (bookingError: any) {
                 errorCount++;
                 console.error(`[${bookingRequestId}] ❌ Error checking booking ${booking.id}:`, bookingError?.response?.data || bookingError?.message || bookingError);
                 // Continue with next booking instead of failing the entire process
