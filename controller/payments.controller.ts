@@ -17,13 +17,17 @@ const EMT_FLIGHT_BOOKING_DETAIL_URL = 'https://stagingapi.easemytrip.com/cancell
 const EMT_USERNAME = process.env.EMT_USERNAME || 'EMTB2B';
 const EMT_PASSWORD = process.env.EMT_PASSWORD || 'EMT@uytrFYTREt';
 
-const flightBookingPollers: Map<number, NodeJS.Timeout> = new Map();
+const flightBookingPollers: Map<number, ReturnType<typeof setInterval>> = new Map();
 
-function stopFlightBookingDetailPolling(bookingId: number) {
+function stopFlightBookingDetailPolling(bookingId: number, reason?: string) {
   const timer = flightBookingPollers.get(bookingId);
   if (timer) {
     clearInterval(timer);
     flightBookingPollers.delete(bookingId);
+    console.log('🛑 Stopped EMT flightbookingdetail polling', {
+      bookingId,
+      reason: reason || 'unspecified'
+    });
   }
 }
 
@@ -35,17 +39,43 @@ function startFlightBookingDetailPolling(bookingId: number, transactionId: strin
     ? transactionId
     : `#${transactionId}`;
 
+  console.log('▶️ Starting EMT flightbookingdetail polling', {
+    bookingId,
+    transactionScreenId: normalizedTransactionId,
+    startedAt: new Date().toISOString()
+  });
+
+  let pollAttempt = 0;
+
   const pollOnce = async () => {
+    pollAttempt += 1;
+    const attemptStartedAt = new Date().toISOString();
+    console.log('⏱ EMT flightbookingdetail poll attempt', {
+      bookingId,
+      attempt: pollAttempt,
+      transactionScreenId: normalizedTransactionId,
+      at: attemptStartedAt
+    });
+
     try {
       const booking = await prisma.flightBooking.findUnique({ where: { id: bookingId } });
       if (!booking) {
-        stopFlightBookingDetailPolling(bookingId);
+        console.warn('⚠️ EMT flightbookingdetail: Booking not found, stopping polling', {
+          bookingId,
+          attempt: pollAttempt
+        });
+        stopFlightBookingDetailPolling(bookingId, 'booking_not_found');
         return;
       }
 
       // If already confirmed/cancelled, stop polling
       if (booking.bookingStatus !== 'PENDING') {
-        stopFlightBookingDetailPolling(bookingId);
+        console.log('ℹ️ EMT flightbookingdetail: Booking not pending, stopping polling', {
+          bookingId,
+          attempt: pollAttempt,
+          bookingStatus: booking.bookingStatus
+        });
+        stopFlightBookingDetailPolling(bookingId, 'status_not_pending');
         return;
       }
 
@@ -57,8 +87,24 @@ function startFlightBookingDetailPolling(bookingId: number, transactionId: strin
         transactionScreenId: normalizedTransactionId
       };
 
+      console.log('🌐 EMT flightbookingdetail request', {
+        bookingId,
+        attempt: pollAttempt,
+        url: EMT_FLIGHT_BOOKING_DETAIL_URL,
+        // Do not log password
+        UserName: EMT_USERNAME,
+        transactionScreenId: normalizedTransactionId
+      });
+
       const resp = await axios.post(EMT_FLIGHT_BOOKING_DETAIL_URL, payload, {
         headers: { 'Content-Type': 'application/json' }
+      });
+
+      console.log('📡 EMT flightbookingdetail response meta', {
+        bookingId,
+        attempt: pollAttempt,
+        status: resp.status,
+        statusText: resp.statusText
       });
 
       // Persist latest vendor response snapshot for traceability
@@ -72,19 +118,32 @@ function startFlightBookingDetailPolling(bookingId: number, transactionId: strin
       const pax = Array.isArray(resp.data?.passengerDetails) ? resp.data.passengerDetails[0] : null;
       const vendorStatus: string | undefined = pax?.status;
 
+      console.log('🔍 EMT flightbookingdetail parsed status', {
+        bookingId,
+        attempt: pollAttempt,
+        vendorStatus,
+        passengerCount: Array.isArray(resp.data?.passengerDetails) ? resp.data.passengerDetails.length : 0
+      });
+
       if (vendorStatus && vendorStatus.toLowerCase() !== 'pending') {
+        console.log('✅ EMT flightbookingdetail: Vendor status confirmed, updating booking', {
+          bookingId,
+          attempt: pollAttempt,
+          vendorStatus
+        });
         await prisma.flightBooking.update({
           where: { id: bookingId },
           data: {
             bookingStatus: 'CONFIRMED'
           }
         });
-        stopFlightBookingDetailPolling(bookingId);
+        stopFlightBookingDetailPolling(bookingId, 'confirmed');
       }
     } catch (err) {
       // Log and continue polling on transient failures
       console.error('flightbookingdetail poll error', {
         bookingId,
+        attempt: pollAttempt,
         error: err instanceof Error ? err.message : err
       });
     }
@@ -1310,7 +1369,9 @@ export const confirmFlightBooking = async (
     } else {
       // Treat as pending: start EMT flightbookingdetail polling instead of refunding
       console.log('⏳ confirmFlightBooking: Vendor booking pending, starting status polling', {
-        bookingId: booking.id
+        bookingId: booking.id,
+        emtStatus: data?.BookingStatus ?? data?.reservationStatusCode,
+        hasEMTTransactionId: Boolean(data?.EMTTransactionId)
       });
 
       // Store initial response for traceability
@@ -1329,6 +1390,10 @@ export const confirmFlightBooking = async (
         '';
 
       if (transactionId) {
+        console.log('▶️ confirmFlightBooking: Starting poller with TransactionId', {
+          bookingId: booking.id,
+          transactionId
+        });
         startFlightBookingDetailPolling(booking.id, String(transactionId));
       } else {
         console.warn('confirmFlightBooking: TransactionId missing in vendorPayload, skipping polling', {
@@ -1337,14 +1402,21 @@ export const confirmFlightBooking = async (
       }
 
       // Send 202 Accepted indicating background polling
-      return res.status(202).json({
+      const responseBody = {
         success: true,
         message: 'Flight booking pending. Polling vendor every 5 minutes until confirmation.',
         data: {
           bookingId: booking.id,
           status: 'PENDING'
         }
+      };
+
+      console.log('↩️ confirmFlightBooking: Responding 202 Accepted for pending booking', {
+        bookingId: booking.id,
+        responsePreview: responseBody.data
       });
+
+      return res.status(202).json(responseBody);
     }
   } catch (err) {
     console.error('❌ confirmFlightBooking: Unexpected error occurred', {
