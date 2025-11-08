@@ -77,8 +77,8 @@ model User {
   CustomExpenses               CustomExpense[]
   CustomExpense                CustomExpense[]       @relation("CustomExpenseAddedUser")
   hotelBookings                HotelBooking[]
-  flightBookings                FlightBooking[]
-  busBookings                   BusBooking[]
+  flightBookings               FlightBooking[]
+  busBookings                  BusBooking[]
   payments                     Payment[]
   appFeedbacks                 AppFeedback[]
 }
@@ -119,14 +119,14 @@ model PackageCountry {
 }
 
 model Package {
-  id                  Int      @id @default(autoincrement())
+  id                  Int                @id @default(autoincrement())
   type                Int // 0 = india, 1 = international
   category            String
   name                String
   state               String?
   city                String?
   country             String?
-  description         String   @db.Text
+  description         String             @db.Text
   images              Json
   price               Int
   tax                 Int
@@ -142,8 +142,8 @@ model Package {
   providedBy          String?
   quotes              Quote[]
   customPackageMain   CustomPackageMain?
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
 }
 
 model CustomPackageMain {
@@ -168,11 +168,11 @@ model CustomPackageMain {
   cancellation_policy Json
   date_change_policy  Json
   providedBy          String?
-  number_of_people   Int?
+  number_of_people    Int?
   sender_email        String?
   sender_phone        String?
-  packageId          Int      @unique
-  package            Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId           Int      @unique
+  package             Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 }
@@ -237,13 +237,19 @@ model HotelBooking {
   updatedAt       DateTime      @updatedAt
 }
 
+enum FlightBookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 model FlightBooking {
-  id              Int           @id @default(autoincrement())
+  id              Int                 @id @default(autoincrement())
   userId          Int
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status          BookingStatus @default(INIT)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          BookingStatus       @default(INIT)
   amount          Int // in paise
-  currency        String        @default("INR") // only INR supported for now
+  currency        String              @default("INR") // only INR supported for now
   vendorPayload   Json // the exact body you'll POST to EMT /HotelBooking
   vendorResponse  Json // EMT booking confirmation
   vendorPnr       String? // PNR from EMT
@@ -253,8 +259,9 @@ model FlightBooking {
   rzpRefundId     String? // Razorpay refund id
   notes           String? // any additional notes from user
   expiresAt       DateTime? // optional price/room hold window
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  bookingStatus   FlightBookingStatus @default(PENDING)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 }
 
 model BusBooking {
@@ -633,18 +640,18 @@ enum QuoteSource {
 }
 
 model Quote {
-  id               Int          @id @default(autoincrement())
-  done             Boolean      @default(false)
+  id               Int            @id @default(autoincrement())
+  done             Boolean        @default(false)
   packageId        Int
-  package          Package      @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  package          Package        @relation(fields: [packageId], references: [id], onDelete: Cascade)
   number_of_people Int
   start_date       String
   name             String
   phone            String
   source           QuoteSource?
   customPackage    CustomPackage?
-  created_at       DateTime     @default(now())
-  updated_at       DateTime     @updatedAt
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
 }
 
 model VendorNotification {
@@ -974,8 +981,8 @@ model Airport {
 }
 
 model Banner {
-  id          Int      @id @default(autoincrement())
-  image       String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  image      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
