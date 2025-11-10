@@ -152,6 +152,8 @@ userRouter
     //@ts-ignore
     .get('/flight/bookings', userController.getUserFlightBookings)
     //@ts-ignore
+    .post('/flight/flight-details', userController.getUserFlightDetails)
+    //@ts-ignore
     .get('/bus/bookings', userController.getUserBusBookings)
 
 export default userRouter

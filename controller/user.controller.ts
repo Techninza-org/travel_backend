@@ -3211,6 +3211,30 @@ const getUserFlightBookings = async (req: ExtendedRequest, res: Response, next: 
         return next(err);
     }
 }
+
+const getUserFlightDetails = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.id;
+        const body = req.body;
+
+        if (!userId || !body) {
+            return res.status(401).json({ message: 'User not authenticated or body is missing' });
+        }
+
+        const response = await axios.post('https://stagingapi.easemytrip.com/cancellationjson/api/flightbookingdetail', body, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        return res.status(200).json({ message: 'Flight details fetched successfully', data: response.data });
+
+    } catch (err) {
+        console.error('getUserFlightDetails error', err);
+        return next(err);
+    }
+}
+
 const getUserBusBookings = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.id;
@@ -3308,6 +3332,7 @@ const userController = {
     addUserInTravelRequestResuests,
     autoSuggestQuotesByWords,
     getUserFlightBookings,
+    getUserFlightDetails,
     getUserBusBookings
 }
 
