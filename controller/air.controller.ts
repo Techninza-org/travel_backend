@@ -289,6 +289,7 @@ const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: Ne
         console.log(`[${requestId}] FLIGHT CANCELLATION - Response status: ${response.status}`);
 
         const data = response.data
+        console.log(`[${requestId}] FLIGHT CANCELLATION - Response data:`, data);
 
         // Log cancellation details
         if (data && !data.error) {
