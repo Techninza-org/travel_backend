@@ -17,6 +17,6 @@ flightRouter
     //@ts-ignore
     .post('/authkey', airController.getAuthKeyForCancellation)
     //@ts-ignore
-    .post('/cancelflight', airController.cancelFlightBooking)
+    .post('/cancelflight/:id', airController.cancelFlightBooking)
 
 export default flightRouter
