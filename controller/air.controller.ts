@@ -294,18 +294,18 @@ const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: Ne
         // Log cancellation details
         if (data && !data.error) {
             console.log(`[${requestId}] FLIGHT CANCELLATION SUCCESS - Cancellation processed`);
-            if (data.cancellationId) {
-                console.log(`[${requestId}] FLIGHT CANCELLATION SUCCESS - Cancellation ID: ${data.cancellationId}`);
+            if (data.isCancelled === true) {
                 await prisma.flightBooking.update({
                     where: { id: body.bookingId },
                     data: {
-                        cancellationId: data.cancellationId as string,
                         bookingStatus: 'CANCELLED',
                         status: 'CANCELLED',
-
                         updatedAt: new Date()
                     }
                 });
+                console.log(`[${requestId}] FLIGHT CANCELLATION SUCCESS - Booking cancelled successfully`);
+            }else{
+                console.warn(`[${requestId}] FLIGHT CANCELLATION WARNING - Booking cancellation failed`);
             }
         } else {
             console.warn(`[${requestId}] FLIGHT CANCELLATION WARNING - Error in response:`, data?.error || 'Unknown error');
