@@ -269,6 +269,7 @@ const getAuthKeyForCancellation = async (req: ExtendedRequest, res: Response, ne
 const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: NextFunction) => {
     const requestId = Date.now().toString();
     const userId = req.user?.id;
+    const bookingId = req.params.id;
 
     console.log(`[${requestId}] FLIGHT CANCELLATION START - User: ${userId || 'Anonymous'}`);
     console.log(`[${requestId}] FLIGHT CANCELLATION REQUEST BODY:`, JSON.stringify(req.body, null, 2));
@@ -296,7 +297,7 @@ const cancelFlightBooking = async (req: ExtendedRequest, res: Response, next: Ne
             console.log(`[${requestId}] FLIGHT CANCELLATION SUCCESS - Cancellation processed`);
             if (data.isCancelled === true) {
                 await prisma.flightBooking.update({
-                    where: { id: body.bookingId },
+                    where: { id: Number(bookingId) },
                     data: {
                         bookingStatus: 'CANCELLED',
                         status: 'CANCELLED',
