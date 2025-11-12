@@ -262,6 +262,7 @@ model FlightBooking {
   bookingStatus   FlightBookingStatus @default(PENDING)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  cancellationId  String? // Cancellation ID from EMT
 }
 
 model BusBooking {
