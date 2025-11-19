@@ -1196,6 +1196,7 @@ export const confirmFlightBooking = async (
       await prisma.flightBooking.update({
         where: { id: booking.id },
         data: {
+          amount: data?.BookingDetail.PaymentAmount || (booking.amount / 100),
           status: 'CONFIRMED',
           vendorResponse: emtResp.data,
           vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
