@@ -1016,7 +1016,7 @@ export const verifyFlightPayment = async (
         data: {
           userId,
           status: 'ORDER_CREATED', // Payment verified and order created
-          amount: Math.round(amount), // Convert to paise
+          amount: Math.round(amount / 100), // Convert to paise
           currency,
           vendorPayload: {}, // Empty for now, will be filled in confirmHotelBooking
           notes,
@@ -1196,7 +1196,6 @@ export const confirmFlightBooking = async (
       await prisma.flightBooking.update({
         where: { id: booking.id },
         data: {
-          amount: data?.BookingDetail.PaymentAmount || (booking.amount / 100),
           status: 'CONFIRMED',
           vendorResponse: emtResp.data,
           vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
@@ -1218,7 +1217,7 @@ export const confirmFlightBooking = async (
           status: 'CONFIRMED',
           vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
           vendorBookingId: emtResp.data?.BookingId || null,
-          amount: emtResp.data?.BookingDetail.PaymentAmount || (booking.amount / 100),
+          amount: booking.amount,
           currency: booking.currency,
           rzpPaymentId: booking.rzpPaymentId,
           rzpOrderId: booking.rzpOrderId,
