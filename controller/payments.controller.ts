@@ -1218,7 +1218,7 @@ export const confirmFlightBooking = async (
           status: 'CONFIRMED',
           vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
           vendorBookingId: emtResp.data?.BookingId || null,
-          amount: booking.amount,
+          amount: emtResp.data?.BookingDetail.PaymentAmount || (booking.amount / 100),
           currency: booking.currency,
           rzpPaymentId: booking.rzpPaymentId,
           rzpOrderId: booking.rzpOrderId,
