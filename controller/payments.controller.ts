@@ -1016,7 +1016,7 @@ export const verifyFlightPayment = async (
         data: {
           userId,
           status: 'ORDER_CREATED', // Payment verified and order created
-          amount: Math.round(amount / 100), // Convert to paise
+          amount: Math.round(amount), // Convert to paise
           currency,
           vendorPayload: {}, // Empty for now, will be filled in confirmHotelBooking
           notes,
@@ -1217,7 +1217,7 @@ export const confirmFlightBooking = async (
           status: 'CONFIRMED',
           vendorPnr: emtResp.data?.BookingDetail?.PnrDetail?.Pnr[0]?.PNR || emtResp.data?.EMTTransactionId || null,
           vendorBookingId: emtResp.data?.BookingId || null,
-          amount: booking.amount,
+          amount: Math.round(booking.amount / 100),
           currency: booking.currency,
           rzpPaymentId: booking.rzpPaymentId,
           rzpOrderId: booking.rzpOrderId,
