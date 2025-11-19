@@ -1221,6 +1221,7 @@ export const confirmFlightBooking = async (
           currency: booking.currency,
           rzpPaymentId: booking.rzpPaymentId,
           rzpOrderId: booking.rzpOrderId,
+          emtFlightBookingResponse: emtResp.data
         },
       });
     } else {
