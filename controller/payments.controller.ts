@@ -1482,7 +1482,7 @@ export const confirmBusBooking = async (
 
     console.log('🔄 confirmBusBooking initiated', {
       bookingId,
-      vendorPayload: vendorPayload ? 'provided' : 'missing',
+      vendorPayload: vendorPayload,
       userId,
       timestamp: new Date().toISOString()
     });
