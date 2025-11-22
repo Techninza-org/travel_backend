@@ -1568,7 +1568,7 @@ export const confirmBusBooking = async (
     console.log('EMT booking response', emtResp.data);
 
     const data = emtResp.data;
-    const isOk = data?.isTransactionCreated === true
+    const isOk = data.isticket === true;
 
     if (isOk) {
      
@@ -1577,7 +1577,7 @@ export const confirmBusBooking = async (
         data: {
           status: 'CONFIRMED',
           vendorResponse: emtResp.data,
-          vendorPnr: emtResp?.data?.transactionId || null,
+          vendorPnr: data.ticketpnr || null,
           vendorBookingId: emtResp.data?.BookingId || null,
         },
       });
@@ -1590,7 +1590,7 @@ export const confirmBusBooking = async (
         data: {
           bookingId: booking.id,
           status: 'CONFIRMED',
-          vendorPnr: emtResp?.data?.transactionId || null,
+          vendorPnr: data.ticketpnr || null,
           vendorBookingId: emtResp.data?.BookingId || null,
           amount: booking.amount,
           currency: booking.currency,
