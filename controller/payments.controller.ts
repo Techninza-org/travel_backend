@@ -1477,7 +1477,7 @@ export const confirmBusBooking = async (
   next: NextFunction
 ) => {
   try {
-    const { bookingId, vendorPayload } = req.body;
+    const { bookingId, vendorPayload, seatHoldData } = req.body;
     const userId = req.user?.id;
 
     console.log('🔄 confirmBusBooking initiated', {
@@ -1578,6 +1578,7 @@ export const confirmBusBooking = async (
           status: 'CONFIRMED',
           vendorResponse: emtResp.data,
           vendorPnr: data.ticketpnr || null,
+          seatHoldData: seatHoldData || null,
           vendorBookingId: emtResp.data?.BookingId || null,
         },
       });

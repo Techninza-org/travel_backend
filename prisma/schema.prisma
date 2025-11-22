@@ -274,6 +274,7 @@ model BusBooking {
   currency        String        @default("INR") // only INR supported for now
   vendorPayload   Json // the exact body you'll POST to EMT /HotelBooking
   vendorResponse  Json // EMT booking confirmation
+  seatHoldData    Json?
   vendorPnr       String? // PNR from EMT
   vendorBookingId String? // Booking ID from EMT
   rzpOrderId      String? // Razorpay order id
